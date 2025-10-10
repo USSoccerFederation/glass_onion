@@ -85,9 +85,10 @@ jobs:
       run: databricks bundle deploy
       env:
         DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-    # - name: Update cluster policies with latest package version
-    #   run: scripts/update_policies.sh
-    #   env:
-    #     DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-    #     DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE_URL }}
-    #     RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+    - name: Update cluster policies with latest package version
+      run: scripts/update_cluster_policy.sh
+      env:
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE_URL }}
+        CLUSTER_POLICY_ID: ${{ secrets.CLUSTER_POLICY_ID }}
+        RELEASE_VERSION: ${{ env.RELEASE_VERSION }}

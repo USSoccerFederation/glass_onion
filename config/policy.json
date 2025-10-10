@@ -1,0 +1,10 @@
+{
+    "name": "glass_onion",
+    "policy_id": "REPLACE_WITH_POLICY_ID",
+    "libraries": [
+        {
+            "whl": "/Workspace/Packages/glass_onion/artifacts/.internal/glass_onion-REPLACE_WITH_VERSION-py3-none-any.whl"
+        }
+    ],
+    "policy_family_id": "job-cluster"
+}
