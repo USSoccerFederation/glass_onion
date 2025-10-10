@@ -19,13 +19,13 @@ class MatchSyncEngine(SyncEngine):
         self.join_columns = (
             [
                 "match_date",
-                "competition_id",
-                "season_id",
-                "away_team_id",
+                "ussf_competition_id",
+                "ussf_season_id",
                 "home_team_id",
+                "away_team_id",
             ]
             if use_competition_context
-            else ["match_date", "away_team_id", "home_team_id"]
+            else ["match_date", "home_team_id", "away_team_id"]
         )
         self.verbose = verbose
         self.use_competition_context = use_competition_context
@@ -95,11 +95,12 @@ class MatchSyncEngine(SyncEngine):
             input2.provider,
             input2.data[~(input2.data[input2.id_field].isin(synced[input2.id_field]))],
         )
-        self.verbose_log(
-            f"Attempting date-adjusted pair synchronization for inputs {remaining_1.provider} (length {len(remaining_1.data)}) and {remaining_2.provider} (length {len(remaining_2.data)})"
-        )
+
         result = []
         if len(remaining_1.data) > 0 and len(remaining_2.data) > 0:
+            self.verbose_log(
+                f"Attempting date-adjusted pair synchronization for inputs {remaining_1.provider} (length {len(remaining_1.data)}) and {remaining_2.provider} (length {len(remaining_2.data)})"
+            )
             for d in range(-3, 3):
                 r = self.synchronize_on_adjusted_dates(
                     remaining_1, remaining_2, pd.Timedelta(d)

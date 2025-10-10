@@ -47,6 +47,12 @@ class SyncEngine:
         raise NotImplementedError()
 
     def synchronize(self) -> SyncableContent:
+        if len(self.content) == 0:
+            return SyncableContent(self.data_type, "unknown", pd.DataFrame())
+
+        if len(self.content) == 1:
+            return self.content[0]
+
         # first pass: straight matching - approach: agglomerative
         self.verbose_log(
             f"Starting {self.data_type} synchronization across {len(self.content)} datasets"
