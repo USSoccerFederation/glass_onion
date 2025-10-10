@@ -1,0 +1,96 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"] #, "3.10", "3.12"]
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Install Python 3.11
+        run: uv python install 3.11
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+      - name: Run tests
+        # For example, using `pytest`
+        run: uv run pytest tests
+    #   - name: Build
+    #     run: uv build
+      # Check that basic features work and we didn't miss to include crucial files
+    #   - name: Smoke test (wheel)
+    #     run: uv run --isolated --no-project --with dist/*.whl tests/smoke_test.py
+    #   - name: Smoke test (source distribution)
+    #     run: uv run --isolated --no-project --with dist/*.tar.gz tests/smoke_test.py
+    #   - name: Publish
+    #     run: uv publish
+  
+
+  deploy:
+    concurrency: "1"
+    runs-on: ubuntu-latest
+    needs: [tests]
+    # this should only happen on a push directly to main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+    - name: Install Python 3.11
+      run: uv python install 3.11
+    - name: Update VERSION with release version
+      run: |
+        VERSION=$(uv version | sed 's|^glass-onion ||')
+        VERSION=$(echo "$VERSION" | xargs)
+        echo "Base version: ${VERSION}"
+        RELEASE_VERSION="${VERSION}.${{ github.run_number }}.${{ github.run_attempt }}"
+        uv version $RELEASE_VERSION
+        echo "Release version: ${RELEASE_VERSION}"
+        echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
+        echo "RELEASE_FILE_PATH=./dist/ussf_py-${RELEASE_VERSION}-py3-none-any.whl" >> $GITHUB_ENV
+    - name: Build
+      run: uv build
+    - name: Update databricks.yml
+      run: |
+        WORKSPACE_URL=${{ secrets.DATABRICKS_WORKSPACE_URL }}
+        RELEASE_FILE_PATH=${{ env.RELEASE_FILE_PATH }}
+        DBX_YML="$(cat databricks.yml)"
+        DBX_YML="${DBX_YML/REPLACE_WITH_WORKSPACE_URL/\"$WORKSPACE_URL\"}"
+        DBX_YML="${DBX_YML/REPLACE_WITH_ARTIFACT_PATH/\"$RELEASE_FILE_PATH\"}"
+        echo "$DBX_YML" > databricks.yml
+    - name: Setup Databricks Integration
+      uses: databricks/setup-cli@main
+    - name: Validate Release Bundle
+      run: databricks bundle validate
+      working-directory: .
+      env:
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    - name: Release Bundle
+      run: databricks bundle deploy
+      env:
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    # - name: Update cluster policies with latest package version
+    #   run: scripts/update_policies.sh
+    #   env:
+    #     DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    #     DATABRICKS_HOST: ${{ secrets.DATABRICKS_WORKSPACE_URL }}
+    #     RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
