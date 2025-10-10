@@ -39,8 +39,6 @@ jobs:
     #     run: uv run --isolated --no-project --with dist/*.whl tests/smoke_test.py
     #   - name: Smoke test (source distribution)
     #     run: uv run --isolated --no-project --with dist/*.tar.gz tests/smoke_test.py
-    #   - name: Publish
-    #     run: uv publish
   
 
   deploy:
@@ -65,7 +63,7 @@ jobs:
         uv version $RELEASE_VERSION
         echo "Release version: ${RELEASE_VERSION}"
         echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
-        echo "RELEASE_FILE_PATH=./dist/ussf_py-${RELEASE_VERSION}-py3-none-any.whl" >> $GITHUB_ENV
+        echo "RELEASE_FILE_PATH=./dist/glass_onion-${RELEASE_VERSION}-py3-none-any.whl" >> $GITHUB_ENV
     - name: Build
       run: uv build
     - name: Update databricks.yml
@@ -83,10 +81,10 @@ jobs:
       working-directory: .
       env:
         DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-    # - name: Release Bundle
-    #   run: databricks bundle deploy
-    #   env:
-    #     DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    - name: Release Bundle
+      run: databricks bundle deploy
+      env:
+        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
     # - name: Update cluster policies with latest package version
     #   run: scripts/update_policies.sh
     #   env:
