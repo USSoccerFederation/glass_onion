@@ -30,10 +30,10 @@ jobs:
         run: uv python install 3.11
       - name: Install the project
         run: uv sync --locked --all-extras --dev
-      - name: Run tests
-        run: uv run pytest tests
-    #   - name: Build
-    #     run: uv build
+    #   - name: Run tests
+    #     run: uv run pytest tests
+      - name: Build
+        run: uv build
       # Check that basic features work and we didn't miss to include crucial files
     #   - name: Smoke test (wheel)
     #     run: uv run --isolated --no-project --with dist/*.whl tests/smoke_test.py
