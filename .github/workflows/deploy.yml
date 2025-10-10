@@ -31,7 +31,6 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
       - name: Run tests
-        # For example, using `pytest`
         run: uv run pytest tests
     #   - name: Build
     #     run: uv build
@@ -84,10 +83,10 @@ jobs:
       working-directory: .
       env:
         DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-    - name: Release Bundle
-      run: databricks bundle deploy
-      env:
-        DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    # - name: Release Bundle
+    #   run: databricks bundle deploy
+    #   env:
+    #     DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
     # - name: Update cluster policies with latest package version
     #   run: scripts/update_policies.sh
     #   env:
