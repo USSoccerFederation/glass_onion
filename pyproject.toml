@@ -12,6 +12,7 @@ dependencies = [
     "pandas>=2.3.3",
     "scikit-learn>=1.7.2",
     "thefuzz>=0.22.1",
+    "unidecode>=1.4.0",
 ]
 
 [build-system]
