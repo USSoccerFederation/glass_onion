@@ -20,6 +20,17 @@ class SyncableContent:
             data_type=self.data_type, provider=self.provider, data=merged
         )
 
+    def transform_provider_fields(self) -> pd.DataFrame:
+        provider_data_field = f"provider_{self.data_type}_id"
+        if (
+            "data_provider" in self.data.columns or "provider" in self.data.columns
+        ) and (provider_data_field in self.data.columns):
+            self.data.rename({provider_data_field: self.id_field}, axis=1, inplace=True)
+            provider_columns = self.data.columns[
+                self.data.columns.isin(["data_provider", "provider"])
+            ]
+            self.data.drop(provider_columns, axis=1, inplace=True)
+
 
 class SyncEngine:
     def __init__(
