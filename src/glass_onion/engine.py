@@ -1,5 +1,6 @@
 from functools import reduce
 from datetime import datetime
+from typing import Union
 import pandas as pd
 
 
@@ -31,6 +32,20 @@ class SyncableContent:
             ]
             self.data.drop(provider_columns, axis=1, inplace=True)
 
+    def append(self, right: Union["SyncableContent", pd.DataFrame]):
+        new_data = None
+        if isinstance(right, SyncableContent):
+            if self.data_type != right.data_type:
+                return
+
+            new_data = right.data
+
+        if isinstance(right, pd.DataFrame):
+            new_data = right
+
+        if new_data is not None:
+            self.data = pd.concat([self.data, new_data], axis=0, ignore_index=True)
+
 
 class SyncEngine:
     def __init__(
@@ -52,9 +67,6 @@ class SyncEngine:
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
     ) -> SyncableContent:
-        raise NotImplementedError()
-
-    def calculate_sync_scores(self, content: SyncableContent) -> pd.DataFrame:
         raise NotImplementedError()
 
     def synchronize(self) -> SyncableContent:
@@ -126,9 +138,7 @@ class SyncEngine:
                 f"Pass 2: Using remainders as sync basis, found {len(remainders_result.data)} new fully synced rows."
             )
             if len(remainders_result.data) > 0:
-                synced.data = pd.concat(
-                    [synced.data, remainders_result.data], axis=0, ignore_index=True
-                )
+                synced.append(remainders_result)
 
         ## third pass: add remainders to end
         remainders = []
@@ -153,11 +163,11 @@ class SyncEngine:
         if len(remainders) > 0:
             remainder_df = pd.concat(remainders, axis=0)
             self.verbose_log(f"Pass 3: Including {len(remainder_df)} unsynced rows")
-            synced.data = pd.concat(
-                [synced.data, remainder_df], axis=0, ignore_index=True
-            )
+            synced.append(remainder_df)
 
-        self.verbose_log(f"Pre-deduplication: Found {len(synced.data)} total rows")
+        self.verbose_log(
+            f"Pre-deduplication: Found {len(synced.data)} total rows: {synced.data}"
+        )
 
         # validation / dedupe step: final table should summarize on key matching columns to eliminate any duplicate rows
         dedupe_aggregation = {

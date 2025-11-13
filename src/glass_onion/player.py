@@ -35,9 +35,27 @@ class PlayerSyncStrategy:
 
 class PlayerSyncEngine(SyncEngine):
     def __init__(self, content: list[SyncableContent], verbose: bool = False):
-        super().__init__(
-            "player", content, ["jersey_number", "team_id", "player_name"], verbose
-        )
+        join_cols = ["jersey_number", "team_id", "player_name"]
+        super().__init__("player", content, join_cols, verbose)
+        # check if jersey number is empty / unreliable
+        for c in content:
+            for j in join_cols:
+                if j not in c.data.columns:
+                    join_cols.remove(j)
+                    self.verbose_log(
+                        f"Removing column `{j}` from join logic because of issues with content from data provider {c.provider} does not include it"
+                    )
+                    break
+
+                if len(c.data[c.data[j].notna()]) != len(c.data):
+                    join_cols.remove(j)
+                    self.verbose_log(
+                        f"Removing column `{j}` from join logic because content from data provider {c.provider} does not have complete coverage"
+                    )
+                    break
+
+        assert len(join_cols) > 0
+        self.join_columns = join_cols
 
     def synchronize_on_fuzzy_match(
         self,
@@ -187,7 +205,7 @@ class PlayerSyncEngine(SyncEngine):
             f"Attempting strategy-based cosine-similarity pair synchronization for inputs {input1.provider} (length {len(input1.data)}) and {input2.provider} (length {len(input2.data)})"
         )
         self.verbose_log(
-            f"Strategy: {strategy.title}\n- birth date adjustment: {strategy.date_adjustment}\n- swapped birth month/day: {strategy.swap_birth_month_day}\n- cosine-sim fields: {strategy.input_fields}\n- other equal fields: {strategy.other_equal_fields}"
+            f"Strategy: {strategy.title}\n- match_methodology: {strategy.match_methodology}\n- birth date adjustment: {strategy.date_adjustment}\n- swapped birth month/day: {strategy.swap_birth_month_day}\n- cosine-sim fields: {strategy.input_fields}\n- other equal fields: {strategy.other_equal_fields}"
         )
         self.verbose_log(f"Input 1 Columns: {input1.data.columns.to_list()}")
         self.verbose_log(f"Input 2 Columns: {input2.data.columns.to_list()}")
@@ -325,8 +343,11 @@ class PlayerSyncEngine(SyncEngine):
         self.verbose_log(f"Using simple match on jersey/team, found {len(synced)} rows")
         # print(sync_result)
 
-        input_field_options = product(
-            ["player_name", "player_nickname"], ["player_name", "player_nickname"]
+        # `itertools.product` can only be iterated once (https://stackoverflow.com/a/17557923), so turn this into a list
+        input_field_options = list(
+            product(
+                ["player_name", "player_nickname"], ["player_name", "player_nickname"]
+            )
         )
 
         # second layer: cosine similarity x birth date x team
@@ -363,7 +384,7 @@ class PlayerSyncEngine(SyncEngine):
             sync_strategies += reduce(lambda x, y: (x + y), birth_date_layers, [])
         else:
             self.verbose_log(
-                "Skipping birth_date matching strategies because birth_date field is not reliable"
+                "Skipping birth date matching strategies because `birth_date` field is not reliable"
             )
 
         # third layer: cosine similarity + team
@@ -390,15 +411,28 @@ class PlayerSyncEngine(SyncEngine):
         ]
 
         # fifth layer: simple jersey number/team match
+        layer5_fields = ["jersey_number", "team_id"]
+        layer5_title = "Layer 5: jersey number x team"
+        if "jersey_number" not in self.join_columns:
+            # jersey number is not reliable
+            self.verbose_log(
+                "Removing `jersey_number` from Layer 5 processing because it's been marked unreliable"
+            )
+            layer5_fields.remove("jersey_number")
+            layer5_title = "Layer 5: team"
+
         sync_strategies += [
             PlayerSyncStrategy(
-                title="Layer 5: jersey number x team",
+                title=layer5_title,
                 date_adjustment=None,
-                other_equal_fields=["jersey_number", "team_id"],
+                other_equal_fields=layer5_fields,
                 threshold=0,
             )
         ]
 
+        self.verbose_log(
+            f"Collected {len(sync_strategies)} possible sync strategies. Applying one by one until we run out of rows..."
+        )
         for i, strat in enumerate(sync_strategies):
             self.verbose_log(
                 f"Applying pair synchronization strategy {i}: {strat.title}"

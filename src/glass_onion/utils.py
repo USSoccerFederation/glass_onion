@@ -6,66 +6,112 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import re
 
 
-def string_ngrams(string, n=3):
+def string_ngrams(input: str, n: int = 3) -> list[str]:
     """
     Chop names into 3 letter 'words' to try and make better fits
     """
-    string = re.sub(r"[,-./]|\s", r"", str(string))
-    ngrams = zip(*[string[i:] for i in range(n)])
+    input = re.sub(r"[,-./]|\s", r"", str(input))
+    ngrams = zip(*[input[i:] for i in range(n)])
     return ["".join(ngram) for ngram in ngrams]
 
 
-def string_remove_accents(input_str: str):
+def string_remove_accents(input_str: str) -> pd.Series:
     return unidecode(input_str)
 
 
-def series_remove_accents(input: pd.Series):
+def string_clean_spaces(input_str: str) -> pd.Series:
+    return input_str.replace(" ", " ")
+
+
+def string_replace_common_womens_suffixes(input: str) -> str:
+    if input is None:
+        return None
+
+    input = input.strip()
+    input = re.sub(r",?\s+Women's$", "", input)
+    input = re.sub(r",?\s+Women$", "", input)
+    input = re.sub(r",?\s+W$", "", input)
+    input = re.sub(r"\s+WFC$", "", input)
+    input = re.sub(r"\s+LFC$", "", input)
+    input = re.sub(r"\s+Ladies$", "", input)
+    input = re.sub(r"\s+F$", "", input)
+    return (
+        input.replace(", Women", "")
+        .replace(", Women's", "")
+        .replace(" Women's", "")
+        .replace(" WFC", "")
+        .replace(" Femenino", "")
+        .replace(" Femminile", "")
+        .replace("Féminas", "")
+        .strip()
+    )
+
+
+def string_remove_youth_suffixes(input: str) -> str:
+    if input is None:
+        return None
+    input = re.sub(r" Under-?", " U", input)
+    input = re.sub(r" Sub-?", " U", input)
+    input = re.sub(r" Under ", " U", input)
+    input = re.sub(r" U-", " U", input)
+    input = re.sub(r" U\s?\d+$", "", input)
+    return input.strip()
+
+
+def series_remove_accents(input: pd.Series) -> pd.Series:
     return input.apply(string_remove_accents)
 
 
-def series_remove_dashes(input: pd.Series):
+def series_remove_dashes(input: pd.Series) -> pd.Series:
     return input.str.replace(r"[\W_]+", " ", regex=True)
 
 
-def series_remove_double_spaces(input: pd.Series):
+def series_remove_double_spaces(input: pd.Series) -> pd.Series:
     return input.str.replace(r"\s+", " ", regex=True)
 
 
-def series_remove_common_suffixes(input: pd.Series):
+def series_clean_spaces(input: pd.Series) -> pd.Series:
+    return input.apply(string_clean_spaces)
+
+
+def series_remove_common_suffixes(input: pd.Series) -> pd.Series:
+    return (
+        input.apply(string_replace_common_womens_suffixes)
+        .apply(string_remove_youth_suffixes)
+        .str.replace(
+            r" SC$| Sc$| sc$| FC$| fc$| Fc$| LFC$| CF$| CD$| WFC$| FCW$| HSC$| AC$| AF$| FCO$| Ladies$| Women$| W$|\sW$|, W$| F$| Women\'s$| VF$| FF$| Football$",
+            "",
+            regex=True,
+        )
+    )
+
+
+def series_remove_common_prefixes(input: pd.Series) -> pd.Series:
     return input.str.replace(
-        r" SC$| Sc$| sc$| FC$| fc$| Fc$| LFC$| CF$| CD$| WFC$| FCW$| HSC$| AC$| AF$| FCO$| Ladies$| Women$| W$|\sW$|, W$| F$| Women\'s$| VF$| FF$| Football$",
+        r"^SC |^FC |^CF |^CD |^RC |^OL |^Olympique de |^Olympique |^WNT |^SKN |^SK |^1\. ",
         "",
         regex=True,
     )
 
 
-def series_remove_common_prefixes(input: pd.Series):
-    return input.str.replace(
-        r"^SC |^FC |^CF |^CD |^RC |^OL |^Olympique de |^Olympique |^WNT |^SKN |^SK ",
-        "",
-        regex=True,
-    )
-
-
-def series_remove_youth_prefixes(input: pd.Series):
-    return input.str.replace(r" Under-?", " U", regex=True).str.replace(
-        r" Under ", " U", regex=True
-    )
+def series_remove_youth_prefixes(input: pd.Series) -> pd.Series:
+    return input.apply(string_remove_youth_suffixes)
 
 
 def series_normalize(input: pd.Series) -> pd.Series:
-    result = series_remove_accents(input)
+    result = series_clean_spaces(input)
+    result = series_remove_accents(result)
     result = series_remove_dashes(result)
     result = series_remove_double_spaces(result)
     result = result.str.lower().str.strip()
     return result
 
 
-def apply_cosine_similarity(input1: pd.Series, input2: pd.Series):
-    input1_norm = series_normalize(input1).tolist()
-    input2_norm = series_normalize(input2).tolist()
+def apply_cosine_similarity(input1: pd.Series, input2: pd.Series) -> pd.DataFrame:
+    input1_norm = series_normalize(input1).to_list()
+    input2_norm = series_normalize(input2).to_list()
 
-    content = pd.Series(input1_norm + input2_norm).tolist()
+    content = pd.Series(input1_norm + input2_norm).to_list()
     vectorizer = TfidfVectorizer(
         min_df=1, analyzer=string_ngrams, strip_accents="ascii"
     )
