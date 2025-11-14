@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from glass_onion.player import PlayerSyncableContent, PlayerSyncEngine
+from glass_onion.player import PlayerSyncEngine
 import pytest
 
 from tests.utils import utils_create_syncables
