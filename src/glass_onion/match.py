@@ -19,8 +19,8 @@ class MatchSyncEngine(SyncEngine):
         self.join_columns = (
             [
                 "match_date",
-                "ussf_competition_id",
-                "ussf_season_id",
+                "competition_id",
+                "season_id",
                 "home_team_id",
                 "away_team_id",
             ]
