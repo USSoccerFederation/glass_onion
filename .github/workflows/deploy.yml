@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"] #, "3.10", "3.12"]
+        python-version: ["3.11", "3.12"]
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -30,8 +30,8 @@ jobs:
         run: uv python install 3.11
       - name: Install the project
         run: uv sync --locked --all-extras --dev
-    #   - name: Run tests
-    #     run: uv run pytest tests
+      - name: Run tests
+        run: uv run pytest tests
       - name: Build
         run: uv build
       # Check that basic features work and we didn't miss to include crucial files
