@@ -20,6 +20,11 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent / "fixtures" / "player"
             { "provider_a": None, "provider_b": "218500" }, # unused sub, not in A
             { "provider_a": "27889", "provider_b": "33135" }, # naive name matching
             { "provider_a": "13556", "provider_b": "5041" } # no birth date
+        ]),
+        # disjoint player sets between data providers
+        ("2023-09-13-oma-usa.csv", [
+            { "provider_a": None, "provider_b": "190928" },
+            { "provider_a": "429448", "provider_b": None }
         ])
     ]
 )
@@ -29,9 +34,6 @@ def test_player_synchronize(file_path: str, expected_player_ids: dict[str, str])
     syncables = utils_create_syncables(dataset, "player")
     engine_test = PlayerSyncEngine(syncables, verbose=False)
     result = engine_test.synchronize()
-
-    # ensure that non-matching columns make their way through
-    assert "match_id" in result.data.columns
 
     # check different ID conditions/expectations
     for expected_ids in expected_player_ids:

@@ -1,0 +1,91 @@
+match_id,provider_player_id,jersey_number,player_name,player_nickname,birth_date,team_id,player_gender,data_provider
+2023-09-13-OMA-USA,1028620,21,Abdulrahman Al-Mushaifri,Abdulrahman Al-Mushaifri,,OMA,male,provider_a
+2023-09-13-OMA-USA,1061888,15,Musab Al-Mamari,Musab Al-Mamari,,OMA,male,provider_a
+2023-09-13-OMA-USA,1074359,17,Ahmed Al-Adawi,Ahmed Al-Adawi,,OMA,male,provider_a
+2023-09-13-OMA-USA,145466,13,Tim Ream,Tim Ream,1987-10-05,USA,male,provider_a
+2023-09-13-OMA-USA,208317,18,Faiyz Al-Rusheidi,Faiyz Al-Rusheidi,,OMA,male,provider_a
+2023-09-13-OMA-USA,242284,1,Ethan Horvath,Ethan Horvath,1995-06-09,USA,male,provider_a
+2023-09-13-OMA-USA,310163,23,Harib Al-Saadi,Harib Al-Saadi,,OMA,male,provider_a
+2023-09-13-OMA-USA,310166,19,Mahmood Mabrook,Mahmood Mabrook,,OMA,male,provider_a
+2023-09-13-OMA-USA,315762,14,Luca de la Torre,Luca de la Torre,1998-05-23,USA,male,provider_a
+2023-09-13-OMA-USA,315779,10,Christian Pulisic,Christian Pulisic,1998-09-18,USA,male,provider_a
+2023-09-13-OMA-USA,332697,8,Weston McKennie,Weston McKennie,1998-08-28,USA,male,provider_a
+2023-09-13-OMA-USA,349701,5,Antonee Robinson,Antonee Robinson,1997-08-08,USA,male,provider_a
+2023-09-13-OMA-USA,361104,2,Sergiño Dest,Sergiño Dest,2000-11-03,USA,male,provider_a
+2023-09-13-OMA-USA,370846,21,Timothy Weah,Timothy Weah,2000-02-22,USA,male,provider_a
+2023-09-13-OMA-USA,393323,11,Brenden Aaronson,Brenden Aaronson,2000-10-22,USA,male,provider_a
+2023-09-13-OMA-USA,429259,3,Mark McKenzie,Mark McKenzie,1999-02-25,USA,male,provider_a
+2023-09-13-OMA-USA,429448,9,Omar Al-Malki,Omar Al-Malki,,OMA,male,provider_a
+2023-09-13-OMA-USA,467437,17,Malik Tillman,Malik Tillman,2002-05-28,USA,male,provider_a
+2023-09-13-OMA-USA,468022,12,Miles Robinson,Miles Robinson,1997-03-14,USA,male,provider_a
+2023-09-13-OMA-USA,498082,10,Jameel Al-Yahmadi,Jameel Al-Yahmadi,,OMA,male,provider_a
+2023-09-13-OMA-USA,503770,20,Folarin Balogun,Folarin Balogun,2001-07-03,USA,male,provider_a
+2023-09-13-OMA-USA,503991,6,Yunus Musah,Yunus Musah,2002-11-29,USA,male,provider_a
+2023-09-13-OMA-USA,559369,3,Fahmi Durbein,Fahmi Durbein,,OMA,male,provider_a
+2023-09-13-OMA-USA,560989,1,Ibrahim Al-Mukhaini,Ibrahim Al-Mukhaini,,OMA,male,provider_a
+2023-09-13-OMA-USA,560996,12,Muhsen Al-Ghassani,Muhsen Al-Ghassani,,OMA,male,provider_a
+2023-09-13-OMA-USA,560997,8,Zahir Al-Aghbari,Zahir Al-Aghbari,,OMA,male,provider_a
+2023-09-13-OMA-USA,560999,11,Abdullah Fawaz,Abdullah Fawaz,,OMA,male,provider_a
+2023-09-13-OMA-USA,561000,14,Ahmed Al-Kaabi,Ahmed Al-Kaabi,,OMA,male,provider_a
+2023-09-13-OMA-USA,561004,5,Juma Al-Habsi,Juma Al-Habsi,,OMA,male,provider_a
+2023-09-13-OMA-USA,561006,13,Ahmed Al-Matrooshi,Ahmed Al-Matrooshi,,OMA,male,provider_a
+2023-09-13-OMA-USA,562185,6,Ahmed Al-Khamisi,Ahmed Al-Khamisi,,OMA,male,provider_a
+2023-09-13-OMA-USA,578539,4,Chris Richards,Chris Richards,2000-03-28,USA,male,provider_a
+2023-09-13-OMA-USA,623773,23,Kristoffer Lund,Kristoffer Lund,2002-05-14,USA,male,provider_a
+2023-09-13-OMA-USA,625310,16,Khalid Al-Braiki,Khalid Al-Braiki,,OMA,male,provider_a
+2023-09-13-OMA-USA,625311,22,Ahmed Al-Rawahi,Ahmed Al-Rawahi,,OMA,male,provider_a
+2023-09-13-OMA-USA,627207,9,Ricardo Pepi,Ricardo Pepi,2003-01-09,USA,male,provider_a
+2023-09-13-OMA-USA,637146,19,DeJuan Jones,DeJuan Jones,1997-06-24,USA,male,provider_a
+2023-09-13-OMA-USA,647235,7,Cade Cowell,Cade Cowell,2003-10-14,USA,male,provider_a
+2023-09-13-OMA-USA,670096,16,Tanner Tessmann,Tanner Tessmann,2001-09-24,USA,male,provider_a
+2023-09-13-OMA-USA,711517,22,Kevin Paredes,Kevin Paredes,2003-05-07,USA,male,provider_a
+2023-09-13-OMA-USA,715886,7,Essam Al-Subhi,Essam Al-Subhi,,OMA,male,provider_a
+2023-09-13-OMA-USA,723561,18,Drake Callender,Drake Callender,1997-10-07,USA,male,provider_a
+2023-09-13-OMA-USA,847944,4,Ali Moosa,Ali Moosa,,OMA,male,provider_a
+2023-09-13-OMA-USA,857144,2,Tamim Al-Balushi,Tamim Al-Balushi,,OMA,male,provider_a
+2023-09-13-OMA-USA,999127,15,Benja Cremaschi,Benja Cremaschi,2005-03-02,USA,male,provider_a
+2023-09-13-OMA-USA,3377,21,Timothy Weah,Timothy Weah,2000-02-22,USA,male,provider_b
+2023-09-13-OMA-USA,4614,5,Antonee Robinson,Antonee Robinson,1997-08-08,USA,male,provider_b
+2023-09-13-OMA-USA,8246,10,Christian Pulisic,Christian Pulisic,1998-09-18,USA,male,provider_b
+2023-09-13-OMA-USA,8526,8,Weston McKennie,Weston McKennie,1998-08-28,USA,male,provider_b
+2023-09-13-OMA-USA,12601,12,Miles Gordon Robinson,Miles Gordon Robinson,1997-03-14,USA,male,provider_b
+2023-09-13-OMA-USA,18242,13,Tim Ream,Tim Ream,1987-10-05,USA,male,provider_b
+2023-09-13-OMA-USA,18897,3,Mark McKenzie,Mark McKenzie,1999-02-25,USA,male,provider_b
+2023-09-13-OMA-USA,21201,1,Ethan Horvath,Ethan Horvath,1995-06-09,USA,male,provider_b
+2023-09-13-OMA-USA,21881,2,Sergino Dest,Sergiño Dest,2000-11-03,USA,male,provider_b
+2023-09-13-OMA-USA,24243,11,Brenden Aaronson,Brenden Aaronson,2000-10-22,USA,male,provider_b
+2023-09-13-OMA-USA,24627,19,DeJuan Lytelle Jones,DeJuan Lytelle Jones,1997-06-24,USA,male,provider_b
+2023-09-13-OMA-USA,26151,9,Ricardo Daniel Pepi,Ricardo Daniel Pepi,2003-01-09,USA,male,provider_b
+2023-09-13-OMA-USA,33274,14,Luca de la Torre,Luca de la Torre,1998-05-23,USA,male,provider_b
+2023-09-13-OMA-USA,35477,7,Cade Dylan Cowell,Cade Dylan Cowell,2003-10-14,USA,male,provider_b
+2023-09-13-OMA-USA,35716,16,Tanner Tessmann,Tanner Tessmann,2001-09-24,USA,male,provider_b
+2023-09-13-OMA-USA,38009,22,Kevin Paredes,Kevin Paredes,2003-05-07,USA,male,provider_b
+2023-09-13-OMA-USA,38792,6,Yunus Dimoara Musah,Yunus Dimoara Musah,2002-11-29,USA,male,provider_b
+2023-09-13-OMA-USA,39259,17,Malik Tillman,Malik Tillman,2002-05-28,USA,male,provider_b
+2023-09-13-OMA-USA,41266,4,Chris Richards,Chris Richards,2000-03-28,USA,male,provider_b
+2023-09-13-OMA-USA,42373,18,Drake Callender,Drake Callender,1997-10-07,USA,male,provider_b
+2023-09-13-OMA-USA,44857,23,Kristoffer Lund,Kristoffer Lund,2002-05-14,USA,male,provider_b
+2023-09-13-OMA-USA,51733,20,Folarin Balogun,Folarin Balogun,2001-07-03,USA,male,provider_b
+2023-09-13-OMA-USA,124751,12,Muhsen Saleh Abdullah Ali Al Ghassani,Muhsen Al Ghassani,1997-03-27,OMA,male,provider_b
+2023-09-13-OMA-USA,124755,23,Harib Jamil Zaid Al Saadi,Harib Al Saadi,1990-02-01,OMA,male,provider_b
+2023-09-13-OMA-USA,124764,18,Faiyz Issa Khadoom Al Rashidi,Faiyz Al Rashidi,1988-07-19,OMA,male,provider_b
+2023-09-13-OMA-USA,124776,1,Ibrahim Saleh Al Mukhaini,Ibrahim Al Mukhaini,1997-06-20,OMA,male,provider_b
+2023-09-13-OMA-USA,124778,14,Ahmed Khalifa Said Al Kaabi,Ahmed Al Kaabi,1996-09-15,OMA,male,provider_b
+2023-09-13-OMA-USA,125272,7,Issam Al Sabhi,Issam Al Sabhi,1997-05-01,OMA,male,provider_b
+2023-09-13-OMA-USA,125273,8,Zahir Sulaiman Abdullah Al Aghbari,Zahir Al Aghbari,1999-05-28,OMA,male,provider_b
+2023-09-13-OMA-USA,125274,3,Fahmi Said Rajab Nasib Bait Durbin,Fahmi Durbein,1993-10-10,OMA,male,provider_b
+2023-09-13-OMA-USA,125275,11,Abdullah Fawaz,Abdullah Fawaz,1996-10-03,OMA,male,provider_b
+2023-09-13-OMA-USA,125277,16,Khalid Al-Braiki,Khalid Al-Braiki,1993-07-03,OMA,male,provider_b
+2023-09-13-OMA-USA,125278,5,Juma Marhoon Juma Al Habsi,Juma Al Habsi,1996-01-28,OMA,male,provider_b
+2023-09-13-OMA-USA,125281,22,Ahmed Faraj Abdulla Al Rawahi,Ahmed Al Rawahi,1994-05-05,OMA,male,provider_b
+2023-09-13-OMA-USA,125283,10,Jameel Al Yahmadi,Jameel Al Yahmadi,1996-07-27,OMA,male,provider_b
+2023-09-13-OMA-USA,135763,6,Ahmed Mohammed Khalfan Al Khamisi,AHMED AL KHAMISI,1991-11-26,OMA,male,provider_b
+2023-09-13-OMA-USA,188849,19,Mahmood Mabrook Nasib Al Mushaifri,Mahmood Mabrook Nasib Al Mushaifri,1993-01-14,OMA,male,provider_b
+2023-09-13-OMA-USA,190928,24,Mohammed Al Amri,Mohammed Al Amri,1985-03-01,OMA,male,provider_b
+2023-09-13-OMA-USA,225209,15,Benjamin Cremaschi,Benjamin Cremaschi,2005-03-02,USA,male,provider_b
+2023-09-13-OMA-USA,360907,13,Ahmed Al Matrooshi,Ahmed Al Matrooshi,1997-05-26,OMA,male,provider_b
+2023-09-13-OMA-USA,360908,15,Musab Hamad Al Maamari,Musab Al Maamari,2000-01-22,OMA,male,provider_b
+2023-09-13-OMA-USA,360909,17,Ahmed Al-Adawi,Ahmed Al-Adawi,,OMA,male,provider_b
+2023-09-13-OMA-USA,417054,2,Tameem Haitham Shambeh Al Balushi,Tameem Haitham Shambeh Al Balushi,1999-11-03,OMA,male,provider_b
+2023-09-13-OMA-USA,422677,21,Abdulrahman Al Mushaifri,Abdulrahman Al Mushaifri,1998-08-16,OMA,male,provider_b
+2023-09-13-OMA-USA,442079,4,Ali Moosa Ali Mohammed Al Hinai,Ali Moosa,1998-01-16,OMA,male,provider_b
