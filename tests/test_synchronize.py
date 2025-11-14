@@ -5,7 +5,7 @@ import pytest
 
 from tests.utils import utils_create_syncables
 
-FIXTURE_DATA_PATH = Path(__file__).resolve().parent / "fixtures" / "player"
+FIXTURE_DATA_PATH = Path(__file__).resolve().parent / "fixtures"
 
 
 @pytest.mark.parametrize(
@@ -44,7 +44,7 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent / "fixtures" / "player"
     ],
 )
 def test_player_synchronize(file_path: str, expected_player_ids: dict[str, str]):
-    dataset = pd.read_csv(FIXTURE_DATA_PATH / file_path)
+    dataset = pd.read_csv(FIXTURE_DATA_PATH / "player" / file_path)
 
     syncables = utils_create_syncables(dataset, "player")
     engine_test = PlayerSyncEngine(syncables, verbose=False)
