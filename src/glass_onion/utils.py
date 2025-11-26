@@ -15,11 +15,11 @@ def string_ngrams(input: str, n: int = 3) -> list[str]:
     return ["".join(ngram) for ngram in ngrams]
 
 
-def string_remove_accents(input_str: str) -> pd.Series:
+def string_remove_accents(input_str: str) -> str:
     return unidecode(input_str)
 
 
-def string_clean_spaces(input_str: str) -> pd.Series:
+def string_clean_spaces(input_str: str) -> str:
     return input_str.replace(" ", " ")
 
 
@@ -58,23 +58,23 @@ def string_remove_youth_suffixes(input: str) -> str:
     return input.strip()
 
 
-def series_remove_accents(input: pd.Series) -> pd.Series:
+def series_remove_accents(input: "pd.Series[str]") -> "pd.Series[str]":
     return input.apply(string_remove_accents)
 
 
-def series_remove_dashes(input: pd.Series) -> pd.Series:
+def series_remove_dashes(input: pd.Series) -> "pd.Series[str]":
     return input.str.replace(r"[\W_]+", " ", regex=True)
 
 
-def series_remove_double_spaces(input: pd.Series) -> pd.Series:
+def series_remove_double_spaces(input: "pd.Series[str]") -> "pd.Series[str]":
     return input.str.replace(r"\s+", " ", regex=True)
 
 
-def series_clean_spaces(input: pd.Series) -> pd.Series:
+def series_clean_spaces(input: "pd.Series[str]") -> "pd.Series[str]":
     return input.apply(string_clean_spaces)
 
 
-def series_remove_common_suffixes(input: pd.Series) -> pd.Series:
+def series_remove_common_suffixes(input: "pd.Series[str]") -> "pd.Series[str]":
     return (
         input.apply(string_replace_common_womens_suffixes)
         .apply(string_remove_youth_suffixes)
@@ -86,7 +86,7 @@ def series_remove_common_suffixes(input: pd.Series) -> pd.Series:
     )
 
 
-def series_remove_common_prefixes(input: pd.Series) -> pd.Series:
+def series_remove_common_prefixes(input: "pd.Series[str]") -> "pd.Series[str]":
     return input.str.replace(
         r"^SC |^FC |^CF |^CD |^RC |^OL |^Olympique de |^Olympique |^WNT |^SKN |^SK |^1\. ",
         "",
@@ -94,11 +94,11 @@ def series_remove_common_prefixes(input: pd.Series) -> pd.Series:
     )
 
 
-def series_remove_youth_prefixes(input: pd.Series) -> pd.Series:
+def series_remove_youth_prefixes(input: "pd.Series[str]") -> "pd.Series[str]":
     return input.apply(string_remove_youth_suffixes)
 
 
-def series_normalize(input: pd.Series) -> pd.Series:
+def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
     result = series_clean_spaces(input)
     result = series_remove_accents(result)
     result = series_remove_dashes(result)
@@ -107,7 +107,7 @@ def series_normalize(input: pd.Series) -> pd.Series:
     return result
 
 
-def apply_cosine_similarity(input1: pd.Series, input2: pd.Series) -> pd.DataFrame:
+def apply_cosine_similarity(input1: "pd.Series[str]", input2: "pd.Series[str]") -> pd.DataFrame:
     input1_norm = series_normalize(input1).to_list()
     input2_norm = series_normalize(input2).to_list()
 

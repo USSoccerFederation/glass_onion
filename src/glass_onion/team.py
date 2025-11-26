@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pandas as pd
 from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import (
@@ -6,7 +7,6 @@ from glass_onion.utils import (
     series_remove_common_suffixes,
     series_remove_common_prefixes,
 )
-
 
 class TeamSyncableContent(SyncableContent):
     def __init__(self, provider: str, data: pd.DataFrame):
@@ -29,8 +29,8 @@ class TeamSyncEngine(SyncEngine):
             verbose,
         )
 
-    def normalize_team_names(self, input: pd.Series) -> pd.Series:
-        result = series_remove_common_suffixes(result)
+    def normalize_team_names(self, input: "pd.Series[str]") -> "pd.Series[str]":
+        result = series_remove_common_suffixes(input)
         result = series_remove_common_prefixes(result)
         result = series_normalize(result)
         result = result.str.lower().str.strip()
@@ -38,8 +38,8 @@ class TeamSyncEngine(SyncEngine):
 
     def synchronize_on_cosine_similarity(
         self,
-        input1_remaining: SyncableContent,
-        input2_remaining: SyncableContent,
+        input1_remaining: TeamSyncableContent,
+        input2_remaining: TeamSyncableContent,
         threshold: float = 0.75,
     ) -> pd.DataFrame:
         self.verbose_log(
