@@ -1,6 +1,5 @@
 # glass_onion
 
-
 [![PyPI Latest Release](https://img.shields.io/pypi/v/glass_onion.svg)](https://pypi.org/project/glass_onion/)
 ![](https://img.shields.io/github/license/PySport/glass_onion)
 ![](https://img.shields.io/pypi/pyversions/glass_onion)
@@ -9,6 +8,7 @@
 ## Table of Contents
 
 - [Summary](#summary)
+- [Background](#background)
 - [Methodology](#methodology)
 - [Where to get it](#where-to-get-it)
 - [Documentation](#documentation)
@@ -31,8 +31,11 @@ Any identifiers _other than the ones being synchronized_ are assumed to be unive
 
 When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A suggested workflow can be found in the **[integration guide](INTEGRATION.md)**.
 
-Inspiration and some methodology for this package comes from https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system.
+## Background
 
+The idea for this package and its public release started with [this 2022 blog post](https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system) by [@UnravelSports](https://github.com/@UnravelSports). Identifier synchronization is one of the most common problems that soccer analytics groups run into, mostly because it seems unique to soccer (at least, across the major sports): in other (read: American) sports, the organizing body (NFL, MLB, NBA, etc) uniquely identifies players and forces (or at least seems to) data providers to use those identifiers in their datasets. Every club that has multiple data subscriptions has to build their own solution to this problem (or manually synchronize players via spreadsheet) that fits into their ETL system, but few are publicly discussed and open-source (the main exception being that of Parma Calcio in Italy: https://github.com/parmacalcio1913/players-matcher). 
+
+Our hope is that while we can't solve this problem for any existing clubs (unless they integrate the package!), this package will help new data analysts and analytics groups get up to speed more quickly and deliver more robust reports that integrate all of their data sources.
 
 ## Methodology
 
@@ -95,7 +98,7 @@ For more details, refer to the [installation guide](INSTALLATION.md).
 TBD.
 
 ## Contributing to glass_onion
-All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. An overview on how to contribute can be found in the **[contributing guide](CONTRIBUTING.md)**.
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. More information can be found in the **[contributing guide](CONTRIBUTING.md)**.
 
 ## License
 
