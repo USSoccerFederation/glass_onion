@@ -8,11 +8,11 @@
 ## Table of Contents
 
 - [Summary](#summary)
+- [Installation](#installation)
+- [Documentation](#documentation)
 - [Background](#background)
 - [Methodology](#methodology)
-- [Where to get it](#where-to-get-it)
-- [Documentation](#documentation)
-- [Contributing to glass_onion](#contributing-to-glass_onion)
+- [Contributing](#contributing)
 - [License](#license)
 - [Why the name `Glass Onion`?](#why-the-name-glass-onion)
 
@@ -30,6 +30,28 @@ Glass Onion aims to do one thing -- synchronizing soccer data object identifiers
 Any identifiers _other than the ones being synchronized_ are assumed to be universal across data providers (e.g. `team_id` when synchronizing players).
 
 When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A suggested workflow can be found in the **[integration guide](INTEGRATION.md)**.
+
+## Installation
+
+The source code is hosted on GitHub at: [https://github.com/USSoccerFederation/glass_onion](https://github.com/USSoccerFederation/glass_onion).
+
+The easiest way to install Glass Onion is via **pip**:
+
+```bash
+pip install glass_onion
+```
+
+You can also install from GitHub for the latest updates:
+
+```sh
+pip install git+https://github.com/USSoccerFederation/glass_onion.git
+```
+
+For more details, refer to the [installation guide](INSTALLATION.md).
+
+## Documentation
+
+TBD.
 
 ## Background
 
@@ -75,29 +97,7 @@ This result dataframe is then deduplicated: by default, the result dataframe is 
 4. Attempt to join remaining records using "naive similarity": looking for normalized parts of one record's `player name` (or `player_nickname`) that exist in another's. Additionally, require that `team_id` is equal for matches found via this method.
 5. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with no minimum cosine similarity threshold for player name. Additionally, require that `team_id` is equal.
 
-## Installation
-
-The source code is hosted on GitHub at: [https://github.com/USSoccerFederation/glass_onion](https://github.com/USSoccerFederation/glass_onion).
-
-The easiest way to install Glass Onion is via **pip**:
-
-```bash
-pip install glass_onion
-```
-
-You can also install from GitHub for the latest updates:
-
-```sh
-pip install git+https://github.com/USSoccerFederation/glass_onion.git
-```
-
-For more details, refer to the [installation guide](INSTALLATION.md).
-
-## Documentation
-
-TBD.
-
-## Contributing to glass_onion
+## Contributing
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. More information can be found in the **[contributing guide](CONTRIBUTING.md)**.
 
 ## License
