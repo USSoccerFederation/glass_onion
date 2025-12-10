@@ -13,6 +13,7 @@ class SyncableContent:
 
     This class should be subclassed for each new object type: see [`PlayerSyncableContent`][`glass_onion.player.PlayerSyncableContent`] for an example.
     """
+
     def __init__(self, data_type: str, provider: str, data: pd.DataFrame):
         self.data_type = data_type
         self.provider = provider
@@ -24,27 +25,33 @@ class SyncableContent:
         Combine two `SyncableContent` objects into one by conducting a left-join on the underlying dataframes.
 
         Notes:
-        - This operation is not in-place and produces a new `SyncableContent` object. 
+        - This operation is not in-place and produces a new `SyncableContent` object.
         - This operation is not permitted on `SyncableContent` objects that do not use the same `data_type`.
-        - This operation only moves fields from `right` that are identifiers of the same `data_type` as `self`. Example: if `self` has `data_type` player, the only fields merged from right will be those that contain `_player_id`. 
-        - This operation's left-join is done using the `id_field` of `right`, which MUST exist in `self` for the operation to work. 
+        - This operation only moves fields from `right` that are identifiers of the same `data_type` as `self`. Example: if `self` has `data_type` player, the only fields merged from right will be those that contain `_player_id`.
+        - This operation's left-join is done using the `id_field` of `right`, which MUST exist in `self` for the operation to work.
 
         Args:
             right (`glass_onion.SyncableContent`, required): a `SyncableContent` object.
-        
+
         Returns:
             a new `SyncableContent` object that uses
             - the shared `data_type` of both parent objects
             - `self.provider`
             - a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `data_type` as `self` + all columns from `self.data`.
         """
-        assert self.data_type == right.data_type, f"Left `data_type` ({self.data_type}) does not match Right `data_type` ({right.data_type})."
-        assert right.id_field in self.data.columns, f"Right `id_field` ({right.id_field}) not in Left `data` columns."
+        assert self.data_type == right.data_type, (
+            f"Left `data_type` ({self.data_type}) does not match Right `data_type` ({right.data_type})."
+        )
+        assert right.id_field in self.data.columns, (
+            f"Right `id_field` ({right.id_field}) not in Left `data` columns."
+        )
 
         id_mask = right.data.columns[
             right.data.columns.str.contains(f"_{self.data_type}_id")
         ]
-        assert len(id_mask) > 0, f"Identifiers for left `data_type` ({self.data_type}) are not in any columns in Right."
+        assert len(id_mask) > 0, (
+            f"Identifiers for left `data_type` ({self.data_type}) are not in any columns in Right."
+        )
 
         merged = pd.merge(self.data, right.data[id_mask], how="left", on=right.id_field)
 
@@ -66,7 +73,7 @@ class SyncableContent:
         - converting `provider_*_id` fields in the dataframe to use `SyncableContent.provider`.
         - removing the `data_provider` (or `provider`) column.
 
-        This method is an in-place operation. If a `provider_*_id` field and a `data_provider`/`provider` method are found, the above cleaning steps will be applied. 
+        This method is an in-place operation. If a `provider_*_id` field and a `data_provider`/`provider` method are found, the above cleaning steps will be applied.
         If only one or neither are found, then no cleaning will be applied.
 
         Args:
@@ -85,19 +92,21 @@ class SyncableContent:
             ]
             self.data.drop(provider_columns, axis=1, inplace=True)
 
-    def append(self, right: Union["SyncableContent", pd.DataFrame]) -> "SyncableContent":
+    def append(
+        self, right: Union["SyncableContent", pd.DataFrame]
+    ) -> "SyncableContent":
         """
         Combine two `SyncableContent` objects into one by appending all rows from `right` to the end of `left`.
 
         Notes:
-        - This operation is in-place and does NOT produce a new `SyncableContent` object. This method simply returns the adjusted `left` object. 
+        - This operation is in-place and does NOT produce a new `SyncableContent` object. This method simply returns the adjusted `left` object.
         - If `right` is a `SyncableContent` object, the rows from its `data` dataframe are appended to the end of `left`'s `data` dataframe. If `right` is a `pandas.DataFrame` object, its own rows are appended to the end of `left`'s `data` dataframe.
         - This operation is not permitted on `SyncableContent` objects that do not use the same `data_type`.
         - If `right` is None, this method is a no-op.
 
         Args:
             right (`glass_onion.SyncableContent` OR `pandas.DataFrame`, required): a `SyncableContent` object or a pandas.DataFrame object.
-        
+
         Returns:
             `self` but with a `data` pandas.DataFrame that contains all rows from `right` and `left`.
         """
@@ -120,9 +129,9 @@ class SyncableContent:
 
 class SyncEngine:
     """
-    A wrapper around an object type's synchronization process. 
+    A wrapper around an object type's synchronization process.
 
-    Given a list of `SyncableContent`, a `SyncEngine` synchronizes one pair of objects at a time (via `SyncEngine.synchronize_pair()`). The results of all pairs are then merged together and deduplicated. 
+    Given a list of `SyncableContent`, a `SyncEngine` synchronizes one pair of objects at a time (via `SyncEngine.synchronize_pair()`). The results of all pairs are then merged together and deduplicated.
     Each object type corresponds to a subclass of SyncEngine that overrides `synchronize_pair()` to define how pairs are synchronized in `synchronize()`, which contains wrapper logic for the entire process.
 
     There are three distinct layers within `SyncEngine.synchronize()`'s wrapper logic:
@@ -130,11 +139,12 @@ class SyncEngine:
     1. The aforementioned sync process that results in a data frame of synced identifiers.
     2. Collect remaining unsynced rows and run the sync process on those. Append any newly synced rows to the result dataframe from Layer 1.
     3. Append any remaining unsynced rows to the bottom of the result data frame.
-    
+
     This result dataframe is then deduplicated: by default, the result dataframe is grouped by the specific columns defined in `SyncEngine` and the first non-null result is selected for each data provider's identifier field.
 
     This class should be subclassed for each new object type: see [`PlayerSyncEngine`][`glass_onion.player.PlayerSyncEngine`] for an example.
     """
+
     def __init__(
         self,
         data_type: str,
@@ -150,7 +160,7 @@ class SyncEngine:
             content (list[SyncableContent], required): a list of `SyncableContent` objects that correspond to `data_type`.
             join_columns (list[str], required): a list of columns used to aggregate and deduplicate identifiers
             verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
-        
+
         Returns:
             a new `SyncEngine` object.
         """
@@ -161,7 +171,7 @@ class SyncEngine:
 
     def verbose_log(self, msg: str):
         """
-        Helper method to enable verbose logging via `print`. These logs are sent to `stdout` (the default output location of `print`). Logs are also prefixed with a timestamp for easy sorting.
+        Helper method to enable verbose logging via `print()`. These logs are sent to `stdout` (the default output location of `print()`). Logs are also prefixed with a timestamp for easy sorting.
 
         Args:
             msg (str, required): a custom log message
@@ -261,14 +271,13 @@ class SyncEngine:
 
         return composite
 
-
     def synchronize_with_naive_match(
         self, input1: SyncableContent, input2: SyncableContent, fields: Tuple[str]
     ) -> pd.DataFrame:
         """
-        Synchronizes two `SyncableContent` objects using the `naive` similarity using the columns provided by the two-tuple `fields`. 
-        
-        Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`. 
+        Synchronizes two `SyncableContent` objects using the `naive` similarity using the columns provided by the two-tuple `fields`.
+
+        Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
 
         Args:
             input1 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
@@ -279,10 +288,18 @@ class SyncEngine:
             a `pandas.DataFrame` object that contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
         """
 
-        assert len(fields) == 2, "Must provide two columns (one from `input1` and one from `input2`) as `fields`."
-        assert fields[0] in input1.data.columns, "First element of `fields` must exist in `input1.data`."
-        assert fields[1] in input2.data.columns, "Second element of `fields` must exist in `input2.data`."
-        assert len(input1.data) > 0 and len(input2.data) > 0, "Both `SyncableContent` objects must be non-empty."
+        assert len(fields) == 2, (
+            "Must provide two columns (one from `input1` and one from `input2`) as `fields`."
+        )
+        assert fields[0] in input1.data.columns, (
+            "First element of `fields` must exist in `input1.data`."
+        )
+        assert fields[1] in input2.data.columns, (
+            "Second element of `fields` must exist in `input2.data`."
+        )
+        assert len(input1.data) > 0 and len(input2.data) > 0, (
+            "Both `SyncableContent` objects must be non-empty."
+        )
 
         name_population = input1.data[fields[0]]
         normalized_name_population = series_normalize(name_population)
@@ -340,7 +357,7 @@ class SyncEngine:
         Args:
             input1 (`glass_onion.SyncableContent`, required): a SyncableContent object from `SyncEngine.content`
             input2 (`glass_onion.SyncableContent`, required): a SyncableContent object from `SyncEngine.content`
-        
+
         Returns:
             a new `SyncableContent` object.
 
@@ -358,17 +375,17 @@ class SyncEngine:
         1. The aforementioned sync process that results in a data frame of synced identifiers.
         2. Collect remaining unsynced rows and run the sync process on those. Append any newly synced rows to the result dataframe from Layer 1.
         3. Append any remaining unsynced rows to the bottom of the result data frame.
-    
+
         This result dataframe is then deduplicated: by default, the result dataframe is grouped by `SyncEngine.join_columns` and the first non-null result is selected for each data provider's identifier field.
 
         The result dataframe is then wrapped in a `SyncableContent` object using the `provider` from the first `SyncableContent` object in `SyncEngine.content`.
 
         Args:
             None
-        
+
         Returns:
-            - If there are no elements in `SyncEngine.content`, returns a `SyncableContent` object with `SyncEngine.data_type` with `provider` unknown and an empty `pandas.DataFrame`. 
-            - If there's only one element in `SyncEngine.content`, returns that element. 
+            - If there are no elements in `SyncEngine.content`, returns a `SyncableContent` object with `SyncEngine.data_type` with `provider` unknown and an empty `pandas.DataFrame`.
+            - If there's only one element in `SyncEngine.content`, returns that element.
             - If there are 2+ elements in `SyncEngine.content`, returns a new `SyncableContent` object with synchronized identifiers based on the `SyncableContent` objects in `SyncEngine.content`.
         """
         if len(self.content) == 0:
