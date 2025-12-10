@@ -8,6 +8,7 @@ from glass_onion.utils import (
     series_remove_common_prefixes,
 )
 
+
 class TeamSyncableContent(SyncableContent):
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("team", provider, data)

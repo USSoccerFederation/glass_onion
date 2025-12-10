@@ -13,7 +13,7 @@ def string_ngrams(input: str, n: int = 3) -> list[str]:
     Args:
         input (str, required): any string.
         n (int, default: 3): the number of characters to use in each n-gram.
-    
+
     Returns:
         A list of strings of length n.
     """
@@ -33,7 +33,7 @@ def string_remove_accents(input: str) -> str:
 
     Args:
         input (str, required): any Unicode-compliant string.
-    
+
     Returns:
         A string with only ASCII-compliant characters.
     """
@@ -49,7 +49,7 @@ def string_clean_spaces(input: str) -> str:
 
     Args:
         input (str, required): any string.
-    
+
     Returns:
         A string with only "true" spaces (U+0020).
     """
@@ -65,7 +65,7 @@ def string_replace_common_womens_suffixes(input: str) -> str:
 
     Args:
         input (str, required): any string.
-    
+
     Returns:
         A cleaned string without specific text indicating women's teams.
     """
@@ -98,7 +98,7 @@ def string_remove_youth_suffixes(input: str) -> str:
 
     Args:
         input (str, required): any string.
-    
+
     Returns:
         A cleaned string without specific text indicating youth teams.
     """
@@ -119,7 +119,7 @@ def series_remove_accents(input: "pd.Series[str]") -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series with Unicode-compliant strings.
-    
+
     Returns:
         A pandas.Series with ASCII strings.
     """
@@ -132,7 +132,7 @@ def series_remove_non_word_chars(input: pd.Series) -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series of strings.
-    
+
     Returns:
         A pandas.Series of strings.
     """
@@ -145,7 +145,7 @@ def series_remove_double_spaces(input: "pd.Series[str]") -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series of strings.
-    
+
     Returns:
         A pandas.Series of strings.
     """
@@ -158,7 +158,7 @@ def series_clean_spaces(input: "pd.Series[str]") -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series of strings.
-    
+
     Returns:
         A pandas.Series of strings with only "true" spaces (U+0020).
     """
@@ -173,19 +173,18 @@ def series_remove_common_suffixes(input: "pd.Series[str]") -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series with club names.
-    
+
     Returns:
         A pandas.Series with more standardized club names.
     """
     return (
-        input
-            .apply(string_replace_common_womens_suffixes)
-            .apply(string_remove_youth_suffixes)
-            .str.replace(
-                r" SC$| Sc$| sc$| FC$| fc$| Fc$| LFC$| CF$| CD$| WFC$| FCW$| HSC$| AC$| AF$| FCO$| Ladies$| Women$| W$|\sW$|, W$| F$| Women\'s$| VF$| FF$| Football$",
-                "",
-                regex=True,
-            )
+        input.apply(string_replace_common_womens_suffixes)
+        .apply(string_remove_youth_suffixes)
+        .str.replace(
+            r" SC$| Sc$| sc$| FC$| fc$| Fc$| LFC$| CF$| CD$| WFC$| FCW$| HSC$| AC$| AF$| FCO$| Ladies$| Women$| W$|\sW$|, W$| F$| Women\'s$| VF$| FF$| Football$",
+            "",
+            regex=True,
+        )
     )
 
 
@@ -195,7 +194,7 @@ def series_remove_common_prefixes(input: "pd.Series[str]") -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series with club names.
-    
+
     Returns:
         A pandas.Series with more standardized club names.
     """
@@ -214,7 +213,7 @@ def series_remove_youth_prefixes(input: "pd.Series[str]") -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series with club names.
-    
+
     Returns:
         A pandas.Series with more standardized club names.
     """
@@ -233,7 +232,7 @@ def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
 
     Args:
         input (pd.Series[str], required): a pandas.Series of strings.
-    
+
     Returns:
         A pandas.Series with normalized strings.
     """
@@ -245,14 +244,16 @@ def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
     return result
 
 
-def apply_cosine_similarity(input1: "pd.Series[str]", input2: "pd.Series[str]") -> pd.DataFrame:
+def apply_cosine_similarity(
+    input1: "pd.Series[str]", input2: "pd.Series[str]"
+) -> pd.DataFrame:
     """
-    Generates a dataframe of cosine similarity results from two pandas.Series. 
+    Generates a dataframe of cosine similarity results from two pandas.Series.
 
     Args:
         input1 (pd.Series[str], required): a pandas.Series of strings.
         input2 (pd.Series[str], required): a pandas.Series of strings.
-    
+
     Returns:
         A pandas.DataFrame object with the following schema:
             - input1: a string from the `input1` pandas.Series
