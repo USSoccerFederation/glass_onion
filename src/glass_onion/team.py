@@ -2,6 +2,7 @@ from __future__ import annotations
 import pandas as pd
 from glass_onion.engine import SyncableContent, SyncEngine
 
+
 class TeamSyncableContent(SyncableContent):
     """
     A subclass of SyncableContent to use for team objects.
@@ -17,6 +18,7 @@ class TeamSyncEngine(SyncEngine):
 
     See `synchronize_pair()`[glass_onion.team.TeamSyncEngine.synchronize_pair] for methodology details.
     """
+
     def __init__(
         self,
         content: list[TeamSyncableContent],
@@ -30,7 +32,7 @@ class TeamSyncEngine(SyncEngine):
             content (list[str], required): a list of `TeamSyncableContent` objects.
             use_competition_context (bool, default: False): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize team names?
             verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
-    
+
         Returns:
             a new `TeamSyncEngine` object.
         """
@@ -42,7 +44,6 @@ class TeamSyncEngine(SyncEngine):
             else ["team_name"],
             verbose,
         )
-
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
@@ -71,7 +72,7 @@ class TeamSyncEngine(SyncEngine):
         if len(input1.data) > 0 and len(input2.data) == 0:
             input1.data[input2.id_field] = pd.NA
             return input1
-        
+
         # first pass: names are equal
         self.verbose_log(
             f"Attempting pair synchronization for inputs {input1.provider} (length {len(input1.data)}) and {input2.provider} (length {len(input2.data)})"
@@ -93,7 +94,10 @@ class TeamSyncEngine(SyncEngine):
 
         if len(remaining_1.data) > 0 and len(remaining_2.data) > 0:
             cosine_results = self.synchronize_with_cosine_similarity(
-                remaining_1, remaining_2, input1_field="team_name", input2_field="team_name"
+                remaining_1,
+                remaining_2,
+                input1_field="team_name",
+                input2_field="team_name",
             )
 
             if len(cosine_results) > 0:
@@ -138,7 +142,11 @@ class TeamSyncEngine(SyncEngine):
                 f"Attempting less-stringent cosine-similarity pair synchronization for inputs {remaining_1.provider} (length {len(remaining_1.data)}) and {remaining_2.provider} (length {len(remaining_2.data)})"
             )
             cosine_results = self.synchronize_with_cosine_similarity(
-                remaining_1, remaining_2, input1_field="team_name", input2_field="team_name", threshold=0.0
+                remaining_1,
+                remaining_2,
+                input1_field="team_name",
+                input2_field="team_name",
+                threshold=0.0,
             )
 
             if len(cosine_results) > 0:

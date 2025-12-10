@@ -373,7 +373,7 @@ class SyncEngine:
         if len(input1.data) > 0 and len(input2.data) == 0:
             input1.data[input2.id_field] = pd.NA
             return input1
-        
+
         raise NotImplementedError()
 
     def synchronize(self) -> SyncableContent:

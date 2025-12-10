@@ -89,7 +89,7 @@ class PlayerSyncEngine(SyncEngine):
         Args:
             content (list[str], required): a list of `PlayerSyncableContent` objects.
             verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
-    
+
         Returns:
             a new `TeamSyncEngine` object.
         """

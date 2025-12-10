@@ -6,6 +6,7 @@ class MatchSyncableContent(SyncableContent):
     """
     A subclass of SyncableContent to use for match objects.
     """
+
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("match", provider, data)
 
@@ -16,6 +17,7 @@ class MatchSyncEngine(SyncEngine):
 
     See `synchronize_pair()`[glass_onion.player.MatchSyncEngine.synchronize_pair] for methodology details.
     """
+
     def __init__(
         self,
         content: list[MatchSyncableContent],
@@ -29,7 +31,7 @@ class MatchSyncEngine(SyncEngine):
             content (list[str], required): a list of `MatchSyncableContent` objects.
             use_competition_context (bool, default: False): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize match identifiers?
             verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
-    
+
         Returns:
             a new `MatchSyncEngine` object.
         """

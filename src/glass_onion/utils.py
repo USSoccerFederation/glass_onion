@@ -178,8 +178,7 @@ def series_remove_common_suffixes(input: "pd.Series[str]") -> "pd.Series[str]":
         A pandas.Series with more standardized club names.
     """
     return (
-        input
-        .apply(string_replace_common_womens_suffixes)
+        input.apply(string_replace_common_womens_suffixes)
         .apply(string_remove_youth_suffixes)
         .str.replace(
             r" SC$| Sc$| sc$| FC$| fc$| Fc$| LFC$| CF$| CD$| WFC$| FCW$| HSC$| AC$| AF$| FCO$| Ladies$| Women$| W$|\sW$|, W$| F$| Women\'s$| VF$| FF$| Football$",
