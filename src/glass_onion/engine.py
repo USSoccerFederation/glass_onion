@@ -1,7 +1,7 @@
 from functools import reduce
 from datetime import datetime
 import re
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 import pandas as pd
 from thefuzz import process
 from glass_onion.utils import apply_cosine_similarity, series_normalize
@@ -159,7 +159,7 @@ class SyncEngine:
             data_type (str, required): the object type this `SyncEngine` is working with.
             content (list[SyncableContent], required): a list of `SyncableContent` objects that correspond to `data_type`.
             join_columns (list[str], required): a list of columns used to aggregate and deduplicate identifiers
-            verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
+            verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
 
         Returns:
             a new `SyncEngine` object.
@@ -359,11 +359,21 @@ class SyncEngine:
             input2 (`glass_onion.SyncableContent`, required): a SyncableContent object from `SyncEngine.content`
 
         Returns:
-            a new `SyncableContent` object.
+            If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.
+            If `input2`'s underlying `data` dataframe is empty, returns `input1` with a column in `input1.data` for `input2.id_field`.
+            If both dataframes are non-empty, returns a new `PlayerSyncableContent` object with synchronized identifiers from `input1` and `input2`.
 
         Raises:
             `NotImplementedError` if this method is not overridden.
         """
+        if len(input1.data) == 0 and len(input2.data) > 0:
+            input2.data[input1.id_field] = pd.NA
+            return input2
+
+        if len(input1.data) > 0 and len(input2.data) == 0:
+            input1.data[input2.id_field] = pd.NA
+            return input1
+        
         raise NotImplementedError()
 
     def synchronize(self) -> SyncableContent:

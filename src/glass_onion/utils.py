@@ -178,7 +178,8 @@ def series_remove_common_suffixes(input: "pd.Series[str]") -> "pd.Series[str]":
         A pandas.Series with more standardized club names.
     """
     return (
-        input.apply(string_replace_common_womens_suffixes)
+        input
+        .apply(string_replace_common_womens_suffixes)
         .apply(string_remove_youth_suffixes)
         .str.replace(
             r" SC$| Sc$| sc$| FC$| fc$| Fc$| LFC$| CF$| CD$| WFC$| FCW$| HSC$| AC$| AF$| FCO$| Ladies$| Women$| W$|\sW$|, W$| F$| Women\'s$| VF$| FF$| Football$",
@@ -240,6 +241,25 @@ def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
     result = series_remove_accents(result)
     result = series_remove_non_word_chars(result)
     result = series_remove_double_spaces(result)
+    result = result.str.lower().str.strip()
+    return result
+
+
+def series_normalize_team_names(self, input: "pd.Series[str]") -> "pd.Series[str]":
+    """
+    Applies a full suite of normalizations to a pandas.Series of team name strings.
+
+    Please see the following methods for more details:
+        - [`series_remove_common_suffixes`][glass_onion.utils.series_remove_common_suffixes]
+        - [`series_remove_common_prefixes`][glass_onion.utils.series_remove_common_prefixes]
+        - [`series_normalize`][glass_onion.utils.series_normalize]
+
+    Returns:
+        A pandas.Series with more standardized club names.
+    """
+    result = series_remove_common_suffixes(input)
+    result = series_remove_common_prefixes(result)
+    result = series_normalize(result)
     result = result.str.lower().str.strip()
     return result
 

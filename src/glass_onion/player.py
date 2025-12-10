@@ -79,7 +79,20 @@ class PlayerSyncEngine(SyncEngine):
     See `synchronize_pair()`[glass_onion.player.PlayerSyncEngine.synchronize_pair] for methodology details.
     """
 
-    def __init__(self, content: list[SyncableContent], verbose: bool = False):
+    def __init__(self, content: list[PlayerSyncableContent], verbose: bool = False):
+        """
+        Creates a new `PlayerSyncEngine` object.
+
+        Unlike other `SyncEngine` subclasses, this subclass does not accept any explicit `join_columns`. Player synchronization is a more finicky task than team or match synchronization, and as a result, the columns used in synchronization have to be checked for null values and validity before synchronization can be attempted.
+        In this case, the base set of columns is ["jersey_number", "team_id", "player_name"], but since some providers may not provide a player's jersey number, we remove this column so that the logic in `SyncEngine.synchronize()` does not use it to group, aggregate, and deduplicate results.
+
+        Args:
+            content (list[str], required): a list of `PlayerSyncableContent` objects.
+            verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
+    
+        Returns:
+            a new `TeamSyncEngine` object.
+        """
         join_cols = ["jersey_number", "team_id", "player_name"]
         super().__init__("player", content, join_cols, verbose)
         # check if jersey number is empty / unreliable
@@ -99,7 +112,7 @@ class PlayerSyncEngine(SyncEngine):
                     )
                     break
 
-        assert len(join_cols) > 0
+        assert len(join_cols) > 0, "No join columns remaining to use for aggregation."
         self.join_columns = join_cols
 
     def synchronize_using_layer(
