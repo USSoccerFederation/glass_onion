@@ -59,6 +59,9 @@ def test_synchronize(file_path: str, data_type: str, expected_object_ids: dict[s
         engine_test = MatchSyncEngine(syncables, verbose=False)
     elif data_type == "team":
         engine_test = TeamSyncEngine(syncables, verbose=False)
+    else:
+        raise NotImplementedError(f"SyncEngine subclass not implemented for data_type '{data_type}'")
+
     result = engine_test.synchronize()
 
     # check different ID conditions/expectations
