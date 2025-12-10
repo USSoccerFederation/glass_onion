@@ -18,23 +18,23 @@ class SyncableContent:
 
     def merge(left: "SyncableContent", right: "SyncableContent") -> "SyncableContent":
         """
-        Combine two SyncableContent objects into one by conducting a left-join on the underlying dataframes.
+        Combine two `SyncableContent` objects into one by conducting a left-join on the underlying dataframes.
 
         Notes:
-        - This operation is not in-place and produces a new SyncableContent object. 
-        - This operation is not permitted on SyncableContent objects that do not use the same `data_type`.
+        - This operation is not in-place and produces a new `SyncableContent` object. 
+        - This operation is not permitted on `SyncableContent` objects that do not use the same `data_type`.
         - This operation only moves fields from `right` that are identifiers of the same `data_type` as `left`. Example: if `left` has `data_type` player, the only fields merged from right will be those that contain `_player_id`. 
         - This operation's left-join is done using the `id_field` of `right`, which MUST exist in `left` for the operation to work. 
 
         Args:
-            left (glass_onion.SyncableContent, required): a SyncableContent object.
-            right (glass_onion.SyncableContent, required): a SyncableContent object.
+            left (`glass_onion.SyncableContent`, required): a `SyncableContent` object.
+            right (`glass_onion.SyncableContent`, required): a `SyncableContent` object.
         
         Returns:
-            a new SyncableContent object that uses
+            a new `SyncableContent` object that uses
             - the shared `data_type` of both parent objects
             - the `provider` of `left`
-            - a combined `data` pandas.DataFrame that contains all columns from `right` that are identifiers of the same `data_type` as `left` + all columns from `left`.
+            - a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `data_type` as `left` + all columns from `left`.
         """
         assert left.data_type == right.data_type, f"Left `data_type` ({left.data_type}) does not match Right `data_type` ({right.data_type})."
         assert right.id_field in left.data.columns, f"Right `id_field` ({right.id_field}) not in Left `data` columns."
@@ -91,17 +91,17 @@ class SyncableContent:
 
     def append(left: "SyncableContent", right: Union["SyncableContent", pd.DataFrame]):
         """
-        Combine two SyncableContent objects into one by appending all rows from `right` to the end of `left`.
+        Combine two `SyncableContent` objects into one by appending all rows from `right` to the end of `left`.
 
         Notes:
-        - This operation is in-place and does NOT produce a new SyncableContent object. This method simply returns the adjusted `left` object. 
+        - This operation is in-place and does NOT produce a new `SyncableContent` object. This method simply returns the adjusted `left` object. 
         - If `right` is a `SyncableContent` object, the rows from its `data` dataframe are appended to the end of `left`'s `data` dataframe. If `right` is a `pandas.DataFrame` object, its own rows are appended to the end of `left`'s `data` dataframe.
-        - This operation is not permitted on SyncableContent objects that do not use the same `data_type`.
+        - This operation is not permitted on `SyncableContent` objects that do not use the same `data_type`.
         - If `right` is None, this method is a no-op.
 
         Args:
-            left (glass_onion.SyncableContent, required): a SyncableContent object.
-            right (glass_onion.SyncableContent OR pandas.DataFrame, required): a SyncableContent object or a pandas.DataFrame object.
+            left (`glass_onion.SyncableContent`, required): a `SyncableContent` object.
+            right (`glass_onion.SyncableContent` OR `pandas.DataFrame`, required): a `SyncableContent` object or a pandas.DataFrame object.
         
         Returns:
             `left` but with a `data` pandas.DataFrame that contains all rows from `right` and `left`.
@@ -131,28 +131,101 @@ class SyncableContent:
 
 
 class SyncEngine:
+    """
+    A wrapper around an object type's synchronization process. 
+
+    Given a list of `SyncableContent`, a `SyncEngine` synchronizes one pair of objects at a time (via `SyncEngine.synchronize_pair()`). The results of all pairs are then merged together and deduplicated. 
+    Each object type corresponds to a subclass of SyncEngine that overrides `synchronize_pair()` to define how pairs are synchronized in `synchronize()`, which contains wrapper logic for the entire process.
+
+    There are three distinct layers within `SyncEngine.synchronize()`'s wrapper logic:
+
+    1. The aforementioned sync process that results in a data frame of synced identifiers.
+    2. Collect remaining unsynced rows and run the sync process on those. Append any newly synced rows to the result dataframe from Layer 1.
+    3. Append any remaining unsynced rows to the bottom of the result data frame.
+    
+    This result dataframe is then deduplicated: by default, the result dataframe is grouped by the specific columns defined in `SyncEngine` and the first non-null result is selected for each data provider's identifier field.
+
+    This class should be subclassed for each new object type: see [`PlayerSyncEngine`][`glass_onion.player.PlayerSyncEngine`] for an example.
+    """
     def __init__(
         self,
         data_type: str,
         content: list[SyncableContent],
-        join_columns: list[str] = [],
+        join_columns: list[str],
         verbose: bool = False,
     ):
+        """
+        Create a new `SyncEngine` object.
+
+        Args:
+            data_type (str, required): the object type this `SyncEngine` is working with.
+            content (list[SyncableContent], required): a list of `SyncableContent` objects that correspond to `data_type`.
+            join_columns (list[str], required): a list of columns used to aggregate and deduplicate identifiers
+            verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
+        
+        Returns:
+            a new `SyncEngine` object.
+        """
         self.content = content
         self.data_type = data_type
         self.verbose = verbose
         self.join_columns = join_columns
 
     def verbose_log(self, msg: str):
+        """
+        Helper method to enable verbose logging via `print`. These logs are sent to `stdout` (the default output location of `print`). Logs are also prefixed with a timestamp for easy sorting.
+
+        Args:
+            msg (str, required): a custom log message
+
+        Returns:
+            None
+        """
         if self.verbose:
             print(f"{datetime.now()}: {msg}")
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
     ) -> SyncableContent:
+        """
+        Synchronize two `SyncableContent` objects.
+
+        This method should be overridden for each new object type: see [`PlayerSyncEngine`][`glass_onion.player.PlayerSyncEngine`] for an example.
+
+        Args:
+            input1 (`glass_onion.SyncableContent`, required): a SyncableContent object from `SyncEngine.content`
+            input2 (`glass_onion.SyncableContent`, required): a SyncableContent object from `SyncEngine.content`
+        
+        Returns:
+            a new `SyncableContent` object.
+
+        Raises:
+            `NotImplementedError` if this method is not overridden.
+        """
         raise NotImplementedError()
 
     def synchronize(self) -> SyncableContent:
+        """
+        Synchronizes the full list of `SyncableContent` objects from `SyncEngine.content` using `SyncEngine.synchronize_pair()`.
+
+        There are three distinct layers here:
+
+        1. The aforementioned sync process that results in a data frame of synced identifiers.
+        2. Collect remaining unsynced rows and run the sync process on those. Append any newly synced rows to the result dataframe from Layer 1.
+        3. Append any remaining unsynced rows to the bottom of the result data frame.
+    
+        This result dataframe is then deduplicated: by default, the result dataframe is grouped by `SyncEngine.join_columns` and the first non-null result is selected for each data provider's identifier field.
+
+        The result dataframe is then wrapped in a `SyncableContent` object using the `provider` from the first `SyncableContent` object in `SyncEngine.content`.
+
+        Args:
+            None
+        
+        Returns:
+            - If there are no elements in `SyncEngine.content`, returns a `SyncableContent` object with `SyncEngine.data_type` with `provider` unknown and an empty `pandas.DataFrame`. 
+            - If there's only one element in `SyncEngine.content`, returns that element. 
+            - If there are 2+ elements in `SyncEngine.content`, returns a new `SyncableContent` object with synchronized identifiers based on the `SyncableContent` objects in `SyncEngine.content`.
+        """
         if len(self.content) == 0:
             return SyncableContent(self.data_type, "unknown", pd.DataFrame())
 
@@ -164,7 +237,7 @@ class SyncEngine:
             f"Starting {self.data_type} synchronization across {len(self.content)} datasets"
         )
 
-        self.verbose_log(f"Pass 1: agglomeration")
+        self.verbose_log(f"Layer 1: agglomeration")
         results = []
         for i in range(0, len(self.content) - 1):
             x = self.content[i]
@@ -182,7 +255,7 @@ class SyncEngine:
         )
 
         self.verbose_log(
-            f"Pass 1: Using {self.content[0].provider} as sync basis, found {len(sync_result.data)} total rows and {len(synced.data)} fully synced rows."
+            f"Layer 1: Using {self.content[0].provider} as sync basis, found {len(sync_result.data)} total rows and {len(synced.data)} fully synced rows."
         )
 
         ## second pass: relate remainders to each other
@@ -192,13 +265,13 @@ class SyncEngine:
 
             if len(missing) > 0:
                 self.verbose_log(
-                    f"Pass 2: Aggregating {len(missing)} identified unsynced rows for {c.provider}"
+                    f"Layer 2: Aggregating {len(missing)} identified unsynced rows for {c.provider}"
                 )
                 remainders.append(SyncableContent(self.data_type, c.provider, missing))
 
         if len(remainders) > 1:
             self.verbose_log(
-                f"Pass 2: Agglomeration on remaining unsynced rows across {len(remainders)} datasets"
+                f"Layer 2: Agglomeration on remaining unsynced rows across {len(remainders)} datasets"
             )
             rem_results = []
             for i in range(0, len(remainders) - 1):
@@ -218,7 +291,7 @@ class SyncEngine:
             remainders_result.data.dropna(subset=rem_id_mask, inplace=True)
 
             self.verbose_log(
-                f"Pass 2: Using remainders as sync basis, found {len(remainders_result.data)} new fully synced rows."
+                f"Layer 2: Using remainders as sync basis, found {len(remainders_result.data)} new fully synced rows."
             )
             if len(remainders_result.data) > 0:
                 synced.append(remainders_result)
@@ -229,7 +302,7 @@ class SyncEngine:
             r = c.data[~(c.data[c.id_field].isin(synced.data[c.id_field]))]
             if len(r) > 0:
                 self.verbose_log(
-                    f"Pass 3: Aggregating {len(r)} identified unsynced rows for {c.provider}"
+                    f"Layer 3: Aggregating {len(r)} identified unsynced rows for {c.provider}"
                 )
                 applicable_columns = synced.data.columns[
                     synced.data.columns.isin(c.data.columns)
@@ -245,7 +318,7 @@ class SyncEngine:
 
         if len(remainders) > 0:
             remainder_df = pd.concat(remainders, axis=0)
-            self.verbose_log(f"Pass 3: Including {len(remainder_df)} unsynced rows")
+            self.verbose_log(f"Layer 3: Including {len(remainder_df)} unsynced rows")
             synced.append(remainder_df)
 
         self.verbose_log(
