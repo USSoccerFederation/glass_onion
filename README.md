@@ -29,7 +29,7 @@ Glass Onion aims to do one thing -- synchronizing soccer data object identifiers
 
 Any identifiers _other than the ones being synchronized_ are assumed to be universal across data providers (e.g. `team_id` when synchronizing players).
 
-When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A suggested workflow can be found in the **[integration guide](INTEGRATION.md)**.
+When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A example workflow can be found in the **[integration guide](INTEGRATION.md)**.
 
 ## Installation
 
@@ -95,7 +95,7 @@ This result dataframe is then deduplicated: by default, the result dataframe is 
 2. Account for players with different birth dates across data providers (timezones, human error, etc) by adjusting `birth_date` in one dataset in the pair by -1 to 1 days and/or swapping the month and day, then attempting synchronization using `birth_date`, `team_id`, and a combination of `player_name` and `player_nickname`. This process is then repeated for the other dataset in the pair. 
 3. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with a minimum 75% cosine similarity threshold for player name. Additionally, require that `team_id` is equal for matches that meet the similarity threshold.
 4. Attempt to join remaining records using "naive similarity": looking for normalized parts of one record's `player name` (or `player_nickname`) that exist in another's. Additionally, require that `team_id` is equal for matches found via this method.
-5. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with no minimum cosine similarity threshold for player name. Additionally, require that `team_id` is equal.
+5. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with no minimum cosine similarity threshold. Additionally, require that `team_id` is equal.
 
 ## Contributing
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. More information can be found in the **[contributing guide](CONTRIBUTING.md)**.
