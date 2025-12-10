@@ -25,15 +25,12 @@ class MatchSyncEngine(SyncEngine):
         verbose: bool = False,
     ):
         """
-        Creates a new `MatchSyncEngine` object. Setting `use_competition_context` adds `competition_id` and `season_id` (assumed to be universal across all data providers) to `join_columns`.
+        Creates a new MatchSyncEngine object. Setting `use_competition_context` adds `competition_id` and `season_id` (assumed to be universal across all data providers) to `join_columns`.
 
         Args:
-            content (list[str], required): a list of `MatchSyncableContent` objects.
-            use_competition_context (bool, default: False): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize match identifiers?
-            verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
-
-        Returns:
-            a new `MatchSyncEngine` object.
+            content (list[str]): a list of MatchSyncableContent objects.
+            use_competition_context (bool): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize match identifiers?
+            verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
         self.data_type = "match"
         self.content = content
@@ -58,11 +55,11 @@ class MatchSyncEngine(SyncEngine):
         date_adjustment: pd.Timedelta,
     ) -> pd.DataFrame:
         """
-        Synchronizes two `MatchSyncableContent` objects after adjusting the `match_date` field of `input1` by `date_adjustment`.
+        Synchronizes two MatchSyncableContent objects after adjusting the `match_date` field of `input1` by `date_adjustment`.
 
         Args:
-            input1 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
-            input2 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+            input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
+            input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
             date_adjustment (`pandas.Timedelta`): a time period to adjust `match_date` by for this layer.
         Returns:
             a `pandas.DataFrame` object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
@@ -91,11 +88,11 @@ class MatchSyncEngine(SyncEngine):
         self, input1: SyncableContent, input2: SyncableContent
     ) -> pd.DataFrame:
         """
-        Synchronizes two `MatchSyncableContent` objects using `matchday` instead of `match_date`.
+        Synchronizes two MatchSyncableContent objects using `matchday` instead of `match_date`.
 
         Args:
-            input1 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
-            input2 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+            input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
+            input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
 
         Returns:
             a `pandas.DataFrame` object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
@@ -117,7 +114,7 @@ class MatchSyncEngine(SyncEngine):
         self, input1: SyncableContent, input2: SyncableContent
     ) -> SyncableContent:
         """
-        Synchronizes two `MatchSyncableContent` objects.
+        Synchronizes two MatchSyncableContent objects.
 
         Methodology:
             1. Attempt to join pair using `match_date`, `home_team_id`, and `away_team_id`.
@@ -125,13 +122,13 @@ class MatchSyncEngine(SyncEngine):
             3. Account for matches postponed to a different date outside the [-3, 3] day range by attempting synchronization using `matchday`, `home_team_id`, and `away_team_id` (if `matchday` is available).
 
         Args:
-            input1 (`glass_onion.SyncableContent`, required): a `MatchSyncableContent` object from `MatchSyncEngine.content`
-            input2 (`glass_onion.SyncableContent`, required): a `MatchSyncableContent` object from `MatchSyncEngine.content`
+            input1 (glass_onion.SyncableContent): a MatchSyncableContent object from MatchSyncEngine.Content
+            input2 (glass_onion.SyncableContent): a MatchSyncableContent object from MatchSyncEngine.Content
 
         Returns:
             If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.
             If `input2`'s underlying `data` dataframe is empty, returns `input1` with a column in `input1.data` for `input2.id_field`.
-            If both dataframes are non-empty, returns a new `MatchSyncableContent` object with synchronized identifiers from `input1` and `input2`.
+            If both dataframes are non-empty, returns a new MatchSyncableContent object with synchronized identifiers from `input1` and `input2`.
         """
         if len(input1.data) == 0 and len(input2.data) > 0:
             input2.data[input1.id_field] = pd.NA

@@ -1,0 +1,41 @@
+site_name: Glass Onion v0.1
+site_url: https://kloppy.pysport.org
+repo_url: https://github.com/USSoccerFederation/glass_onion
+repo_name: 'USSoccerFederation/glass_onion'
+edit_uri: blob/main/docs/
+
+theme:
+  name: material
+  font: false
+  language: en
+  palette:
+    scheme: default
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.tracking
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+    - content.tooltips
+    - toc.integrate
+
+plugins:
+- search
+- mkdocstrings
+- autorefs
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Methodology: methodology.md
+  - Integration: integration.md
+  - Reference:
+      - reference/index.md
+      - Engine: reference/engine.md
+      - Match: reference/match.md
+      - Team: reference/team.md
+      - Player: reference/player.md
+      - Utilities: reference/utils.md
+  - Contributing: contributing.md

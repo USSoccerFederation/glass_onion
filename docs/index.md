@@ -1,20 +1,8 @@
-# glass_onion
+# Glass Onion
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/glass_onion.svg)](https://pypi.org/project/glass_onion/)
 ![](https://img.shields.io/github/license/PySport/glass_onion)
 ![](https://img.shields.io/pypi/pyversions/glass_onion)
-
-
-## Table of Contents
-
-- [Summary](#summary)
-- [Installation](#installation)
-- [Documentation](#documentation)
-- [Background](#background)
-- [Methodology](#methodology)
-- [Contributing](#contributing)
-- [License](#license)
-- [Why the name `Glass Onion`?](#why-the-name-glass-onion)
 
 
 ## Summary
@@ -29,7 +17,7 @@ Glass Onion aims to do one thing -- synchronizing soccer data object identifiers
 
 Any identifiers _other than the ones being synchronized_ are assumed to be universal across data providers (e.g. `team_id` when synchronizing players).
 
-When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A example workflow can be found in the **[integration guide](docs/integration.md)**.
+When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A example workflow can be found in the **[integration guide](integration.md)**.
 
 ## Installation
 
@@ -47,11 +35,8 @@ You can also install from GitHub for the latest updates:
 pip install git+https://github.com/USSoccerFederation/glass_onion.git
 ```
 
-For more details, refer to the [installation guide](docs/installation.md).
+For more details, refer to the [installation guide](installation.md).
 
-## Documentation
-
-Please see the [docs](docs/index.md).
 
 ## Background
 
@@ -61,14 +46,14 @@ Our hope is that while we can't solve this problem for any existing clubs (unles
 
 ## Methodology
 
-Please see the [docs](docs/methodology.md).
+Please see the [docs](methodology.md).
 
 ## Contributing
-All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. More information can be found in the **[contributing guide](docs/contributing.md)**.
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. More information can be found in the **[contributing guide](contributing.md)**.
 
 ## License
 
-Glass Onion is distributed under the terms of the [BSD 3 license](LICENSE).
+Glass Onion is distributed under the terms of the [BSD 3 license](../LICENSE).
 
 ## Why the name `Glass Onion`?
 

@@ -53,15 +53,12 @@ class PlayerSyncLayer:
         Creates a new synchronization layer object.
 
         Args:
-            match_methodology (`glass_onion.player.PlayerSyncSimilarityMethod`): see [`PlayerSyncSimilarityMethod`][glass_onion.player.PlayerSyncSimilarityMethod] for options.
+            match_methodology (glass_onion.player.PlayerSyncSimilarityMethod`): see [PlayerSyncSimilarityMethod`][glass_onion.player.PlayerSyncSimilarityMethod] for options.
             date_adjustment (`pandas.Timedelta`): a time period to adjust `birth_date` by for this layer.
             swap_birth_month_day (bool): a flag for if this layer should swap birth day and month
             input_fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity. Possible options for tuple values: `player_name`, `player_nickname`
-            other_equal_fields (list[str]): a list of columns that must be equal between the two `PlayerSyncableContent` datasets in order for an identifier to be synchronized validly.
-            threshold (float): the threshold to use for string similarity when match_methodology is `PlayerSyncSimilarityMethod.COSINE` or `PlayerSyncSimilarityMethod.FUZZY`.
-
-        Returns:
-            a new synchronization layer object.
+            other_equal_fields (list[str]): a list of columns that must be equal between the two PlayerSyncableContent datasets in order for an identifier to be synchronized validly.
+            threshold (float): the threshold to use for string similarity when match_methodology is PlayerSyncSimilarityMethod.COSINE` or PlayerSyncSimilarityMethod.FUZZY`.
         """
         self.title = title
         self.date_adjustment = date_adjustment
@@ -81,17 +78,14 @@ class PlayerSyncEngine(SyncEngine):
 
     def __init__(self, content: list[PlayerSyncableContent], verbose: bool = False):
         """
-        Creates a new `PlayerSyncEngine` object.
+        Creates a new PlayerSyncEngine object.
 
-        Unlike other `SyncEngine` subclasses, this subclass does not accept any explicit `join_columns`. Player synchronization is a more finicky task than team or match synchronization, and as a result, the columns used in synchronization have to be checked for null values and validity before synchronization can be attempted.
+        Unlike other SyncEngine subclasses, this subclass does not accept any explicit `join_columns`. Player synchronization is a more finicky task than team or match synchronization, and as a result, the columns used in synchronization have to be checked for null values and validity before synchronization can be attempted.
         In this case, the base set of columns is ["jersey_number", "team_id", "player_name"], but since some providers may not provide a player's jersey number, we remove this column so that the logic in `SyncEngine.synchronize()` does not use it to group, aggregate, and deduplicate results.
 
         Args:
-            content (list[str], required): a list of `PlayerSyncableContent` objects.
-            verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
-
-        Returns:
-            a new `TeamSyncEngine` object.
+            content (list[str]): a list of PlayerSyncableContent objects.
+            verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
         join_cols = ["jersey_number", "team_id", "player_name"]
         super().__init__("player", content, join_cols, verbose)
@@ -122,17 +116,17 @@ class PlayerSyncEngine(SyncEngine):
         layer: PlayerSyncLayer,
     ) -> pd.DataFrame:
         """
-        Synchronizes two `PlayerSyncableContent` objects using options from `layer` and returns a `pandas.DataFrame` of synchronized identifiers.
+        Synchronizes two PlayerSyncableContent objects using options from `layer` and returns a `pandas.DataFrame` of synchronized identifiers.
 
         This method also prevents the propagation of duplicate synchronized identifiers by ensuring that the resulting dataframe only contains identifiers that are only used once per `input`.
 
         Args:
-            input1 (`glass_onion.player.PlayerSyncableContent`, required): a `PlayerSyncableContent` object.
-            input2 (`glass_onion.player.PlayerSyncableContent`, required): a `PlayerSyncableContent` object.
-            layer (`glass_onion.player.PlayerSyncLayer`, required): a `PlayerSyncLayer` object.
+            input1 (glass_onion.player.PlayerSyncableContent): a PlayerSyncableContent object.
+            input2 (glass_onion.player.PlayerSyncableContent): a PlayerSyncableContent object.
+            layer (glass_onion.player.PlayerSyncLayer`): a PlayerSyncLayer` object.
 
         Returns:
-            a `pandas.DataFrame` object that contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+            pandas.DataFrame: a `pandas.DataFrame` object that contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
         """
         self.verbose_log(
             f"Attempting strategy-based cosine-similarity pair synchronization for inputs {input1.provider} (length {len(input1.data)}) and {input2.provider} (length {len(input2.data)})"
@@ -239,7 +233,7 @@ class PlayerSyncEngine(SyncEngine):
         self, input1: SyncableContent, input2: SyncableContent
     ) -> SyncableContent:
         """
-        Synchronizes two `PlayerSyncableContent` objects.
+        Synchronizes two PlayerSyncableContent objects.
 
         Methodology:
             1. Attempt to join pair using `player_name` with a minimum 75% cosine similarity threshold for player name. Additionally, require that `jersey_number` and `team_id` are equal for matches that meet the similarity threshold.
@@ -249,13 +243,13 @@ class PlayerSyncEngine(SyncEngine):
             5. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with no minimum cosine similarity threshold. Additionally, require that `team_id` is equal.
 
         Args:
-            input1 (`glass_onion.SyncableContent`, required): a `PlayerSyncableContent` object from `PlayerSyncEngine.content`
-            input2 (`glass_onion.SyncableContent`, required): a `PlayerSyncableContent` object from `PlayerSyncEngine.content`
+            input1 (glass_onion.SyncableContent): a PlayerSyncableContent object from PlayerSyncEngine.Content
+            input2 (glass_onion.SyncableContent): a PlayerSyncableContent object from PlayerSyncEngine.Content
 
         Returns:
             If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.
             If `input2`'s underlying `data` dataframe is empty, returns `input1` with a column in `input1.data` for `input2.id_field`.
-            If both dataframes are non-empty, returns a new `PlayerSyncableContent` object with synchronized identifiers from `input1` and `input2`.
+            If both dataframes are non-empty, returns a new PlayerSyncableContent object with synchronized identifiers from `input1` and `input2`.
         """
         if len(input1.data) == 0 and len(input2.data) > 0:
             input2.data[input1.id_field] = pd.NA

@@ -26,15 +26,12 @@ class TeamSyncEngine(SyncEngine):
         verbose: bool = False,
     ):
         """
-        Creates a new `TeamSyncEngine` object. Setting `use_competition_context` adds `competition_id` and `season_id` (assumed to be universal across all data providers) to `join_columns`.
+        Creates a new TeamSyncEngine object. Setting `use_competition_context` adds `competition_id` and `season_id` (assumed to be universal across all data providers) to `join_columns`.
 
         Args:
-            content (list[str], required): a list of `TeamSyncableContent` objects.
-            use_competition_context (bool, default: False): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize team names?
-            verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
-
-        Returns:
-            a new `TeamSyncEngine` object.
+            content (list[str]): a list of TeamSyncableContent objects.
+            use_competition_context (bool): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize team names?
+            verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
         super().__init__(
             "team",
@@ -49,7 +46,7 @@ class TeamSyncEngine(SyncEngine):
         self, input1: SyncableContent, input2: SyncableContent
     ) -> SyncableContent:
         """
-        Synchronizes two `TeamSyncableContent` objects.
+        Synchronizes two TeamSyncableContent objects.
 
         Methodology:
             1. Attempt to join pair simply on `team_name`.
@@ -57,13 +54,13 @@ class TeamSyncEngine(SyncEngine):
             3. For any remaining records, attempt to match via cosine similarity using no minimum similarity threshold.
 
         Args:
-            input1 (`glass_onion.SyncableContent`, required): a `TeamSyncableContent` object from `TeamSyncEngine.content`
-            input2 (`glass_onion.SyncableContent`, required): a `TeamSyncableContent` object from `TeamSyncEngine.content`
+            input1 (glass_onion.SyncableContent): a TeamSyncableContent object from TeamSyncEngine.Content
+            input2 (glass_onion.SyncableContent): a TeamSyncableContent object from TeamSyncEngine.Content
 
         Returns:
             If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.
             If `input2`'s underlying `data` dataframe is empty, returns `input1` with a column in `input1.data` for `input2.id_field`.
-            If both dataframes are non-empty, returns a new `TeamSyncableContent` object with synchronized identifiers from `input1` and `input2`.
+            If both dataframes are non-empty, returns a new TeamSyncableContent object with synchronized identifiers from `input1` and `input2`.
         """
         if len(input1.data) == 0 and len(input2.data) > 0:
             input2.data[input1.id_field] = pd.NA
