@@ -1,7 +1,10 @@
 from functools import reduce
 from datetime import datetime
-from typing import Union
+import re
+from typing import Tuple, Union
 import pandas as pd
+from thefuzz import process
+from glass_onion.utils import apply_cosine_similarity, series_normalize
 
 
 class SyncableContent:
@@ -183,6 +186,164 @@ class SyncEngine:
         """
         if self.verbose:
             print(f"{datetime.now()}: {msg}")
+
+    def synchronize_with_fuzzy_match(
+        self,
+        input1: SyncableContent,
+        input2: SyncableContent,
+        fields: Tuple[str],
+        threshold: float = 0.90,
+    ):
+        name_population = input1.data[fields[0]]
+        normalized_name_population = series_normalize(name_population)
+        name_sample = input2.data[fields[1]]
+        normalized_name_sample = series_normalize(name_sample)
+
+        results = []
+        name_map = {}
+        for j in range(0, len(normalized_name_sample)):
+            i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
+            if i2_raw in name_map.values():
+                continue
+
+            result = process.extractOne(i2_raw, normalized_name_population)
+            if (
+                result
+                and result[1] >= (threshold * 100)
+                and result[0] not in name_map.keys()
+            ):
+                self.verbose_log(f"Logging match: {result[0]} -> {i2_raw}")
+                name_map[result[0]] = i2_raw
+                i = normalized_name_population[
+                    normalized_name_population == result[0]
+                ].index[0]
+                results.append(
+                    {
+                        f"{input1.id_field}": input1.data.loc[
+                            input1.data.index[i], input1.id_field
+                        ],
+                        f"{input2.id_field}": input2.data.loc[
+                            input2.data.index[j], input2.id_field
+                        ],
+                    }
+                )
+                break
+            elif result and result[1] < (threshold * 100):
+                self.verbose_log(
+                    f"not match: {result[0]} -/-> {i2_raw} (similarity: {result[1]} < ({threshold * 100}))"
+                )
+
+        if len(results) == 0:
+            return pd.DataFrame(data=[], columns=[input1.id_field, input2.id_field])
+
+        return pd.DataFrame(results)
+
+    def synchronize_with_cosine_similarity(
+        self,
+        input1: SyncableContent,
+        input2: SyncableContent,
+        input1_field: str,
+        input2_field: str,
+        threshold: float = 0.75,
+    ) -> pd.DataFrame:
+        input1_fields = input1.data[input1_field].reset_index(drop=True)
+        input2_fields = input2.data[input2_field].reset_index(drop=True)
+
+        match_results = apply_cosine_similarity(input1_fields, input2_fields)
+        # print(match_results)
+
+        result = match_results.sort_values(by="similarity", ascending=False)
+        result = result[result.similarity >= threshold]
+        result["similarity_rank"] = result.groupby(["input1", "input2"])[
+            "similarity"
+        ].rank(method="dense", ascending=False)
+        result = result[result.similarity_rank <= 1]
+
+        composite = pd.merge(
+            input1.data[[input1_field, input1.id_field]],
+            result,
+            left_on=input1_field,
+            right_on="input1",
+            how="inner",
+        )
+
+        composite = pd.merge(
+            composite,
+            input2.data[[input2_field, input2.id_field]],
+            left_on="input2",
+            right_on=input2_field,
+            how="inner",
+        )
+
+        return composite
+
+
+    def synchronize_with_naive_match(
+        self, input1: SyncableContent, input2: SyncableContent, fields: Tuple[str]
+    ) -> pd.DataFrame:
+        """
+        Synchronizes two `SyncableContent` objects using the `naive` similarity using the columns provided by the two-tuple `fields`. 
+        
+        Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`. 
+
+        Args:
+            input1 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+            input2 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+            fields (Tuple[str], required): a two-tuple containing the column names to use for player name similarity.
+
+        Returns:
+            a `pandas.DataFrame` object that contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+        """
+
+        assert len(fields) == 2, "Must provide two columns (one from `input1` and one from `input2`) as `fields`."
+        assert fields[0] in input1.data.columns, "First element of `fields` must exist in `input1.data`."
+        assert fields[1] in input2.data.columns, "Second element of `fields` must exist in `input2.data`."
+        assert len(input1.data) > 0 and len(input2.data) > 0, "Both `SyncableContent` objects must be non-empty."
+
+        name_population = input1.data[fields[0]]
+        normalized_name_population = series_normalize(name_population)
+        name_sample = input2.data[fields[1]]
+        normalized_name_sample = series_normalize(name_sample)
+
+        results = []
+        name_map = {}
+        for i in range(0, len(normalized_name_population)):
+            i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
+            if i1_raw in name_map.keys():
+                continue
+
+            for j in range(0, len(normalized_name_sample)):
+                i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
+                if i2_raw in name_map.values():
+                    continue
+
+                i1_set = set(re.split(r"\s+", i1_raw))
+                self.verbose_log(f"Input1 {i}: {i1_raw} -> {i1_set}")
+                i2_set = set(re.split(r"\s+", i2_raw))
+                self.verbose_log(f"Input2 {j}: {i2_raw} -> {i2_set}")
+
+                if len(i1_set.intersection(i2_set)) == len(i2_set) or len(
+                    i2_set.intersection(i1_set)
+                ) == len(i1_set):
+                    # this is a match
+                    self.verbose_log(f"Logging match: {i1_raw} -> {i2_raw}")
+                    name_map[i1_raw] = i2_raw
+                    results.append(
+                        {
+                            f"{input1.id_field}": input1.data.loc[
+                                input1.data.index[i], input1.id_field
+                            ],
+                            f"{input2.id_field}": input2.data.loc[
+                                input2.data.index[j], input2.id_field
+                            ],
+                        }
+                    )
+                    break
+
+        if len(results) == 0:
+            return pd.DataFrame(data=[], columns=[input1.id_field, input2.id_field])
+
+        return pd.DataFrame(results)
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
