@@ -3,17 +3,36 @@ from glass_onion.engine import SyncableContent, SyncEngine
 
 
 class MatchSyncableContent(SyncableContent):
+    """
+    A subclass of SyncableContent to use for match objects.
+    """
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("match", provider, data)
 
 
 class MatchSyncEngine(SyncEngine):
+    """
+    A subclass of SyncEngine to use for match objects.
+
+    See `synchronize_pair()`[glass_onion.player.MatchSyncEngine.synchronize_pair] for methodology details.
+    """
     def __init__(
         self,
-        content: list[SyncableContent],
+        content: list[MatchSyncableContent],
         use_competition_context: bool = False,
         verbose: bool = False,
     ):
+        """
+        Creates a new `MatchSyncEngine` object. Setting `use_competition_context` adds `competition_id` and `season_id` (assumed to be universal across all data providers) to `join_columns`.
+
+        Args:
+            content (list[str], required): a list of `MatchSyncableContent` objects.
+            use_competition_context (bool, default: False): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize match identifiers?
+            verbose (bool, default: False): a flag to verbose logging. This will be `extremely` verbose, allowing new `SyncEngine` developers and those integrating `SyncEngine` into their workflows to see the interactions between different logical layers during synchronization.
+    
+        Returns:
+            a new `MatchSyncEngine` object.
+        """
         self.data_type = "match"
         self.content = content
         self.join_columns = (
@@ -32,61 +51,105 @@ class MatchSyncEngine(SyncEngine):
 
     def synchronize_on_adjusted_dates(
         self,
-        input1_remaining: SyncableContent,
-        input2_remaining: SyncableContent,
+        input1: SyncableContent,
+        input2: SyncableContent,
         date_adjustment: pd.Timedelta,
     ) -> pd.DataFrame:
+        """
+        Synchronizes two `MatchSyncableContent` objects after adjusting the `match_date` field of `input1` by `date_adjustment`.
+
+        Args:
+            input1 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+            input2 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+            date_adjustment (`pandas.Timedelta`): a time period to adjust `match_date` by for this layer.
+        Returns:
+            a `pandas.DataFrame` object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+        """
         self.verbose_log(
-            f"Triggering date adjustment ({date_adjustment}) and sync for inputs {input1_remaining.provider} (length {len(input1_remaining.data)}) and {input2_remaining.provider} (length {len(input2_remaining.data)})"
+            f"Triggering date adjustment ({date_adjustment}) and sync for inputs {input1.provider} (length {len(input1.data)}) and {input2.provider} (length {len(input2.data)})"
         )
-        input1_remaining_adj = input1_remaining.data.copy()
+        input1_remaining_adj = input1.data.copy()
         input1_remaining_adj.match_date = (
             pd.to_datetime(input1_remaining_adj.match_date) + date_adjustment
         ).dt.strftime("%Y-%m-%d")
 
         stage_2 = pd.merge(
-            left=input2_remaining.data,
+            left=input2.data,
             right=input1_remaining_adj,
             on=self.join_columns,
             how="inner",
-        ).dropna(subset=[input1_remaining.id_field, input2_remaining.id_field])
+        ).dropna(subset=[input1.id_field, input2.id_field])
         self.verbose_log(
             f"via date adjustment ({date_adjustment}), found {len(stage_2)} more synced rows"
         )
 
-        return stage_2[[input1_remaining.id_field, input2_remaining.id_field]]
+        return stage_2[[input1.id_field, input2.id_field]]
 
     def synchronize_on_matchday(
-        self, input1_remaining: SyncableContent, input2_remaining: SyncableContent
+        self, input1: SyncableContent, input2: SyncableContent
     ) -> pd.DataFrame:
+        """
+        Synchronizes two `MatchSyncableContent` objects using `matchday` instead of `match_date`.
+
+        Args:
+            input1 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+            input2 (`glass_onion.engine.SyncableContent`, required): a `SyncableContent` object.
+
+        Returns:
+            a `pandas.DataFrame` object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+        """
         temp_join_columns = [
             k.replace("match_date", "matchday") for k in self.join_columns
         ]
-        stage_3 = pd.merge(
-            left=input1_remaining.data,
-            right=input2_remaining.data,
+        result = pd.merge(
+            left=input1.data,
+            right=input2.data,
             on=temp_join_columns,
             how="inner",
-        ).dropna(subset=[input1_remaining.id_field, input2_remaining.id_field])
+        ).dropna(subset=[input1.id_field, input2.id_field])
 
-        self.verbose_log(f"via matchday, found {len(stage_3)} more synced rows")
-        return stage_3[[input1_remaining.id_field, input2_remaining.id_field]]
+        self.verbose_log(f"via matchday, found {len(result)} more synced rows")
+        return result[[input1.id_field, input2.id_field]]
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
     ) -> SyncableContent:
+        """
+        Synchronizes two `MatchSyncableContent` objects.
+
+        Methodology:
+            1. Attempt to join pair using `match_date`, `home_team_id`, and `away_team_id`.
+            2. Account for matches with different dates across data providers (timezones, TV scheduling, etc) by adjusting `match_date` in one dataset in the pair by -3 to 3 days, then attempting synchronization using `match_date`, `home_team_id`, and `away_team_id` again. This process is then repeated for the other dataset in the pair.
+            3. Account for matches postponed to a different date outside the [-3, 3] day range by attempting synchronization using `matchday`, `home_team_id`, and `away_team_id` (if `matchday` is available).
+
+        Args:
+            input1 (`glass_onion.SyncableContent`, required): a `MatchSyncableContent` object from `MatchSyncEngine.content`
+            input2 (`glass_onion.SyncableContent`, required): a `MatchSyncableContent` object from `MatchSyncEngine.content`
+
+        Returns:
+            If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.
+            If `input2`'s underlying `data` dataframe is empty, returns `input1` with a column in `input1.data` for `input2.id_field`.
+            If both dataframes are non-empty, returns a new `MatchSyncableContent` object with synchronized identifiers from `input1` and `input2`.
+        """
+        if len(input1.data) == 0 and len(input2.data) > 0:
+            input2.data[input1.id_field] = pd.NA
+            return input2
+
+        if len(input1.data) > 0 and len(input2.data) == 0:
+            input1.data[input2.id_field] = pd.NA
+            return input1
+
         # first pass: dates are equal
         self.verbose_log(
             f"Attempting pair synchronization for inputs {input1.provider} (length {len(input1.data)}) and {input2.provider} (length {len(input2.data)})"
         )
-        # self.verbose_log(input1.data.columns)
-        # self.verbose_log(input2.data.columns)
+
         sync_result = pd.merge(
             input1.data, input2.data, on=self.join_columns, how="left"
         )
         synced = sync_result.dropna(subset=[input1.id_field, input2.id_field])
 
-        # second pass: dates are off by [-2, 2]
+        # second pass: dates are off by [-3, 3]
         remaining_1 = MatchSyncableContent(
             input1.provider,
             input1.data[~(input1.data[input1.id_field].isin(synced[input1.id_field]))],
