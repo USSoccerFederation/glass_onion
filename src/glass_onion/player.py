@@ -1,3 +1,4 @@
+from enum import Enum
 from functools import reduce
 from itertools import product
 import pandas as pd
@@ -12,12 +13,40 @@ class PlayerSyncableContent(SyncableContent):
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("player", provider, data)
 
+class PlayerSyncSimilarityMethod(Enum):
+    """
+    Used to calculate similarity between player name (or nickname) strings.
+    """
 
-class PlayerSyncStrategy:
+    COSINE = "cosine_similarity"
+    """
+    Use cosine similarity via `apply_cosine_similarity()`[glass_onion.utils.apply_cosine_similarity]. The methodology is explained at https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system.
+    """
+    NAIVE = "naive"
+    """
+    Use 'naive' similarity via `synchronize_using_naive_match()`[glass_onion.player.synchronize_using_naive_match]. TL;DR: split the two player name strings on spaces into sets and consider the intersection of the two sets. See `synchronize_using_naive_match()`[glass_onion.player.synchronize_using_naive_match] for more details.
+    """
+    FUZZY = "fuzzy"
+    """
+    Use fuzzy similarity via `synchronize_on_fuzzy_match()`[glass_onion.player.synchronize_on_fuzzy_match], which is a wrapper around `thefuzz.process()`[thefuzz.process].
+    """
+
+class PlayerSyncLayer:
+    """
+    A helper class that encapsulates a set of synchronization options for player objects.
+
+    Options:
+        - match_methodology (`glass_onion.player.PlayerSyncSimilarityMethod`): see [`PlayerSyncSimilarityMethod`][glass_onion.player.PlayerSyncSimilarityMethod] for options.
+        - date_adjustment (`pandas.Timedelta`): a time period to adjust by `birth_date` for this layer.
+        - swap_birth_month_day (bool): a flag for if this layer should swap birth day and month
+        - input_fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity. Possible options for tuple values: `player_name`, `player_nickname`
+        - other_equal_fields (list[str]): a list of columns that must be equal between the two `PlayerSyncableContent` datasets in order for an identifier to be synchronized validly.
+        - threshold (float): the threshold to use for string similarity when match_methodology is `PlayerSyncSimilarityMethod.COSINE` or `PlayerSyncSimilarityMethod.FUZZY`.
+    """
     def __init__(
         self,
         title: str,
-        match_methodology: str = "cosine_similarity",
+        match_methodology: PlayerSyncSimilarityMethod = PlayerSyncSimilarityMethod.COSINE,
         date_adjustment: Optional[pd.Timedelta] = pd.Timedelta(0),
         swap_birth_month_day: bool = False,
         input_fields: Tuple[str] = ("player_name", "player_name"),
@@ -199,7 +228,7 @@ class PlayerSyncEngine(SyncEngine):
         self,
         input1: SyncableContent,
         input2: SyncableContent,
-        strategy: PlayerSyncStrategy,
+        strategy: PlayerSyncLayer,
     ) -> pd.DataFrame:
         self.verbose_log(
             f"Attempting strategy-based cosine-similarity pair synchronization for inputs {input1.provider} (length {len(input1.data)}) and {input2.provider} (length {len(input2.data)})"
@@ -220,11 +249,11 @@ class PlayerSyncEngine(SyncEngine):
                 pd.to_datetime(input1.data.birth_date) + strategy.date_adjustment
             ).dt.strftime(date_format)
 
-        if strategy.match_methodology == "naive":
+        if strategy.match_methodology == PlayerSyncSimilarityMethod.NAIVE:
             match_result = self.synchronize_using_naive_match(
                 input1, input2, fields=strategy.input_fields
             )
-        elif strategy.match_methodology == "fuzzy":
+        elif strategy.match_methodology == PlayerSyncSimilarityMethod.FUZZY:
             match_result = self.synchronize_on_fuzzy_match(
                 input1,
                 input2,
@@ -323,7 +352,7 @@ class PlayerSyncEngine(SyncEngine):
         sync_result = self.synchronize_using_strategy(
             input1,
             input2,
-            PlayerSyncStrategy(
+            PlayerSyncLayer(
                 title="Layer 1: cosine similarity x jersey number x team",
                 date_adjustment=None,
                 other_equal_fields=["jersey_number", "team_id"],
@@ -362,7 +391,7 @@ class PlayerSyncEngine(SyncEngine):
             for p in input_field_options:
                 birth_date_layers.append(
                     [
-                        PlayerSyncStrategy(
+                        PlayerSyncLayer(
                             title="Layer 2: cosine similarity x birth date x team",
                             date_adjustment=pd.Timedelta(d),
                             input_fields=p,
@@ -372,7 +401,7 @@ class PlayerSyncEngine(SyncEngine):
                 )
                 birth_date_layers.append(
                     [
-                        PlayerSyncStrategy(
+                        PlayerSyncLayer(
                             title="Layer 2: cosine similarity x birth date x team",
                             date_adjustment=pd.Timedelta(d),
                             swap_birth_month_day=True,
@@ -389,7 +418,7 @@ class PlayerSyncEngine(SyncEngine):
 
         # third layer: cosine similarity + team
         sync_strategies += [
-            PlayerSyncStrategy(
+            PlayerSyncLayer(
                 title="Layer 3: cosine similarity x team",
                 date_adjustment=None,
                 input_fields=p,
@@ -400,7 +429,7 @@ class PlayerSyncEngine(SyncEngine):
 
         # fourth layer: take remainders and split normalized strings into sets on whitespace. and check what strings fit into what sets
         sync_strategies += [
-            PlayerSyncStrategy(
+            PlayerSyncLayer(
                 title="Layer 4: naive similarity x team",
                 match_methodology="naive",
                 date_adjustment=None,
@@ -422,7 +451,7 @@ class PlayerSyncEngine(SyncEngine):
             layer5_title = "Layer 5: team"
 
         sync_strategies += [
-            PlayerSyncStrategy(
+            PlayerSyncLayer(
                 title=layer5_title,
                 date_adjustment=None,
                 other_equal_fields=layer5_fields,
