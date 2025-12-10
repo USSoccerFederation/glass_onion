@@ -250,17 +250,21 @@ def apply_cosine_similarity(
     """
     Generates a dataframe of cosine similarity results from two pandas.Series.
 
+    For more technical details on cosine similarity, please see [`TfidfVectorizer`][sklearn.feature_extraction.text.TfidfVectorizer] and [`cosine_similarity`][sklearn.metrics.pairwise.cosine_similarity].
+
+    The methodology behind this implementation can be found at: https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system
+
     Args:
         input1 (pd.Series[str], required): a pandas.Series of strings.
         input2 (pd.Series[str], required): a pandas.Series of strings.
 
     Returns:
-        A pandas.DataFrame object with the following schema:
-            - input1: a string from the `input1` pandas.Series
-            - input1_normalized: the normalized version of the `input1` column
-            - input2: a string from the `input2` pandas.Series
-            - input2_normalized: the normalized version of the `input2` column
-            - similarity (double/float): the cosine similarity score of the normalized strings
+        A pandas.DataFrame object with the following schema
+        - input1: a string from the `input1` pandas.Series.
+        - input1_normalized: the normalized version of the `input1` column.
+        - input2: a string from the `input2` pandas.Series.
+        - input2_normalized: the normalized version of the `input2` column.
+        - similarity (double/float): the cosine similarity score of the normalized strings.
     """
     input1_norm = series_normalize(input1).to_list()
     input2_norm = series_normalize(input2).to_list()
