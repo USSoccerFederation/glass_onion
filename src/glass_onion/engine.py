@@ -235,7 +235,6 @@ class SyncEngine:
         input2_fields = input2.data[input2_field].reset_index(drop=True)
 
         match_results = apply_cosine_similarity(input1_fields, input2_fields)
-        # print(match_results)
 
         result = match_results.sort_values(by="similarity", ascending=False)
         result = result[result.similarity >= threshold]
@@ -459,7 +458,6 @@ class SyncEngine:
                 r_appendable = r[applicable_columns]
                 r_appendable[missing_columns] = pd.NA
                 r_appendable["provider"] = c.provider
-                print(r_appendable)
                 remainders.append(r_appendable)
 
         if len(remainders) > 0:

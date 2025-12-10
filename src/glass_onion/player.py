@@ -157,7 +157,6 @@ class PlayerSyncEngine(SyncEngine):
                 threshold=layer.similarity_threshold,
             )
 
-        # print(match_result)
         actual_available_fields = (
             input1.data.columns[
                 input1.data.columns.isin(layer.other_equal_fields)
@@ -209,13 +208,11 @@ class PlayerSyncEngine(SyncEngine):
             how="left",
             on=input2.id_field,
         )
-        # print(match_result)
 
         synced = match_result.loc[
             (match_result.input1_num == 1) & (match_result.input2_num == 1),
             [input1.id_field, input2.id_field],
         ]
-        # print(synced)
 
         self.verbose_log(
             f"Using strategy-based cosine-similarity pair synchronization, found {len(synced)} new rows"
@@ -278,7 +275,6 @@ class PlayerSyncEngine(SyncEngine):
         )
         synced = sync_result.dropna(subset=[input1.id_field, input2.id_field])
         self.verbose_log(f"Using simple match on jersey/team, found {len(synced)} rows")
-        # print(sync_result)
 
         # `itertools.product` can only be iterated once (https://stackoverflow.com/a/17557923), so turn this into a list
         input_field_options = list(
