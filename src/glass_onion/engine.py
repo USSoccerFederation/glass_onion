@@ -19,45 +19,38 @@ class SyncableContent:
         self.id_field = f"{provider}_{data_type}_id"
         self.data = data
 
-    def merge(left: "SyncableContent", right: "SyncableContent") -> "SyncableContent":
+    def merge(self, right: "SyncableContent") -> "SyncableContent":
         """
         Combine two `SyncableContent` objects into one by conducting a left-join on the underlying dataframes.
 
         Notes:
         - This operation is not in-place and produces a new `SyncableContent` object. 
         - This operation is not permitted on `SyncableContent` objects that do not use the same `data_type`.
-        - This operation only moves fields from `right` that are identifiers of the same `data_type` as `left`. Example: if `left` has `data_type` player, the only fields merged from right will be those that contain `_player_id`. 
-        - This operation's left-join is done using the `id_field` of `right`, which MUST exist in `left` for the operation to work. 
+        - This operation only moves fields from `right` that are identifiers of the same `data_type` as `self`. Example: if `self` has `data_type` player, the only fields merged from right will be those that contain `_player_id`. 
+        - This operation's left-join is done using the `id_field` of `right`, which MUST exist in `self` for the operation to work. 
 
         Args:
-            left (`glass_onion.SyncableContent`, required): a `SyncableContent` object.
             right (`glass_onion.SyncableContent`, required): a `SyncableContent` object.
         
         Returns:
             a new `SyncableContent` object that uses
             - the shared `data_type` of both parent objects
-            - the `provider` of `left`
-            - a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `data_type` as `left` + all columns from `left`.
+            - `self.provider`
+            - a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `data_type` as `self` + all columns from `self.data`.
         """
-        assert left.data_type == right.data_type, f"Left `data_type` ({left.data_type}) does not match Right `data_type` ({right.data_type})."
-        assert right.id_field in left.data.columns, f"Right `id_field` ({right.id_field}) not in Left `data` columns."
+        assert self.data_type == right.data_type, f"Left `data_type` ({self.data_type}) does not match Right `data_type` ({right.data_type})."
+        assert right.id_field in self.data.columns, f"Right `id_field` ({right.id_field}) not in Left `data` columns."
 
         id_mask = right.data.columns[
-            right.data.columns.str.contains(f"_{left.data_type}_id")
+            right.data.columns.str.contains(f"_{self.data_type}_id")
         ]
-        assert len(id_mask) > 0, f"Identifiers for left `data_type` ({left.data_type}) are not in any columns in Right."
+        assert len(id_mask) > 0, f"Identifiers for left `data_type` ({self.data_type}) are not in any columns in Right."
 
-        merged = pd.merge(left.data, right.data[id_mask], how="left", on=right.id_field)
+        merged = pd.merge(self.data, right.data[id_mask], how="left", on=right.id_field)
 
         return SyncableContent(
-            data_type=left.data_type, provider=left.provider, data=merged
+            data_type=self.data_type, provider=self.provider, data=merged
         )
-
-    def merge(self, right: "SyncableContent") -> "SyncableContent":
-        """
-        See [`SyncableContent.merge`][`glass_onion.engine.SyncableContent.merge`] for more details. 
-        """
-        return SyncableContent.merge(self, right)
 
     def transform_provider_fields(self):
         """
@@ -92,7 +85,7 @@ class SyncableContent:
             ]
             self.data.drop(provider_columns, axis=1, inplace=True)
 
-    def append(left: "SyncableContent", right: Union["SyncableContent", pd.DataFrame]):
+    def append(self, right: Union["SyncableContent", pd.DataFrame]) -> "SyncableContent":
         """
         Combine two `SyncableContent` objects into one by appending all rows from `right` to the end of `left`.
 
@@ -103,16 +96,15 @@ class SyncableContent:
         - If `right` is None, this method is a no-op.
 
         Args:
-            left (`glass_onion.SyncableContent`, required): a `SyncableContent` object.
             right (`glass_onion.SyncableContent` OR `pandas.DataFrame`, required): a `SyncableContent` object or a pandas.DataFrame object.
         
         Returns:
-            `left` but with a `data` pandas.DataFrame that contains all rows from `right` and `left`.
+            `self` but with a `data` pandas.DataFrame that contains all rows from `right` and `left`.
         """
         new_data = None
         if right is not None:
             if isinstance(right, SyncableContent):
-                if left.data_type != right.data_type:
+                if self.data_type != right.data_type:
                     return
 
                 new_data = right.data
@@ -121,16 +113,9 @@ class SyncableContent:
                 new_data = right
 
         if new_data is not None:
-            left.data = pd.concat([left.data, new_data], axis=0, ignore_index=True)
+            self.data = pd.concat([self.data, new_data], axis=0, ignore_index=True)
 
-        return left
-
-
-    def append(self, right: Union["SyncableContent", pd.DataFrame]):
-        """
-        See [`SyncableContent.append`][`glass_onion.engine.SyncableContent.append`] for more details. 
-        """
-        return SyncableContent.append(self, right)
+        return self
 
 
 class SyncEngine:
