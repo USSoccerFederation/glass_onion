@@ -143,12 +143,13 @@
 }
 
 
-h1, h2, h3, h4, h5, h6 {
+.md-typeset h1, h2, h3, h4, h5, h6 {
     --md-text-font: "ussf-display"; 
 }
 
 :root {
-  --md-text-font: "ussf-text"; 
+    --md-text-font: "ussf-text"; 
+    --md-header-font: "ussf-display"; 
 }
 
 :root  > * {
@@ -159,10 +160,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .md-header__button.md-logo > img {
     height: 50px;
-}
-
-.md-header__title {
-    margin-left: 0 !important;
 }
 
 .md-typeset .admonition,
