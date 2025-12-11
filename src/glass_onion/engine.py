@@ -35,7 +35,7 @@ class SyncableContent:
             right (glass_onion.SyncableContent): a SyncableContent object.
 
         Returns:
-            SyncableContent: a new object that contains the shared `data_type` of both parent objects, `self.provider`, and a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `data_type` as `self` + all columns from `self.data`.
+            a new object that contains the shared `data_type` of both parent objects, `self.provider`, and a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `data_type` as `self` + all columns from `self.data`.
         """
         assert self.data_type == right.data_type, (
             f"Left `data_type` ({self.data_type}) does not match Right `data_type` ({right.data_type})."
@@ -178,6 +178,23 @@ class SyncEngine:
         fields: Tuple[str],
         threshold: float = 0.90,
     ):
+        """
+        Synchronizes two SyncableContent objects using fuzzy matching similarity using the columns provided by the two-tuple `fields`.
+
+        Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
+
+        See [`thefuzz.process()`](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py) for more details.
+
+        Args:
+            input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
+            input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
+            fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity.
+            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid
+
+        Returns:
+            pandas.DataFrame: contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+        """
+
         name_population = input1.data[fields[0]]
         normalized_name_population = series_normalize(name_population)
         name_sample = input2.data[fields[1]]
@@ -230,6 +247,22 @@ class SyncEngine:
         input2_field: str,
         threshold: float = 0.75,
     ) -> pd.DataFrame:
+        """
+        Synchronizes two SyncableContent objects using cosine similarity and the columns defined in `input1_field` and `input2_field`.
+
+        See [synchronize_with_cosine_similarity()](glass_onion.engine.SyncEngine.synchronize_with_cosine_similarity) for more details.
+
+        Args:
+            input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
+            input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
+            input1_field (str): the column name from `input1` to use for player name similarity.
+            input2_field (str): the column name from `input2` to use for player name similarity.
+            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid.
+
+        Returns:
+            pandas.DataFrame: contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+        """
+
         input1_fields = input1.data[input1_field].reset_index(drop=True)
         input2_fields = input2.data[input2_field].reset_index(drop=True)
 
@@ -344,8 +377,8 @@ class SyncEngine:
         This method should be overridden for each new object type: see [PlayerSyncEngine][glass_onion.player.PlayerSyncEngine] for an example.
 
         Args:
-            input1 (glass_onion.SyncableContent): a SyncableContent object from `SyncEngine.Content
-            input2 (glass_onion.SyncableContent): a SyncableContent object from `SyncEngine.Content
+            input1 (glass_onion.SyncableContent): a SyncableContent object from `SyncEngine.content`
+            input2 (glass_onion.SyncableContent): a SyncableContent object from `SyncEngine.content`
 
         Returns:
             If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.
@@ -353,7 +386,7 @@ class SyncEngine:
             If both dataframes are non-empty, returns a new PlayerSyncableContent object with synchronized identifiers from `input1` and `input2`.
 
         Raises:
-            `NotImplementedError`: if this method is not overridden.
+            NotImplementedError: if this method is not overridden.
         """
         if len(input1.data) == 0 and len(input2.data) > 0:
             input2.data[input1.id_field] = pd.NA
@@ -367,7 +400,7 @@ class SyncEngine:
 
     def synchronize(self) -> SyncableContent:
         """
-        Synchronizes the full list of SyncableContent objects from `SyncEngine.Content using `SyncEngine.synchronize_pair()`.
+        Synchronizes the full list of SyncableContent objects from `SyncEngine.content` using `SyncEngine.synchronize_pair()`.
 
         There are three distinct layers here:
 
@@ -377,12 +410,12 @@ class SyncEngine:
 
         This result dataframe is then deduplicated: by default, the result dataframe is grouped by `SyncEngine.join_columns` and the first non-null result is selected for each data provider's identifier field.
 
-        The result dataframe is then wrapped in a SyncableContent object using the `provider` from the first SyncableContent object in `SyncEngine.Content.
+        The result dataframe is then wrapped in a SyncableContent object using the `provider` from the first SyncableContent object in `SyncEngine.content`.
 
         Returns:
-            * If there are no elements in `SyncEngine.Content, returns a SyncableContent object with `SyncEngine.data_type` with `provider` unknown and an empty `pandas.DataFrame`.
-            * If there's only one element in `SyncEngine.Content, returns that element.
-            * If there are 2+ elements in `SyncEngine.Content, returns a new SyncableContent object with synchronized identifiers based on the SyncableContent objects in `SyncEngine.Content.
+            * If there are no elements in `SyncEngine.content`, returns a SyncableContent object with `SyncEngine.data_type` with `provider` unknown and an empty `pandas.DataFrame`.
+            * If there's only one element in `SyncEngine.content`, returns that element.
+            * If there are 2+ elements in `SyncEngine.content`, returns a new SyncableContent object with synchronized identifiers based on the SyncableContent objects in `SyncEngine.content`.
         """
         if len(self.content) == 0:
             return SyncableContent(self.data_type, "unknown", pd.DataFrame())

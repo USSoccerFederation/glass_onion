@@ -122,8 +122,8 @@ class MatchSyncEngine(SyncEngine):
             3. Account for matches postponed to a different date outside the [-3, 3] day range by attempting synchronization using `matchday`, `home_team_id`, and `away_team_id` (if `matchday` is available).
 
         Args:
-            input1 (glass_onion.SyncableContent): a MatchSyncableContent object from MatchSyncEngine.Content
-            input2 (glass_onion.SyncableContent): a MatchSyncableContent object from MatchSyncEngine.Content
+            input1 (glass_onion.SyncableContent): a MatchSyncableContent object from `MatchSyncEngine.content`
+            input2 (glass_onion.SyncableContent): a MatchSyncableContent object from `MatchSyncEngine.content`
 
         Returns:
             If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.

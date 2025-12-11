@@ -243,8 +243,8 @@ class PlayerSyncEngine(SyncEngine):
             5. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with no minimum cosine similarity threshold. Additionally, require that `team_id` is equal.
 
         Args:
-            input1 (glass_onion.SyncableContent): a PlayerSyncableContent object from PlayerSyncEngine.Content
-            input2 (glass_onion.SyncableContent): a PlayerSyncableContent object from PlayerSyncEngine.Content
+            input1 (glass_onion.SyncableContent): a PlayerSyncableContent object from `PlayerSyncEngine.content`
+            input2 (glass_onion.SyncableContent): a PlayerSyncableContent object from `PlayerSyncEngine.content`
 
         Returns:
             If `input1`'s underlying `data` dataframe is empty, returns `input2` with a column in `input2.data` for `input1.id_field`.
