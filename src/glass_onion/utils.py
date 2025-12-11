@@ -273,7 +273,7 @@ def apply_cosine_similarity(
     """
     Generates a dataframe of cosine similarity results from two pandas.Series.
 
-    For more technical details on cosine similarity, please see [`TfidfVectorizer`](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html) and [`cosine_similarity`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html).
+    For more technical details on cosine similarity, please see [`sklearn.feature_extraction.text.TfidfVectorizer`](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html) and [`sklearn.metrics.pairwise.cosine_similarity`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html).
 
     The methodology behind this implementation can be found at: https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system
 
