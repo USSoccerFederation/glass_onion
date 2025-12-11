@@ -49,7 +49,9 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent / "fixtures"
         ),
     ],
 )
-def test_synchronize(file_path: str, data_type: str, expected_object_ids: dict[str, str]):
+def test_synchronize(
+    file_path: str, data_type: str, expected_object_ids: dict[str, str]
+):
     dataset = pd.read_csv(FIXTURE_DATA_PATH / data_type / file_path)
 
     syncables = utils_create_syncables(dataset, data_type)
@@ -60,7 +62,9 @@ def test_synchronize(file_path: str, data_type: str, expected_object_ids: dict[s
     elif data_type == "team":
         engine_test = TeamSyncEngine(syncables, verbose=False)
     else:
-        raise NotImplementedError(f"SyncEngine subclass not implemented for data_type '{data_type}'")
+        raise NotImplementedError(
+            f"SyncEngine subclass not implemented for data_type '{data_type}'"
+        )
 
     result = engine_test.synchronize()
 
@@ -69,7 +73,9 @@ def test_synchronize(file_path: str, data_type: str, expected_object_ids: dict[s
         player_data = result.data
         for provider, provider_id in expected_ids.items():
             if provider_id is None:
-                player_data = player_data[player_data[f"{provider}_{data_type}_id"].isna()]
+                player_data = player_data[
+                    player_data[f"{provider}_{data_type}_id"].isna()
+                ]
             else:
                 player_data = player_data[
                     player_data[f"{provider}_{data_type}_id"] == provider_id
