@@ -10,7 +10,7 @@ There are three distinct layers within `synchronize()`'s wrapper logic:
 
 This result dataframe is then deduplicated: by default, the result dataframe is grouped by the specific columns defined in SyncEngine and the first non-null result is selected for each data provider's identifier field. 
 
-### Match
+## Match
 
 **NOTE**: Match synchronization can be also done using competition context (IE: columns `competition_id` and `season_id`, which are assumed to already be synchronized across providers) via `use_competition_context`.
 
@@ -18,7 +18,7 @@ This result dataframe is then deduplicated: by default, the result dataframe is 
 2. Account for matches with different dates across data providers (timezones, TV scheduling, etc) by adjusting `match_date` in one dataset in the pair by -3 to 3 days, then attempting synchronization using `match_date`, `home_team_id`, and `away_team_id` again. This process is then repeated for the other dataset in the pair.
 3. Account for matches postponed to a different date outside the [-3, 3] day range by attempting synchronization using `matchday`, `home_team_id`, and `away_team_id`.
 
-### Team
+## Team
 
 **NOTE**: Team synchronization can be also done using competition context (IE: columns `competition_id` and `season_id`, which are assumed to already be synchronized across providers) via `use_competition_context`.
 
@@ -26,7 +26,7 @@ This result dataframe is then deduplicated: by default, the result dataframe is 
 2. With remaining records, attempt to match via cosine similarity using a minimum threshold of 75% similarity.
 3. For any remaining records, attempt to match via cosine similarity using no minimum similarity threshold.
 
-### Player
+## Player
 
 **NOTE**: `PlayerSyncEngine` ignores syncable columns that have unreliable data (IE: NULLs/NAs in `jersey_number` or `birth_date`). The process below describes the best-case scenario. Please set `verbose_log=True` when creating a `PlayerSyncEngine` instance to see the full synchronization process.
 

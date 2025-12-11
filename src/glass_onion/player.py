@@ -22,15 +22,15 @@ class PlayerSyncSimilarityMethod(Enum):
 
     COSINE = "cosine_similarity"
     """
-    Use cosine similarity via `synchronize_with_cosine_similarity()`[glass_onion.engine.synchronize_with_cosine_similarity]. The methodology is explained at https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system.
+    Use cosine similarity via [`synchronize_with_cosine_similarity()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_cosine_similarity). The methodology is explained at [https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system](https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system).
     """
     NAIVE = "naive"
     """
-    Use 'naive' similarity via `synchronize_with_naive_match()`[glass_onion.engine.synchronize_with_naive_match]. TL;DR: split the two player name strings on spaces into sets and consider the intersection of the two sets. See `synchronize_using_naive_match()`[glass_onion.player.synchronize_using_naive_match] for more details.
+    Use 'naive' similarity via [`synchronize_with_naive_match()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_naive_match). TL;DR: split the two player name strings on spaces into sets and consider the intersection of the two sets. See [`synchronize_with_naive_match()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_naive_match) for more details.
     """
     FUZZY = "fuzzy"
     """
-    Use fuzzy similarity via `synchronize_with_fuzzy_match()`[glass_onion.engine.synchronize_with_fuzzy_match], which is a wrapper around `thefuzz.process()`[thefuzz.process].
+    Use fuzzy similarity via [`synchronize_with_fuzzy_match()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_fuzzy_match), which is a wrapper around [`thefuzz.process()`](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py).
     """
 
 
@@ -53,8 +53,8 @@ class PlayerSyncLayer:
         Creates a new synchronization layer object.
 
         Args:
-            match_methodology (glass_onion.player.PlayerSyncSimilarityMethod`): see [PlayerSyncSimilarityMethod`][glass_onion.player.PlayerSyncSimilarityMethod] for options.
-            date_adjustment (`pandas.Timedelta`): a time period to adjust `birth_date` by for this layer.
+            match_methodology (glass_onion.player.PlayerSyncSimilarityMethod): see [PlayerSyncSimilarityMethod][glass_onion.player.PlayerSyncSimilarityMethod] for options.
+            date_adjustment (pandas.Timedelta): a time period to adjust `birth_date` by for this layer.
             swap_birth_month_day (bool): a flag for if this layer should swap birth day and month
             input_fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity. Possible options for tuple values: `player_name`, `player_nickname`
             other_equal_fields (list[str]): a list of columns that must be equal between the two PlayerSyncableContent datasets in order for an identifier to be synchronized validly.
