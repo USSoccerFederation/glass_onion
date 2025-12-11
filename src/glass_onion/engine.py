@@ -250,7 +250,7 @@ class SyncEngine:
         """
         Synchronizes two SyncableContent objects using cosine similarity and the columns defined in `input1_field` and `input2_field`.
 
-        See [synchronize_with_cosine_similarity()](glass_onion.engine.SyncEngine.synchronize_with_cosine_similarity) for more details.
+        See [`synchronize_with_cosine_similarity()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_cosine_similarity) for more details.
 
         Args:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
