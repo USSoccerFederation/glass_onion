@@ -6,10 +6,13 @@ edit_uri: blob/main/docs/
 
 theme:
   name: material
+  logo: assets/img/USSF-Primary.svg
+  favicon: assets/img/USSF-Primary.svg
   font: false
   language: en
   palette:
     scheme: default
+    primary: custom
   features:
     - navigation.tabs
     - navigation.indexes
@@ -39,3 +42,6 @@ nav:
       - Player: reference/player.md
       - Utilities: reference/utils.md
   - Contributing: contributing.md
+
+extra_css:
+  - stylesheets/extra.css
