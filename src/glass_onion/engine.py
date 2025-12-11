@@ -192,7 +192,7 @@ class SyncEngine:
             threshold (float): the minimum similarity threshold that a match must be in order to be considered valid
 
         Returns:
-            pandas.DataFrame: contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+            pandas.DataFrame: a `pandas.DataFrame` object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
         """
 
         name_population = input1.data[fields[0]]
