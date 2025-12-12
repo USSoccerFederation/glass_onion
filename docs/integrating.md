@@ -118,6 +118,7 @@ Once we have a preliminary set of synchronized identifiers (the "preliminary set
 ```
 
 Then, for each data provider (say, Provider A) in the list:
+
 1. Rows with instances of existing non-null identifiers for Provider A from the "knockout list" are removed from the "preliminary set" (IE: they are "knocked out").
 2. We group the set of remaining synchronized identifiers by Provider A's identifiers.
 3. In each group, we find the first non-null identifier for every other data provider (say, B through Z). _However_, if we find multiple identifiers in a group for, say, Provider B, we set provider B's identifier to NULL instead.
@@ -264,7 +265,7 @@ for k in data_providers:
 
 ## Step 4: Flagging Duplicates
 
-Our "knockout" logic 
+
 
 
 ## Step 5: Data Formatting
