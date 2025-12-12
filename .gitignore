@@ -8,3 +8,5 @@ scratch/**
 !scratch/README.md
 .ruff_cache
 site/
+*/.DS_Store
+.DS_Store
