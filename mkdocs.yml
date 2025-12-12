@@ -43,7 +43,7 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Methodology: methodology.md
-  - Integration: integration.md
+  - "Integrating Glass Onion": integrating.md
   - Datasets: datasets.md
   - Reference:
       - reference/index.md
