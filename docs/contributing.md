@@ -12,12 +12,12 @@ All code changes happen through Pull Requests. If you would like to contribute, 
 the project and make changes:
 
 1. Fork the repo and create your branch from `main`.
-2. Make code changes to fix a bug/add features
+2. Make code changes to fix a bug or add features.
 3. If you have added new code, add test(s) which cover the changes you have made. If you have updated existing code, 
 verify that the existing tests cover the changes you have made and add/modify tests if needed. Add docstrings if necessary.
-4. Ensure that tests pass.
+4. Ensure that tests pass using `uv run pytest tests` (or, if you're in VSCode, using the built-in Testing tab).
 5. Ensure that your code conforms to the coding standard by executing the command `uv run ruff format` prior to committing your code. 
-6. Ensure that any documentation is updated in `docs/`. See [Documentation](#documentation) below.
+6. Ensure that any relevant documentation is updated in `docs/` and in docstrings across the project. See [Documentation](#documentation) below.
 7. Commit your code and create your Pull Request. Please specify in your Pull Request what change you have made and 
 please specify if it relates to any existing issues.  
 
