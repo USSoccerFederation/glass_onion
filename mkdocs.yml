@@ -34,6 +34,7 @@ nav:
   - Installation: installation.md
   - Methodology: methodology.md
   - Integration: integration.md
+  - Datasets: datasets.md
   - Reference:
       - reference/index.md
       - Engine: reference/engine.md
