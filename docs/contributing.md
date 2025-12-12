@@ -14,17 +14,16 @@ the project and make changes:
 1. Fork the repo and create your branch from `main`.
 2. Make code changes to fix a bug/add features
 3. If you have added new code, add test(s) which cover the changes you have made. If you have updated existing code, 
-verify that the existing tests cover the changes you have made and add/modify tests if needed.
+verify that the existing tests cover the changes you have made and add/modify tests if needed. Add docstrings if necessary.
 4. Ensure that tests pass.
-5. Ensure that your code conforms to the coding standard by either using the git hook (see instructions below) or by 
-executing the command `uv run ruff format` prior to committing your code. 
-6. Commit your code and create your Pull Request. Please specify in your Pull Request what change you have made and 
+5. Ensure that your code conforms to the coding standard by executing the command `uv run ruff format` prior to committing your code. 
+6. Ensure that any documentation is updated in `docs/`. See [Documentation](#documentation) below.
+7. Commit your code and create your Pull Request. Please specify in your Pull Request what change you have made and 
 please specify if it relates to any existing issues.  
 
 ## Project Setup
 
 After you have forked the code and cloned it to your machine, run `uv sync` to install all dependencies (for the package and for development). `uv` will also maintain a virtual environment for you automatically.
-
 
 ## Code Formatting
 
@@ -32,7 +31,7 @@ This project uses the `ruff` code formatter to ensure all code conforms to a spe
 
 ## Documentation
 
-This project uses [MkDocs](https://www.mkdocs.org/) to generate documentation from pages written in Markdown.
+This project uses [MkDocs](https://www.mkdocs.org/) to generate documentation from pages written in Markdown in `docs/`.
 
 To build docs locally:
 
@@ -41,4 +40,6 @@ To build docs locally:
 uv run mkdocs serve
 ```
 
-Open up [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser to preview your documentation.
+Open up [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser to preview your documentation. 
+
+This project uses [`mkdocstrings`](https://mkdocstrings.github.io/python/usage/customization/) to auto-generate documentation from classes and functions. Please add/update docstrings where necessary so that relevant documentation also gets added/updated.

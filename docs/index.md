@@ -53,7 +53,7 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 
 ## License
 
-Glass Onion is distributed under the terms of the [BSD 3 license](../LICENSE).
+Glass Onion is distributed under the terms of the [BSD 3 license](https://github.com/USSoccerFederation/glass_onion/blob/main/LICENSE).
 
 ## Why the name `Glass Onion`?
 
