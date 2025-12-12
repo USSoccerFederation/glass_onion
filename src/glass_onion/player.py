@@ -22,15 +22,15 @@ class PlayerSyncSimilarityMethod(Enum):
 
     COSINE = "cosine_similarity"
     """
-    Use cosine similarity via [`synchronize_with_cosine_similarity()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_cosine_similarity). The methodology is explained at [https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system](https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system).
+    Use cosine similarity via [synchronize_with_cosine_similarity][glass_onion.engine.SyncEngine.synchronize_with_cosine_similarity]. The methodology is explained at [https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system](https://unravelsports.com/post.html?id=2022-07-11-player-id-matching-system).
     """
     NAIVE = "naive"
     """
-    Use 'naive' similarity via [`synchronize_with_naive_match()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_naive_match). TL;DR: split the two player name strings on spaces into sets and consider the intersection of the two sets. See [`synchronize_with_naive_match()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_naive_match) for more details.
+    Use 'naive' similarity via [synchronize_with_naive_match][glass_onion.engine.SyncEngine.synchronize_with_naive_match]. TL;DR: split the two player name strings on spaces into sets and consider the intersection of the two sets.
     """
     FUZZY = "fuzzy"
     """
-    Use fuzzy similarity via [`synchronize_with_fuzzy_match()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_fuzzy_match), which is a wrapper around [`thefuzz.process()`](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py).
+    Use fuzzy similarity via [synchronize_with_fuzzy_match][glass_onion.engine.SyncEngine.synchronize_with_fuzzy_match], which is a wrapper around [`thefuzz.process()`](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py).
     """
 
 

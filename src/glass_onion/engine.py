@@ -183,16 +183,16 @@ class SyncEngine:
 
         Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
 
-        See [`thefuzz.process()`](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py) for more details.
+        See [thefuzz.process()](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py) for more details.
 
         Args:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
             input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
             fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity.
-            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid
+            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid.
 
         Returns:
-            pandas.DataFrame: a `pandas.DataFrame` object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+            (pandas.DataFrame): a pandas.DataFrame object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
         """
 
         name_population = input1.data[fields[0]]
@@ -250,7 +250,7 @@ class SyncEngine:
         """
         Synchronizes two SyncableContent objects using cosine similarity and the columns defined in `input1_field` and `input2_field`.
 
-        See [`synchronize_with_cosine_similarity()`](/engine/#glass_onion.engine.SyncEngine.synchronize_with_cosine_similarity) for more details.
+        See [apply_cosine_similarity][glass_onion.utils.apply_cosine_similarity] for more details on implementation.
 
         Args:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
@@ -307,7 +307,7 @@ class SyncEngine:
             fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity.
 
         Returns:
-            pandas.DataFrame: a `pandas.DataFrame` object that contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
+            pandas.DataFrame: contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
         """
 
         assert len(fields) == 2, (
