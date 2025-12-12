@@ -19,6 +19,8 @@ Any identifiers _other than the ones being synchronized_ are assumed to be unive
 
 When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A example workflow can be found in the **[integration guide](integration.md)**.
 
+**Please note**: this package simply combines common synchronization techniques to get the closest match for two objects from different data providers. The _accuracy_ of these matches is not necessarily guaranteed. Please review matches for accuracy (either as part of your pipeline or manually).
+
 ## Installation
 
 The source code is hosted on GitHub at: [https://github.com/USSoccerFederation/glass_onion](https://github.com/USSoccerFederation/glass_onion).
