@@ -1,4 +1,4 @@
-# Integration
+# Integrating Glass Onion
 
 When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. Provided below is an abridged and generalized version of the data pipeline that powers our (US Soccer) unified data schema. This is not meant to be the canonical implementation pathway -- just an example based on our environment and needs. Please let us know if you see ways in which we can improve this document (and therefore our implementation)!
 
