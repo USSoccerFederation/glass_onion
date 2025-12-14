@@ -99,7 +99,7 @@ def test_syncablecontent_merge_missing_right_id_column_in_left():
         )
     )
 
-    with pytest.raises(match=re.escape("Right `id_field` (provider_b_object_id) not in Left `data` columns.")):
+    with pytest.raises(AssertionError, match=re.escape("Right `id_field` (provider_b_object_id) not in Left `data` columns.")):
         left.merge(right)
 
 def test_syncablecontent_merge_happy_path():
@@ -237,7 +237,7 @@ def test_syncablecontent_append_syncablecontent_disjoint_object_types():
         )
     )
 
-    with pytest.raises(match=re.escape("Left `object_type` (object) does not match Right `object_type` (object2).")):
+    with pytest.raises(AssertionError, re.escape("Left `object_type` (object) does not match Right `object_type` (object2).")):
         left.merge(right)
 
 
