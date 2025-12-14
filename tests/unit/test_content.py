@@ -237,7 +237,7 @@ def test_syncablecontent_append_syncablecontent_disjoint_object_types():
         )
     )
 
-    with pytest.raises(AssertionError, re.escape("Left `object_type` (object) does not match Right `object_type` (object2).")):
+    with pytest.raises(AssertionError, match=re.escape("Left `object_type` (object) does not match Right `object_type` (object2).")):
         left.merge(right)
 
 
