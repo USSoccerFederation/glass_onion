@@ -1,15 +1,14 @@
 name: Report a sync error
-description: Flag an improprerly synced identifier in one of our datasets.
+description: Flag an improprerly synced identifier(s) in one of our public datasets.
 title: "[Sync Error]: "
 labels: ["sync-error"]
-assignees:
-  - octocat
+
 type: bug
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
+        Thanks for taking the time to report issues with our datasets! Ensuring that these identifiers are accurate makes these public resources as useful and reliable as possible for analysis.
   - type: input
     id: contact
     attributes:
@@ -18,47 +17,47 @@ body:
       placeholder: ex. email@example.com
     validations:
       required: false
-  - type: textarea
-    id: what-happened
-    attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
-    validations:
-      required: true
   - type: dropdown
-    id: version
+    id: competition
     attributes:
-      label: Version
-      description: What version of our software are you running?
+      label: Competition
+      description: Which competition had data sync error(s)?
       options:
-        - 1.0.2 (Default)
-        - 1.0.3 (Edge)
+        - Major League Soccer (MLS)
+        - National Women's Soccer League (NWSL)
+        - USL Super League
       default: 0
     validations:
       required: true
   - type: dropdown
-    id: browsers
+    id: season
     attributes:
-      label: What browsers are you seeing the problem on?
-      multiple: true
+      label: Season
+      description: Which season had data sync error(s)?
       options:
-        - Firefox
-        - Chrome
-        - Safari
-        - Microsoft Edge
+        - 2025
+      default: 0
+    validations:
+      required: true
+  - type: dropdown
+    id: dataset
+    attributes:
+      label: Dataset
+      description: Which dataset had data sync error(s)?
+      options:
+        - Player
+        - Team
+        - Match
+      default: 0
+    validations:
+      required: true
   - type: textarea
-    id: logs
+    id: details
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
-      render: shell
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com).
-      options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
+      label: Relevant corrections
+      description: |
+        Please explain what corrections need to be made, including:
+          - What object needs an update? (Player Name, Match Date/Teams, Team Name)
+          - Which provider's ID needs to be updated? What does it need to be updated to?
+    validations:
+      required: true
