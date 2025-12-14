@@ -155,6 +155,8 @@ class SyncEngine:
             join_columns (list[str]): a list of columns used to aggregate and deduplicate identifiers
             verbose (bool, optional): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
+        assert all([isinstance(c, SyncableContent) for c in content]), "One or more objects in `content` is not a `SyncableContent` object."
+
         self.content = content
         self.data_type = data_type
         self.verbose = verbose
@@ -193,6 +195,19 @@ class SyncEngine:
         Returns:
             (pandas.DataFrame): a pandas.DataFrame object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
         """
+
+        assert len(fields) == 2, (
+            "Must provide two columns (one from `input1` and one from `input2`) as `fields`."
+        )
+        assert fields[0] in input1.data.columns, (
+            "First element of `fields` must exist in `input1.data`."
+        )
+        assert fields[1] in input2.data.columns, (
+            "Second element of `fields` must exist in `input2.data`."
+        )
+        assert len(input1.data) > 0 and len(input2.data) > 0, (
+            "Both SyncableContent objects must be non-empty."
+        )
 
         name_population = input1.data[fields[0]]
         normalized_name_population = series_normalize(name_population)
@@ -242,28 +257,41 @@ class SyncEngine:
         self,
         input1: SyncableContent,
         input2: SyncableContent,
-        input1_field: str,
-        input2_field: str,
+        fields: Tuple[str, str],
         threshold: float = 0.75,
     ) -> pd.DataFrame:
         """
-        Synchronizes two SyncableContent objects using cosine similarity and the columns defined in `input1_field` and `input2_field`.
+        Synchronizes two SyncableContent objects using cosine similarity and the columns provided by the two-tuple `fields`.
+
+        Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
 
         See [apply_cosine_similarity][glass_onion.utils.apply_cosine_similarity] for more details on implementation.
 
         Args:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
             input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
-            input1_field (str): the column name from `input1` to use for player name similarity.
-            input2_field (str): the column name from `input2` to use for player name similarity.
+            fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity.
             threshold (float): the minimum similarity threshold that a match must be in order to be considered valid.
 
         Returns:
             pandas.DataFrame: contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
         """
 
-        input1_fields = input1.data[input1_field].reset_index(drop=True)
-        input2_fields = input2.data[input2_field].reset_index(drop=True)
+        assert len(fields) == 2, (
+            "Must provide two columns (one from `input1` and one from `input2`) as `fields`."
+        )
+        assert fields[0] in input1.data.columns, (
+            "First element of `fields` must exist in `input1.data`."
+        )
+        assert fields[1] in input2.data.columns, (
+            "Second element of `fields` must exist in `input2.data`."
+        )
+        assert len(input1.data) > 0 and len(input2.data) > 0, (
+            "Both SyncableContent objects must be non-empty."
+        )
+
+        input1_fields = input1.data[fields[0]].reset_index(drop=True)
+        input2_fields = input2.data[fields[1]].reset_index(drop=True)
 
         match_results = apply_cosine_similarity(input1_fields, input2_fields)
 
@@ -275,18 +303,18 @@ class SyncEngine:
         result = result[result.similarity_rank <= 1]
 
         composite = pd.merge(
-            input1.data[[input1_field, input1.id_field]],
+            input1.data[[fields[0], input1.id_field]],
             result,
-            left_on=input1_field,
+            left_on=fields[0],
             right_on="input1",
             how="inner",
         )
 
         composite = pd.merge(
             composite,
-            input2.data[[input2_field, input2.id_field]],
+            input2.data[[fields[1], input2.id_field]],
             left_on="input2",
-            right_on=input2_field,
+            right_on=fields[1],
             how="inner",
         )
 

@@ -93,8 +93,7 @@ class TeamSyncEngine(SyncEngine):
             cosine_results = self.synchronize_with_cosine_similarity(
                 remaining_1,
                 remaining_2,
-                input1_field="team_name",
-                input2_field="team_name",
+                fields=("team_name", "team_name"),
             )
 
             if len(cosine_results) > 0:
@@ -141,8 +140,7 @@ class TeamSyncEngine(SyncEngine):
             cosine_results = self.synchronize_with_cosine_similarity(
                 remaining_1,
                 remaining_2,
-                input1_field="team_name",
-                input2_field="team_name",
+                fields=("team_name", "team_name"),
                 threshold=0.0,
             )
 

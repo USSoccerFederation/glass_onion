@@ -162,8 +162,7 @@ class PlayerSyncEngine(SyncEngine):
             match_result = self.synchronize_with_cosine_similarity(
                 input1,
                 input2,
-                input1_field=layer.input_fields[0],
-                input2_field=layer.input_fields[1],
+                fields=layer.input_fields,
                 threshold=layer.similarity_threshold,
             )
 
