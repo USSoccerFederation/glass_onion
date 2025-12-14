@@ -32,7 +32,7 @@ class MatchSyncEngine(SyncEngine):
             use_competition_context (bool): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize match identifiers?
             verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
-        self.data_type = "match"
+        self.object_type = "match"
         self.content = content
         self.join_columns = (
             [

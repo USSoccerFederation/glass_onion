@@ -9,15 +9,15 @@ from glass_onion.utils import apply_cosine_similarity, series_normalize
 
 class SyncableContent:
     """
-    The underlying unit of the synchronization logic. This class is just a wrapper for the dataframe being synchronized, providing some context on the object type (`data_type`) being synchronized and the provider from which the data is sourced.
+    The underlying unit of the synchronization logic. This class is just a wrapper for the dataframe being synchronized, providing some context on the object type (`object_type`) being synchronized and the provider from which the data is sourced.
 
     This class should be subclassed for each new object type: see [PlayerSyncableContent][glass_onion.player.PlayerSyncableContent] for an example.
     """
 
-    def __init__(self, data_type: str, provider: str, data: pd.DataFrame):
-        self.data_type = data_type
+    def __init__(self, object_type: str, provider: str, data: pd.DataFrame):
+        self.object_type = object_type
         self.provider = provider
-        self.id_field = f"{provider}_{data_type}_id"
+        self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
     def merge(self, right: "SyncableContent") -> "SyncableContent":
@@ -27,41 +27,41 @@ class SyncableContent:
         Notes:
 
         * This operation is not in-place and produces a new SyncableContent object.
-        * This operation is not permitted on SyncableContent objects that do not use the same `data_type`.
-        * This operation only moves fields from `right` that are identifiers of the same `data_type` as `self`. Example: if `self` has `data_type` player, the only fields merged from right will be those that contain `_player_id`.
+        * This operation is not permitted on SyncableContent objects that do not use the same `object_type`.
+        * This operation only moves fields from `right` that are identifiers of the same `object_type` as `self`. Example: if `self` has `object_type` player, the only fields merged from right will be those that contain `_player_id`.
         * This operation's left-join is done using the `id_field` of `right`, which MUST exist in `self` for the operation to work.
 
         Args:
             right (glass_onion.SyncableContent): a SyncableContent object.
 
         Returns:
-            a new object that contains the shared `data_type` of both parent objects, `self.provider`, and a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `data_type` as `self` + all columns from `self.data`.
+            a new object that contains the shared `object_type` of both parent objects, `self.provider`, and a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `object_type` as `self` + all columns from `self.data`.
         """
-        assert self.data_type == right.data_type, (
-            f"Left `data_type` ({self.data_type}) does not match Right `data_type` ({right.data_type})."
+        assert self.object_type == right.object_type, (
+            f"Left `object_type` ({self.object_type}) does not match Right `object_type` ({right.object_type})."
         )
         assert right.id_field in self.data.columns, (
             f"Right `id_field` ({right.id_field}) not in Left `data` columns."
         )
 
         id_mask = right.data.columns[
-            right.data.columns.str.contains(f"_{self.data_type}_id")
+            right.data.columns.str.contains(f"_{self.object_type}_id")
         ]
         assert len(id_mask) > 0, (
-            f"Identifiers for left `data_type` ({self.data_type}) are not in any columns in Right."
+            f"Identifiers for left `object_type` ({self.object_type}) are not in any columns in Right."
         )
 
         merged = pd.merge(self.data, right.data[id_mask], how="left", on=right.id_field)
 
         return SyncableContent(
-            data_type=self.data_type, provider=self.provider, data=merged
+            object_type=self.object_type, provider=self.provider, data=merged
         )
 
     def transform_provider_fields(self):
         """
         In certain workflows, it may be useful to have dataframes that use a unified schema to store identifiers from different data providers.
 
-        For `data_type` player, this schema might look something like:
+        For `object_type` player, this schema might look something like:
 
         * data_provider
         * provider_player_id
@@ -76,7 +76,7 @@ class SyncableContent:
         This method is an in-place operation. If a `provider_*_id` field and a `data_provider`/`provider` method are found, the above cleaning steps will be applied.
         If only one or neither are found, then no cleaning will be applied.
         """
-        provider_data_field = f"provider_{self.data_type}_id"
+        provider_data_field = f"provider_{self.object_type}_id"
         if (
             "data_provider" in self.data.columns or "provider" in self.data.columns
         ) and (provider_data_field in self.data.columns):
@@ -96,7 +96,7 @@ class SyncableContent:
 
         * This operation is in-place and does NOT produce a new SyncableContent object. This method simply returns the adjusted `left` object.
         * If `right` is a SyncableContent object, the rows from its `data` dataframe are appended to the end of `left`'s `data` dataframe. If `right` is a `pandas.DataFrame` object, its own rows are appended to the end of `left`'s `data` dataframe.
-        * This operation is not permitted on SyncableContent objects that do not use the same `data_type`.
+        * This operation is not permitted on SyncableContent objects that do not use the same `object_type`.
         * If `right` is None, this method is a no-op.
 
         Args:
@@ -108,7 +108,7 @@ class SyncableContent:
         new_data = None
         if right is not None:
             if isinstance(right, SyncableContent):
-                assert self.data_type == right.data_type, f"Right data_type {right.data_type} does not match target data_type {self.data_type}"
+                assert self.object_type == right.object_type, f"Right object_type {right.object_type} does not match target object_type {self.object_type}"
 
                 new_data = right.data
 
@@ -141,7 +141,7 @@ class SyncEngine:
 
     def __init__(
         self,
-        data_type: str,
+        object_type: str,
         content: list[SyncableContent],
         join_columns: list[str],
         verbose: bool = False,
@@ -150,15 +150,15 @@ class SyncEngine:
         Create a new SyncEngine object.
 
         Args:
-            data_type (str): the object type this SyncEngine is working with.
-            content (list[SyncableContent]): a list of SyncableContent objects that correspond to `data_type`.
+            object_type (str): the object type this SyncEngine is working with.
+            content (list[SyncableContent]): a list of SyncableContent objects that correspond to `object_type`.
             join_columns (list[str]): a list of columns used to aggregate and deduplicate identifiers
             verbose (bool, optional): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
         assert all([isinstance(c, SyncableContent) for c in content]), "One or more objects in `content` is not a `SyncableContent` object."
 
         self.content = content
-        self.data_type = data_type
+        self.object_type = object_type
         self.verbose = verbose
         self.join_columns = join_columns
 
@@ -440,19 +440,19 @@ class SyncEngine:
         The result dataframe is then wrapped in a SyncableContent object using the `provider` from the first SyncableContent object in `SyncEngine.content`.
 
         Returns:
-            * If there are no elements in `SyncEngine.content`, returns a SyncableContent object with `SyncEngine.data_type` with `provider` unknown and an empty `pandas.DataFrame`.
+            * If there are no elements in `SyncEngine.content`, returns a SyncableContent object with `SyncEngine.object_type` with `provider` unknown and an empty `pandas.DataFrame`.
             * If there's only one element in `SyncEngine.content`, returns that element.
             * If there are 2+ elements in `SyncEngine.content`, returns a new SyncableContent object with synchronized identifiers based on the SyncableContent objects in `SyncEngine.content`.
         """
         if len(self.content) == 0:
-            return SyncableContent(self.data_type, "unknown", pd.DataFrame())
+            return SyncableContent(self.object_type, "unknown", pd.DataFrame())
 
         if len(self.content) == 1:
             return self.content[0]
 
         # first pass: straight matching - approach: agglomerative
         self.verbose_log(
-            f"Starting {self.data_type} synchronization across {len(self.content)} datasets"
+            f"Starting {self.object_type} synchronization across {len(self.content)} datasets"
         )
 
         self.verbose_log(f"Layer 1: agglomeration")
@@ -467,7 +467,7 @@ class SyncEngine:
         id_mask = list(map(lambda x: x.id_field, self.content))
 
         synced = SyncableContent(
-            self.data_type,
+            self.object_type,
             self.content[0].provider,
             sync_result.data.dropna(subset=id_mask),
         )
@@ -485,7 +485,7 @@ class SyncEngine:
                 self.verbose_log(
                     f"Layer 2: Aggregating {len(missing)} identified unsynced rows for {c.provider}"
                 )
-                remainders.append(SyncableContent(self.data_type, c.provider, missing))
+                remainders.append(SyncableContent(self.object_type, c.provider, missing))
 
         if len(remainders) > 1:
             self.verbose_log(

@@ -11,7 +11,7 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
 
 
 @pytest.mark.parametrize(
-    "file_path, data_type, expected_object_ids",
+    "file_path, object_type, expected_object_ids",
     [
         # base case
         (
@@ -50,20 +50,20 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
     ],
 )
 def test_synchronize(
-    file_path: str, data_type: str, expected_object_ids: dict[str, str]
+    file_path: str, object_type: str, expected_object_ids: dict[str, str]
 ):
-    dataset = pd.read_csv(FIXTURE_DATA_PATH / data_type / file_path)
+    dataset = pd.read_csv(FIXTURE_DATA_PATH / object_type / file_path)
 
-    syncables = utils_create_syncables(dataset, data_type)
-    if data_type == "player":
+    syncables = utils_create_syncables(dataset, object_type)
+    if object_type == "player":
         engine_test = PlayerSyncEngine(syncables, verbose=False)
-    elif data_type == "match":
+    elif object_type == "match":
         engine_test = MatchSyncEngine(syncables, verbose=False)
-    elif data_type == "team":
+    elif object_type == "team":
         engine_test = TeamSyncEngine(syncables, verbose=False)
     else:
         raise NotImplementedError(
-            f"SyncEngine subclass not implemented for data_type '{data_type}'"
+            f"SyncEngine subclass not implemented for object_type '{object_type}'"
         )
 
     result = engine_test.synchronize()
@@ -74,11 +74,11 @@ def test_synchronize(
         for provider, provider_id in expected_ids.items():
             if provider_id is None:
                 player_data = player_data[
-                    player_data[f"{provider}_{data_type}_id"].isna()
+                    player_data[f"{provider}_{object_type}_id"].isna()
                 ]
             else:
                 player_data = player_data[
-                    player_data[f"{provider}_{data_type}_id"] == provider_id
+                    player_data[f"{provider}_{object_type}_id"] == provider_id
                 ]
 
         assert len(player_data) == 1
