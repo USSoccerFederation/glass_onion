@@ -33,6 +33,7 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences
   - pymdownx.details
+  - pymdownx.tasklist
 
 plugins:
 - search

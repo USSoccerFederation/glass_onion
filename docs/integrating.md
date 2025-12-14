@@ -11,6 +11,7 @@ In our pipeline, each object type depends on a "higher-order" object type to hav
 ## Start: Provider-specific object tables
 
 Our goal with this pipeline should be to take an object's provider-specific tables and generate one "source of truth" table for that object with identifiers we can use across our systems. To achieve that vision, this final table must meet a few different criteria:
+
 - [ ] Does not include duplicate rows or duplicate identifiers
 - [ ] Contains the most accurate metadata for a given object
 - [ ] Object identifiers are durable and unique so that they can be used reliably across our systems
@@ -23,9 +24,11 @@ We collect data from the provider-specific tables into a single Spark DataFrame 
 - Any object-specific columns to use for synchronization
 - A grouping key (More on this in [Step 2](#step-2-glass-onion-synchronization))
 
-Here's how this might look like in code for player synchronization:
+Here's what this might look like in code for player synchronization:
 
 ```python
+from functools import reduce
+
 ## Notes:
 ## - ussf.competition_match and ussf.team are "higher-order" unified tables that assist us in synchronizing player identifiers.
 ## - provider_a.player_match contains data on a player performance in a given match. The primary key for this table is match_id + player_id.
@@ -34,6 +37,7 @@ prov_a = spark.sql(
 """
     SELECT 
         um.match_id,
+        'provider_a' AS data_provider,
         pm.player_id AS provider_player_id,
         pm.jersey_number, 
         pm.player_name, 
@@ -48,6 +52,29 @@ prov_a = spark.sql(
         ON pm.team_id = ut.provider_a_team_id
 """
 )
+
+# ... and so on for other providers ...
+
+all_remaining_records = (
+    reduce(
+        lambda a, b: a.union(b), [
+            prov_a, # ... other providers ...
+        ]
+    )
+    .select(
+        "match_id", 
+        "provider_player_id",
+        "data_provider", 
+        "jersey_number",
+        "player_name",
+        "player_nickname", 
+        "birth_date",
+        "team_id", 
+        "player_gender",
+    )
+)
+# display(all_remaining_player_matches)
+
 ```
 
 
@@ -138,6 +165,27 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
         result.data[missing_columns] = pd.NA
 
     return result.data[skeleton.columns.to_list()]
+```
+
+With these prerequisites in place, we can actually run `GroupedData.applyInPandas(func, schema)`:
+
+```python
+all_synced_records = (
+    all_remaining_records
+        .groupBy("grouping_key")
+        .applyInPandas(synchronize, target_schema)
+)
+
+(
+    all_synced_records
+        .write
+        .mode("overwrite")
+        .option("mergeSchema", "true")
+        .format("delta")
+        .saveAsTable("preliminary_set") # more on this below
+)
+
+display(all_synced_records)
 ```
 
 ## Step 3: "Knockout" Logic
