@@ -20,6 +20,9 @@ class SyncableContent:
         self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
+        assert data is not None, f"Field `data` can not be null"
+        assert self.id_field in self.data.columns, f"Field `{self.id_field}` must be available as a column in `data`"
+
     def merge(self, right: "SyncableContent") -> "SyncableContent":
         """
         Combine two SyncableContent objects into one by conducting a left-join on the underlying dataframes.
@@ -37,6 +40,9 @@ class SyncableContent:
         Returns:
             a new object that contains the shared `object_type` of both parent objects, `self.provider`, and a combined `data` `pandas.DataFrame` that contains all columns from `right` that are identifiers of the same `object_type` as `self` + all columns from `self.data`.
         """
+        if right is None:
+            return self
+
         assert self.object_type == right.object_type, (
             f"Left `object_type` ({self.object_type}) does not match Right `object_type` ({right.object_type})."
         )
@@ -47,9 +53,6 @@ class SyncableContent:
         id_mask = right.data.columns[
             right.data.columns.str.contains(f"_{self.object_type}_id")
         ]
-        assert len(id_mask) > 0, (
-            f"Identifiers for left `object_type` ({self.object_type}) are not in any columns in Right."
-        )
 
         merged = pd.merge(self.data, right.data[id_mask], how="left", on=right.id_field)
 
@@ -57,34 +60,6 @@ class SyncableContent:
             object_type=self.object_type, provider=self.provider, data=merged
         )
 
-    def transform_provider_fields(self):
-        """
-        In certain workflows, it may be useful to have dataframes that use a unified schema to store identifiers from different data providers.
-
-        For `object_type` player, this schema might look something like:
-
-        * data_provider
-        * provider_player_id
-        * player_name
-        * (any other fields)
-
-        This method cleans up dataframes shaped this way for use in other SyncableContent operations by:
-
-        * converting `provider_*_id` fields in the dataframe to use `SyncableContent.provider`.
-        * removing the `data_provider` (or `provider`) column.
-
-        This method is an in-place operation. If a `provider_*_id` field and a `data_provider`/`provider` method are found, the above cleaning steps will be applied.
-        If only one or neither are found, then no cleaning will be applied.
-        """
-        provider_data_field = f"provider_{self.object_type}_id"
-        if (
-            "data_provider" in self.data.columns or "provider" in self.data.columns
-        ) and (provider_data_field in self.data.columns):
-            self.data.rename({provider_data_field: self.id_field}, axis=1, inplace=True)
-            provider_columns = self.data.columns[
-                self.data.columns.isin(["data_provider", "provider"])
-            ]
-            self.data.drop(provider_columns, axis=1, inplace=True)
 
     def append(
         self, right: Union["SyncableContent", pd.DataFrame]
@@ -109,7 +84,7 @@ class SyncableContent:
         if right is not None:
             if isinstance(right, SyncableContent):
                 assert self.object_type == right.object_type, (
-                    f"Right object_type {right.object_type} does not match target object_type {self.object_type}"
+                    f"Left `object_type` ({self.object_type}) does not match Right `object_type` ({right.object_type})."
                 )
 
                 new_data = right.data
