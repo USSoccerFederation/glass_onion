@@ -108,7 +108,9 @@ class SyncableContent:
         new_data = None
         if right is not None:
             if isinstance(right, SyncableContent):
-                assert self.object_type == right.object_type, f"Right object_type {right.object_type} does not match target object_type {self.object_type}"
+                assert self.object_type == right.object_type, (
+                    f"Right object_type {right.object_type} does not match target object_type {self.object_type}"
+                )
 
                 new_data = right.data
 
@@ -155,7 +157,9 @@ class SyncEngine:
             join_columns (list[str]): a list of columns used to aggregate and deduplicate identifiers
             verbose (bool, optional): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
-        assert all([isinstance(c, SyncableContent) for c in content]), "One or more objects in `content` is not a `SyncableContent` object."
+        assert all([isinstance(c, SyncableContent) for c in content]), (
+            "One or more objects in `content` is not a `SyncableContent` object."
+        )
 
         self.content = content
         self.object_type = object_type
@@ -485,7 +489,9 @@ class SyncEngine:
                 self.verbose_log(
                     f"Layer 2: Aggregating {len(missing)} identified unsynced rows for {c.provider}"
                 )
-                remainders.append(SyncableContent(self.object_type, c.provider, missing))
+                remainders.append(
+                    SyncableContent(self.object_type, c.provider, missing)
+                )
 
         if len(remainders) > 1:
             self.verbose_log(

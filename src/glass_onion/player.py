@@ -300,27 +300,23 @@ class PlayerSyncEngine(SyncEngine):
             and len(input2.data[input2.data["birth_date"].notna()]) == len(input2.data)
         ):
             for p in input_field_options:
-                sync_strategies += (
-                    [
-                        PlayerSyncLayer(
-                            title="Layer 2: cosine similarity x birth date x team",
-                            date_adjustment=pd.Timedelta(d),
-                            input_fields=p,
-                        )
-                        for d in range(-1, 1)
-                    ]
-                )
-                sync_strategies += (
-                    [
-                        PlayerSyncLayer(
-                            title="Layer 2: cosine similarity x birth date x team",
-                            date_adjustment=pd.Timedelta(d),
-                            swap_birth_month_day=True,
-                            input_fields=p,
-                        )
-                        for d in range(-1, 1)
-                    ]
-                )
+                sync_strategies += [
+                    PlayerSyncLayer(
+                        title="Layer 2: cosine similarity x birth date x team",
+                        date_adjustment=pd.Timedelta(d),
+                        input_fields=p,
+                    )
+                    for d in range(-1, 1)
+                ]
+                sync_strategies += [
+                    PlayerSyncLayer(
+                        title="Layer 2: cosine similarity x birth date x team",
+                        date_adjustment=pd.Timedelta(d),
+                        swap_birth_month_day=True,
+                        input_fields=p,
+                    )
+                    for d in range(-1, 1)
+                ]
         else:
             self.verbose_log(
                 "Skipping birth date matching strategies because `birth_date` field is not reliable"
