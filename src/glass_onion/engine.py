@@ -21,7 +21,9 @@ class SyncableContent:
         self.data = data
 
         assert data is not None, f"Field `data` can not be null"
-        assert self.id_field in self.data.columns, f"Field `{self.id_field}` must be available as a column in `data`"
+        assert self.id_field in self.data.columns, (
+            f"Field `{self.id_field}` must be available as a column in `data`"
+        )
 
     def merge(self, right: "SyncableContent") -> "SyncableContent":
         """
@@ -59,7 +61,6 @@ class SyncableContent:
         return SyncableContent(
             object_type=self.object_type, provider=self.provider, data=merged
         )
-
 
     def append(
         self, right: Union["SyncableContent", pd.DataFrame]
@@ -132,8 +133,21 @@ class SyncEngine:
             join_columns (list[str]): a list of columns used to aggregate and deduplicate identifiers
             verbose (bool, optional): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
+        assert isinstance(content, list), (
+            "`content` must be a list of SyncableContent objects."
+        )
+        assert len(content) > 0, "`content` can not be empty"
         assert all([isinstance(c, SyncableContent) for c in content]), (
-            "One or more objects in `content` is not a `SyncableContent` object."
+            "One or more objects in `content` are not `SyncableContent` objects."
+        )
+
+        assert object_type is not None, "`object_type` can not be NULL"
+        assert len(object_type.strip()) > 0, (
+            "`object_type` can not be empty or just whitespace"
+        )
+
+        assert all([c.object_type == object_type for c in content]), (
+            "One or more `SyncableContent` objects in `content` do not match `SyncEngine.object_type`."
         )
 
         self.content = content
