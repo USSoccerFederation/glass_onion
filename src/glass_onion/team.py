@@ -21,7 +21,7 @@ class TeamSyncEngine(SyncEngine):
 
     def __init__(
         self,
-        content: list[TeamSyncableContent],
+        content: list[SyncableContent],
         use_competition_context: bool = False,
         verbose: bool = False,
     ):
@@ -29,7 +29,7 @@ class TeamSyncEngine(SyncEngine):
         Creates a new TeamSyncEngine object. Setting `use_competition_context` adds `competition_id` and `season_id` (assumed to be universal across all data providers) to `join_columns`.
 
         Args:
-            content (list[str]): a list of TeamSyncableContent objects.
+            content (list[str]): a list of SyncableContent objects.
             use_competition_context (bool): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize team names?
             verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """

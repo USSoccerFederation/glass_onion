@@ -310,8 +310,8 @@ def apply_cosine_similarity(
 
     match_results = []
     for r, c in zip(row_idx, col_idx):
-        i1_raw = input1[input1.index[c]]
-        i2_raw = input2[input2.index[r]]
+        i1_raw = input1.loc[input1.index[c]]
+        i2_raw = input2.loc[input2.index[r]]
 
         i1_norm = input1_norm[c]
         i2_norm = input2_norm[r]

@@ -7,7 +7,7 @@ import pytest
 from glass_onion.team import TeamSyncEngine
 from tests.utils import utils_create_syncables
 
-FIXTURE_DATA_PATH = Path(__file__).resolve().parent / "fixtures"
+FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
 
 
 @pytest.mark.parametrize(

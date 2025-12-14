@@ -1,7 +1,7 @@
 from functools import reduce
 from datetime import datetime
 import re
-from typing import Optional, Tuple, Union
+from typing import Any, Tuple, Union
 import pandas as pd
 from thefuzz import process
 from glass_onion.utils import apply_cosine_similarity, series_normalize
@@ -108,8 +108,7 @@ class SyncableContent:
         new_data = None
         if right is not None:
             if isinstance(right, SyncableContent):
-                if self.data_type != right.data_type:
-                    return
+                assert self.data_type == right.data_type, f"Right data_type {right.data_type} does not match target data_type {self.data_type}"
 
                 new_data = right.data
 
@@ -161,12 +160,12 @@ class SyncEngine:
         self.verbose = verbose
         self.join_columns = join_columns
 
-    def verbose_log(self, msg: str):
+    def verbose_log(self, msg: Any):
         """
         Helper method to enable verbose logging via `print()`. These logs are sent to `stdout` (the default output location of `print()`). Logs are also prefixed with a timestamp for easy sorting.
 
         Args:
-            msg (str): a custom log message
+            msg (Any): any string-serializable object
         """
         if self.verbose:
             print(f"{datetime.now()}: {msg}")
@@ -175,7 +174,7 @@ class SyncEngine:
         self,
         input1: SyncableContent,
         input2: SyncableContent,
-        fields: Tuple[str],
+        fields: Tuple[str, str],
         threshold: float = 0.90,
     ):
         """
@@ -188,7 +187,7 @@ class SyncEngine:
         Args:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
             input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
-            fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity.
+            fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity.
             threshold (float): the minimum similarity threshold that a match must be in order to be considered valid.
 
         Returns:
@@ -201,7 +200,7 @@ class SyncEngine:
         normalized_name_sample = series_normalize(name_sample)
 
         results = []
-        name_map = {}
+        name_map: dict[str, str] = {}
         for j in range(0, len(normalized_name_sample)):
             i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
             if i2_raw in name_map.values():
@@ -294,7 +293,7 @@ class SyncEngine:
         return composite
 
     def synchronize_with_naive_match(
-        self, input1: SyncableContent, input2: SyncableContent, fields: Tuple[str]
+        self, input1: SyncableContent, input2: SyncableContent, fields: Tuple[str, str]
     ) -> pd.DataFrame:
         """
         Synchronizes two SyncableContent objects using the `naive` similarity using the columns provided by the two-tuple `fields`.
@@ -304,7 +303,7 @@ class SyncEngine:
         Args:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
             input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
-            fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity.
+            fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity.
 
         Returns:
             pandas.DataFrame: contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
@@ -329,7 +328,7 @@ class SyncEngine:
         normalized_name_sample = series_normalize(name_sample)
 
         results = []
-        name_map = {}
+        name_map: dict[str, str] = {}
         for i in range(0, len(normalized_name_population)):
             i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
             if i1_raw in name_map.keys():
@@ -488,7 +487,7 @@ class SyncEngine:
                 synced.append(remainders_result)
 
         ## third pass: add remainders to end
-        remainders = []
+        remainder_dfs = []
         for c in self.content:
             r = c.data[~(c.data[c.id_field].isin(synced.data[c.id_field]))]
             if len(r) > 0:
@@ -504,10 +503,10 @@ class SyncEngine:
                 r_appendable = r[applicable_columns]
                 r_appendable[missing_columns] = pd.NA
                 r_appendable["provider"] = c.provider
-                remainders.append(r_appendable)
+                remainder_dfs.append(r_appendable)
 
-        if len(remainders) > 0:
-            remainder_df = pd.concat(remainders, axis=0)
+        if len(remainder_dfs) > 0:
+            remainder_df = pd.concat(remainder_dfs, axis=0)
             self.verbose_log(f"Layer 3: Including {len(remainder_df)} unsynced rows")
             synced.append(remainder_df)
 

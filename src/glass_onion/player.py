@@ -45,7 +45,7 @@ class PlayerSyncLayer:
         match_methodology: PlayerSyncSimilarityMethod = PlayerSyncSimilarityMethod.COSINE,
         date_adjustment: Optional[pd.Timedelta] = pd.Timedelta(0),
         swap_birth_month_day: bool = False,
-        input_fields: Tuple[str] = ("player_name", "player_name"),
+        input_fields: Tuple[str, str] = ("player_name", "player_name"),
         other_equal_fields: list[str] = ["birth_date", "team_id"],
         threshold: float = 0.75,
     ):
@@ -56,7 +56,7 @@ class PlayerSyncLayer:
             match_methodology (glass_onion.player.PlayerSyncSimilarityMethod): see [PlayerSyncSimilarityMethod][glass_onion.player.PlayerSyncSimilarityMethod] for options.
             date_adjustment (pandas.Timedelta): a time period to adjust `birth_date` by for this layer.
             swap_birth_month_day (bool): a flag for if this layer should swap birth day and month
-            input_fields (Tuple[str]): a two-tuple containing the column names to use for player name similarity. Possible options for tuple values: `player_name`, `player_nickname`
+            input_fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity. Possible options for tuple values: `player_name`, `player_nickname`
             other_equal_fields (list[str]): a list of columns that must be equal between the two PlayerSyncableContent datasets in order for an identifier to be synchronized validly.
             threshold (float): the threshold to use for string similarity when match_methodology is PlayerSyncSimilarityMethod.COSINE` or PlayerSyncSimilarityMethod.FUZZY`.
         """
@@ -76,7 +76,7 @@ class PlayerSyncEngine(SyncEngine):
     See `synchronize_pair()`[glass_onion.player.PlayerSyncEngine.synchronize_pair] for methodology details.
     """
 
-    def __init__(self, content: list[PlayerSyncableContent], verbose: bool = False):
+    def __init__(self, content: list[SyncableContent], verbose: bool = False):
         """
         Creates a new PlayerSyncEngine object.
 
@@ -84,7 +84,7 @@ class PlayerSyncEngine(SyncEngine):
         In this case, the base set of columns is ["jersey_number", "team_id", "player_name"], but since some providers may not provide a player's jersey number, we remove this column so that the logic in `SyncEngine.synchronize()` does not use it to group, aggregate, and deduplicate results.
 
         Args:
-            content (list[str]): a list of PlayerSyncableContent objects.
+            content (list[str]): a list of SyncableContent objects.
             verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
         join_cols = ["jersey_number", "team_id", "player_name"]
@@ -300,9 +300,8 @@ class PlayerSyncEngine(SyncEngine):
             and "birth_date" in input2.data.columns
             and len(input2.data[input2.data["birth_date"].notna()]) == len(input2.data)
         ):
-            birth_date_layers = []
             for p in input_field_options:
-                birth_date_layers.append(
+                sync_strategies += (
                     [
                         PlayerSyncLayer(
                             title="Layer 2: cosine similarity x birth date x team",
@@ -312,7 +311,7 @@ class PlayerSyncEngine(SyncEngine):
                         for d in range(-1, 1)
                     ]
                 )
-                birth_date_layers.append(
+                sync_strategies += (
                     [
                         PlayerSyncLayer(
                             title="Layer 2: cosine similarity x birth date x team",
@@ -323,7 +322,6 @@ class PlayerSyncEngine(SyncEngine):
                         for d in range(-1, 1)
                     ]
                 )
-            sync_strategies += reduce(lambda x, y: (x + y), birth_date_layers, [])
         else:
             self.verbose_log(
                 "Skipping birth date matching strategies because `birth_date` field is not reliable"
@@ -344,7 +342,7 @@ class PlayerSyncEngine(SyncEngine):
         sync_strategies += [
             PlayerSyncLayer(
                 title="Layer 4: naive similarity x team",
-                match_methodology="naive",
+                match_methodology=PlayerSyncSimilarityMethod.NAIVE,
                 date_adjustment=None,
                 input_fields=p,
                 other_equal_fields=["team_id"],

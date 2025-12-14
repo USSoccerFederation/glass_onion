@@ -20,7 +20,7 @@ class MatchSyncEngine(SyncEngine):
 
     def __init__(
         self,
-        content: list[MatchSyncableContent],
+        content: list[SyncableContent],
         use_competition_context: bool = False,
         verbose: bool = False,
     ):
@@ -28,7 +28,7 @@ class MatchSyncEngine(SyncEngine):
         Creates a new MatchSyncEngine object. Setting `use_competition_context` adds `competition_id` and `season_id` (assumed to be universal across all data providers) to `join_columns`.
 
         Args:
-            content (list[str]): a list of MatchSyncableContent objects.
+            content (list[str]): a list of SyncableContent objects.
             use_competition_context (bool): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize match identifiers?
             verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
@@ -220,14 +220,14 @@ class MatchSyncEngine(SyncEngine):
             self.verbose_log(
                 f"Attempting matchday pair synchronization for inputs {remaining_1.provider} (length {len(remaining_1.data)}) and {remaining_2.provider} (length {len(remaining_2.data)})"
             )
-            result = self.synchronize_on_matchday(remaining_1, remaining_2)
+            result_df = self.synchronize_on_matchday(remaining_1, remaining_2)
             self.verbose_log(
-                f"Via matchday pair synchronization for inputs, found {len(result)} new rows"
+                f"Via matchday pair synchronization for inputs, found {len(result_df)} new rows"
             )
 
-            if len(result) > 0:
+            if len(result_df) > 0:
                 sync_result = pd.merge(
-                    sync_result, result, on=input1.id_field, how="left"
+                    sync_result, result_df, on=input1.id_field, how="left"
                 )
 
                 sync_result.loc[

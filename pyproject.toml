@@ -12,7 +12,7 @@ dependencies = [
     "pandas>=2.3.3",
     "scikit-learn>=1.7.2",
     "thefuzz>=0.22.1",
-    "unidecode>=1.4.0"
+    "unidecode>=1.4.0",
 ]
 
 [build-system]
@@ -25,6 +25,38 @@ dev = [
     "mkdocs-material>=9.7.0",
     "mkdocstrings>=1.0.0",
     "mkdocstrings-python>=2.0.1",
+    "mypy>=1.19.0",
+    "pre-commit>=4.5.0",
     "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
     "ruff>=0.14.0",
+    "scipy-stubs>=1.16.3.3",
+    "pandas-stubs>=2.3.3.251201",
+    "types-openpyxl>=3.1.5.20250919",
+    "types-python-dateutil>=2.9.0.20251115",
+    "types-xlrd>=2.0.0.20251020",
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
 ]
