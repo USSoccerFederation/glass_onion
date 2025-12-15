@@ -347,10 +347,10 @@ class SyncEngine:
             "Both SyncableContent objects must be non-empty."
         )
 
-        name_population = input1.data[fields[0]]
-        normalized_name_population = series_normalize(name_population)
-        name_sample = input2.data[fields[1]]
-        normalized_name_sample = series_normalize(name_sample)
+        name_population = input1.data.loc[input1.data[fields[0]].notna(), [fields[0], input1.id_field]]
+        normalized_name_population = series_normalize(name_population[fields[0]])
+        name_sample = input2.data.loc[input2.data[fields[1]].notna(), [fields[1], input2.id_field]]
+        normalized_name_sample = series_normalize(name_sample[fields[1]])
 
         results = []
         name_map: dict[str, str] = {}
@@ -377,11 +377,11 @@ class SyncEngine:
                     name_map[i1_raw] = i2_raw
                     results.append(
                         {
-                            f"{input1.id_field}": input1.data.loc[
-                                input1.data.index[i], input1.id_field
+                            f"{input1.id_field}": name_population.loc[
+                                name_population.index[i], input1.id_field
                             ],
-                            f"{input2.id_field}": input2.data.loc[
-                                input2.data.index[j], input2.id_field
+                            f"{input2.id_field}": name_sample.loc[
+                                name_sample.index[j], input2.id_field
                             ],
                         }
                     )
