@@ -13,4 +13,5 @@
         "**/__pycache__": true,
         ".pytest_cache": true,
     },
+    "testing.defaultGutterClickAction": "debug",
 }

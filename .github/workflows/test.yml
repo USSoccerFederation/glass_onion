@@ -55,7 +55,7 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
       - name: Run tests
-        run: uv run pytest
+        run: uv run pytest --cov=glass_onion --cov-report=html --cov-report=xml
       - name: Code Coverage Report
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:

@@ -39,7 +39,7 @@ dev = [
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config --cov=glass_onion --cov-report=html --cov-report=xml"
+addopts = "-ra -q --strict-markers --strict-config"
 testpaths = ["tests"]
 
 [tool.coverage.run]
