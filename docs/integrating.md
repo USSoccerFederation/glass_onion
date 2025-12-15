@@ -98,6 +98,7 @@ target_schema = T.StructType([
 ```
 
 `func` will receive a pandas.DataFrame that contains a subset of our big object table without the grouping key added, so we need to do three things:
+
 - Transform this subset into a list of `SyncableContent` instances
 - Run those instances through `SyncEngine`
 - Format `SyncEngine`'s result into the target schema.

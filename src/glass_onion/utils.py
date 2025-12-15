@@ -14,7 +14,7 @@ def string_ngrams(input: str, n: int = 3) -> list[str]:
 
     Args:
         input (str): any string.
-        n (int, optional): the number of characters to use in each n-gram.
+        n (int, optional): the number of characters to use in each n-gram. Must be greater than 0.
 
     Returns:
         A list of strings of length n.
@@ -22,7 +22,9 @@ def string_ngrams(input: str, n: int = 3) -> list[str]:
     if input is None:
         return []
 
-    input = re.sub(r"[,-./]|\s", r"", str(input))
+    assert n > 0, "Length of n-grams `n` must be greater than 0."
+
+    input = re.sub(r"[,-./;]|\s", r"", str(input))
     ngrams = zip(*[input[i:] for i in range(n)])
     return ["".join(ngram) for ngram in ngrams]
 
@@ -125,6 +127,8 @@ def series_remove_accents(input: "pd.Series[str]") -> "pd.Series[str]":
     Returns:
         A pandas.Series with ASCII strings.
     """
+    if input is None:
+        return None
     return input.apply(string_remove_accents)
 
 
@@ -138,6 +142,8 @@ def series_remove_non_word_chars(input: pd.Series) -> "pd.Series[str]":
     Returns:
         A pandas.Series of strings.
     """
+    if input is None:
+        return None
     return input.str.replace(r"[\W_]+", " ", regex=True)
 
 
@@ -151,6 +157,8 @@ def series_remove_double_spaces(input: "pd.Series[str]") -> "pd.Series[str]":
     Returns:
         A pandas.Series of strings.
     """
+    if input is None:
+        return None
     return input.str.replace(r"\s+", " ", regex=True)
 
 
@@ -164,6 +172,8 @@ def series_clean_spaces(input: "pd.Series[str]") -> "pd.Series[str]":
     Returns:
         A pandas.Series of strings with only "true" spaces (U+0020).
     """
+    if input is None:
+        return None
     return input.apply(string_clean_spaces)
 
 
@@ -179,6 +189,8 @@ def series_remove_common_suffixes(input: "pd.Series[str]") -> "pd.Series[str]":
     Returns:
         A pandas.Series with more standardized club names.
     """
+    if input is None:
+        return None
     return (
         input.apply(string_replace_common_womens_suffixes)
         .apply(string_remove_youth_suffixes)
@@ -200,6 +212,8 @@ def series_remove_common_prefixes(input: "pd.Series[str]") -> "pd.Series[str]":
     Returns:
         A pandas.Series with more standardized club names.
     """
+    if input is None:
+        return None
     return input.str.replace(
         r"^SC |^FC |^CF |^CD |^RC |^OL |^Olympique de |^Olympique |^WNT |^SKN |^SK |^1\. ",
         "",
@@ -219,6 +233,8 @@ def series_remove_youth_prefixes(input: "pd.Series[str]") -> "pd.Series[str]":
     Returns:
         A pandas.Series with more standardized club names.
     """
+    if input is None:
+        return None
     return input.apply(string_remove_youth_suffixes)
 
 
@@ -239,6 +255,8 @@ def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
     Returns:
         A pandas.Series with normalized strings.
     """
+    if input is None:
+        return None
     result = series_clean_spaces(input)
     result = series_remove_accents(result)
     result = series_remove_non_word_chars(result)
@@ -260,6 +278,8 @@ def series_normalize_team_names(self, input: "pd.Series[str]") -> "pd.Series[str
     Returns:
         A pandas.Series with more standardized club names.
     """
+    if input is None:
+        return None
     result = series_remove_common_suffixes(input)
     result = series_remove_common_prefixes(result)
     result = series_normalize(result)
@@ -288,7 +308,7 @@ def apply_cosine_similarity(
             * input1_normalized: the normalized version of the `input1` column.
             * input2: a string from the `input2` pandas.Series.
             * input2_normalized: the normalized version of the `input2` column.
-            * similarity (double/float): the cosine similarity score of the normalized strings.
+            * similarity (float): the cosine similarity score of the normalized strings.
     """
     input1_norm = series_normalize(input1).to_list()
     input2_norm = series_normalize(input2).to_list()

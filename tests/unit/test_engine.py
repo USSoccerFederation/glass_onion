@@ -157,7 +157,7 @@ def test_init_object_type_empty_whitespace():
         ),
     ],
 )
-def test_synchronize_with_naive_match_fields_error(
+def test_synchronize_with_error_cases(
     fields: Tuple[str, str], data: pd.DataFrame, expected_error: str
 ):
     left = SyncableContent(
@@ -177,6 +177,24 @@ def test_synchronize_with_naive_match_fields_error(
         right.data = data
 
     engine = SyncEngine("object", [left, right], ["object_name"])
+    methods = [
+        "synchronize_with_naive_match",
+        "synchronize_with_fuzzy_match",
+        "synchronize_with_cosine_similarity",
+    ]
 
-    with pytest.raises(AssertionError, match=re.escape(expected_error)):
-        engine.synchronize_with_naive_match(input1=left, input2=right, fields=fields)
+    for m in methods:
+        with pytest.raises(AssertionError, match=re.escape(expected_error)):
+            print(f"Testing failure modes for SyncEngine method: {m}")
+            getattr(engine, m)(input1=left, input2=right, fields=fields)
+
+
+# def test_synchronize_methods_happy_path():
+#     # Edge cases
+#     #   - same string <-> same string matches properly
+#     #   - same string <-> reverse order matches properly
+#     #   - Same string <-> random order
+#     #   - maiden name <-> married name
+#     #   - arabic anglicization
+#     #   - cyrillic anglicization
+#     #   - ridiculous thresholds

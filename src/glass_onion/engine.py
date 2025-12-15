@@ -183,7 +183,7 @@ class SyncEngine:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
             input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
             fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity.
-            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid.
+            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid. Options: any float value from 0.0 to 1.0. Options outside this range will be clamped to the min or max value.
 
         Returns:
             (pandas.DataFrame): a pandas.DataFrame object that contains synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
@@ -207,6 +207,8 @@ class SyncEngine:
         name_sample = input2.data[fields[1]]
         normalized_name_sample = series_normalize(name_sample)
 
+        adjusted_threshold = max(min(threshold, 1.0), 0.0) * 100
+
         results = []
         name_map: dict[str, str] = {}
         for j in range(0, len(normalized_name_sample)):
@@ -217,7 +219,7 @@ class SyncEngine:
             result = process.extractOne(i2_raw, normalized_name_population)
             if (
                 result
-                and result[1] >= (threshold * 100)
+                and result[1] >= adjusted_threshold
                 and result[0] not in name_map.keys()
             ):
                 self.verbose_log(f"Logging match: {result[0]} -> {i2_raw}")
@@ -236,9 +238,9 @@ class SyncEngine:
                     }
                 )
                 break
-            elif result and result[1] < (threshold * 100):
+            elif result and result[1] < adjusted_threshold:
                 self.verbose_log(
-                    f"not match: {result[0]} -/-> {i2_raw} (similarity: {result[1]} < ({threshold * 100}))"
+                    f"not match: {result[0]} -/-> {i2_raw} (similarity: {result[1]} < ({adjusted_threshold}))"
                 )
 
         if len(results) == 0:
@@ -264,7 +266,7 @@ class SyncEngine:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
             input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
             fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity.
-            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid.
+            threshold (float): the minimum similarity threshold that a match must be in order to be considered valid. Options: any float value from 0.0 to 1.0. Options outside this range will be clamped to the min or max value.
 
         Returns:
             pandas.DataFrame: contains unique synchronized identifier pairs from `input1` and `input2`. The available columns are the `id_field` values of `input1` and `input2`.
@@ -286,10 +288,12 @@ class SyncEngine:
         input1_fields = input1.data[fields[0]].reset_index(drop=True)
         input2_fields = input2.data[fields[1]].reset_index(drop=True)
 
+        adjusted_threshold = max(min(threshold, 1.0), 0.0)
+
         match_results = apply_cosine_similarity(input1_fields, input2_fields)
 
         result = match_results.sort_values(by="similarity", ascending=False)
-        result = result[result.similarity >= threshold]
+        result = result[result.similarity >= adjusted_threshold]
         result["similarity_rank"] = result.groupby(["input1", "input2"])[
             "similarity"
         ].rank(method="dense", ascending=False)
