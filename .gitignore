@@ -12,3 +12,4 @@ site/
 .DS_Store
 .coverage
 htmlcov/
+coverage.xml
