@@ -110,7 +110,7 @@ def test_string_clean_spaces(input: str, expected: str):
         ("Atlanta Beat WFC Sub-21", "Atlanta Beat WFC"),
         ("Atlanta Beat WFC Sub 21", "Atlanta Beat WFC"),
         ("Atlanta Beat WFC", "Atlanta Beat WFC"),
-        ("Atlanta Beat Sub-21 WFC", "Atlanta Beat Sub-21 WFC"),
+        ("Atlanta Beat Sub-21 WFC", "Atlanta Beat U21 WFC"),
     ],
 )
 def test_string_remove_youth_suffixes(input: str, expected: str):
