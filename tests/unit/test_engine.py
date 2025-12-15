@@ -198,3 +198,4 @@ def test_synchronize_with_error_cases(
 #     #   - arabic anglicization
 #     #   - cyrillic anglicization
 #     #   - ridiculous thresholds
+#     #   - nulls in series

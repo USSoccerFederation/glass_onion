@@ -19,7 +19,7 @@ def string_ngrams(input: str, n: int = 3) -> list[str]:
     Returns:
         A list of strings of length n.
     """
-    if input is None:
+    if pd.isna(input):
         return []
 
     assert n > 0, "Length of n-grams `n` must be greater than 0."
@@ -41,7 +41,7 @@ def string_remove_accents(input: str) -> str:
     Returns:
         A string with only ASCII-compliant characters.
     """
-    if input is None:
+    if pd.isna(input):
         return None
 
     return unidecode(input)
@@ -57,7 +57,7 @@ def string_clean_spaces(input: str) -> str:
     Returns:
         A string with only "true" spaces (U+0020).
     """
-    if input is None:
+    if pd.isna(input):
         return None
 
     return input.replace(" ", " ")
@@ -73,7 +73,7 @@ def string_replace_common_womens_suffixes(input: str) -> str:
     Returns:
         A cleaned string without specific text indicating women's teams.
     """
-    if input is None:
+    if pd.isna(input):
         return None
 
     input = input.strip()
@@ -106,7 +106,7 @@ def string_remove_youth_suffixes(input: str) -> str:
     Returns:
         A cleaned string without specific text indicating youth teams.
     """
-    if input is None:
+    if pd.isna(input):
         return None
 
     input = re.sub(r" Under-?", " U", input)
@@ -265,7 +265,7 @@ def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
     return result
 
 
-def series_normalize_team_names(self, input: "pd.Series[str]") -> "pd.Series[str]":
+def series_normalize_team_names(input: "pd.Series[str]") -> "pd.Series[str]":
     """
     Applies a full suite of normalizations to a pandas.Series of team name strings.
 
@@ -291,7 +291,7 @@ def apply_cosine_similarity(
     input1: "pd.Series[str]", input2: "pd.Series[str]"
 ) -> pd.DataFrame:
     """
-    Generates a dataframe of cosine similarity results from two pandas.Series.
+    Generates a dataframe of cosine similarity results from two pandas.Series. The inputs have NULL/NA values removed before being vectorized for use in the similarity algorithm.
 
     For more technical details on cosine similarity, please see [`sklearn.feature_extraction.text.TfidfVectorizer`](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html) and [`sklearn.metrics.pairwise.cosine_similarity`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html).
 
@@ -310,14 +310,29 @@ def apply_cosine_similarity(
             * input2_normalized: the normalized version of the `input2` column.
             * similarity (float): the cosine similarity score of the normalized strings.
     """
-    input1_norm = series_normalize(input1).to_list()
-    input2_norm = series_normalize(input2).to_list()
+    assert input1 is not None and input2 is not None, (
+        "Both `input1` and `input2` must be not be NULL."
+    )
+
+    assert isinstance(input1, pd.Series) and isinstance(input2, pd.Series), (
+        "Both `input1` and `input2` must be `pandas.Series` objects."
+    )
+    
+    # only include non-null elements
+    non_null_i1 = input1[input1.notna()]
+    non_null_i2 = input2[input2.notna()]
+    assert len(non_null_i1) > 0 and len(non_null_i2) > 0, (
+        "Both `input1` and `input2` must include > 0 non-null/NA elements."
+    )
+
+    input1_norm = series_normalize(non_null_i1).to_list()
+    input2_norm = series_normalize(non_null_i2).to_list()
 
     content = pd.Series(input1_norm + input2_norm).to_list()
     vectorizer = TfidfVectorizer(
         min_df=1, analyzer=string_ngrams, strip_accents="ascii"
     )
-    vectorizer.fit(content)  # fit the vectorizer on all teams
+    vectorizer.fit(content)  # fit the vectorizer on all elements
 
     tfidf_i1 = vectorizer.transform(input1_norm)
     tfidf_i2 = vectorizer.transform(input2_norm)
@@ -330,8 +345,8 @@ def apply_cosine_similarity(
 
     match_results = []
     for r, c in zip(row_idx, col_idx):
-        i1_raw = input1.loc[input1.index[c]]
-        i2_raw = input2.loc[input2.index[r]]
+        i1_raw = non_null_i1.loc[non_null_i1.index[c]]
+        i2_raw = non_null_i2.loc[non_null_i2.index[r]]
 
         i1_norm = input1_norm[c]
         i2_norm = input2_norm[r]
