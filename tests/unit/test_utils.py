@@ -70,7 +70,7 @@ def test_string_manipulation_NA_returns_null(method: str):
         "series_remove_common_prefixes",
         "series_remove_youth_prefixes",
         "series_normalize",
-        "series_normalize_team_names"
+        "series_normalize_team_names",
     ],
 )
 def test_series_manipulation_empty_series_returns_empty_series(method: str):
@@ -91,7 +91,7 @@ def test_series_manipulation_empty_series_returns_empty_series(method: str):
         "series_remove_common_prefixes",
         "series_remove_youth_prefixes",
         "series_normalize",
-        "series_normalize_team_names"
+        "series_normalize_team_names",
     ],
 )
 def test_series_manipulation_null_returns_null(method: str):
@@ -109,7 +109,7 @@ def test_series_manipulation_null_returns_null(method: str):
         "series_remove_common_prefixes",
         "series_remove_youth_prefixes",
         "series_normalize",
-        "series_normalize_team_names"
+        "series_normalize_team_names",
     ],
 )
 def test_series_manipulation_series_all_nulls_returns_series_all_nulls(method: str):
@@ -130,7 +130,7 @@ def test_series_manipulation_series_all_nulls_returns_series_all_nulls(method: s
         "series_remove_common_prefixes",
         "series_remove_youth_prefixes",
         "series_normalize",
-        "series_normalize_team_names"
+        "series_normalize_team_names",
     ],
 )
 def test_series_manipulation_mixed_nulls_returns_mixed_nulls(method: str):
@@ -148,12 +148,18 @@ def test_apply_cosine_similarity_happy_path():
     assert isinstance(actual, pd.DataFrame)
     assert len(actual) == 3
 
-    columns = ["input1", "input1_normalized", "input2", "input2_normalized", "similarity"]
+    columns = [
+        "input1",
+        "input1_normalized",
+        "input2",
+        "input2_normalized",
+        "similarity",
+    ]
     assert all([(k in actual.columns) for k in columns])
     assert all([is_string_dtype(actual[k]) for k in columns if k != "similarity"])
     assert is_float_dtype(actual["similarity"])
 
-    target = actual.loc[actual["input1"] == "Test Team 1",:]
+    target = actual.loc[actual["input1"] == "Test Team 1", :]
     assert len(target) == 1
     assert target.loc[target.index[0], "input1_normalized"] == "test team 1"
     assert target.loc[target.index[0], "input2"] == "Test Team 1"
@@ -169,17 +175,23 @@ def test_apply_cosine_similarity_mixed_nulls():
     assert isinstance(actual, pd.DataFrame)
     assert len(actual) == 2
 
-    columns = ["input1", "input1_normalized", "input2", "input2_normalized", "similarity"]
+    columns = [
+        "input1",
+        "input1_normalized",
+        "input2",
+        "input2_normalized",
+        "similarity",
+    ]
     assert all([(k in actual.columns) for k in columns])
     assert all([is_string_dtype(actual[k]) for k in columns if k != "similarity"])
     assert is_float_dtype(actual["similarity"])
 
-    target = actual.loc[actual["input1"] == "Test Team 1",:]
+    target = actual.loc[actual["input1"] == "Test Team 1", :]
     assert len(target) == 1
     assert target.loc[target.index[0], "input1_normalized"] == "test team 1"
     assert target.loc[target.index[0], "input2"] == "Test Team 1"
     assert target.loc[target.index[0], "input2_normalized"] == "test team 1"
     assert int(target.loc[target.index[0], "similarity"]) == 1
 
-    should_be_missing = actual.loc[actual["input1"] == "Test Team 2",:]
+    should_be_missing = actual.loc[actual["input1"] == "Test Team 2", :]
     assert len(should_be_missing) == 0

@@ -317,7 +317,7 @@ def apply_cosine_similarity(
     assert isinstance(input1, pd.Series) and isinstance(input2, pd.Series), (
         "Both `input1` and `input2` must be `pandas.Series` objects."
     )
-    
+
     # only include non-null elements
     non_null_i1 = input1[input1.notna()]
     non_null_i2 = input2[input2.notna()]
