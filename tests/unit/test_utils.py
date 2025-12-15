@@ -208,8 +208,8 @@ def test_series_manipulation_series_all_nulls_returns_series_all_nulls(method: s
     ],
 )
 def test_series_manipulation_mixed_nulls_returns_mixed_nulls(method: str):
-    input = pd.Series([None] * 10)
-    expected = pd.Series([None] * 10)
+    input = pd.Series(([None] * 10) + (["test"] * 10))
+    expected = pd.Series(([None] * 10) + (["test"] * 10))
     actual = getattr(glass_onion, method)(input)
     assert assert_series_equal(actual, expected) == None
 

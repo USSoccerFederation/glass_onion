@@ -78,6 +78,7 @@ def string_replace_common_womens_suffixes(input: str) -> str:
 
     input = input.strip()
     input = re.sub(r",?\s+Women'+s$", "", input)
+    input = re.sub(r",?\s+Womens$", "", input)
     input = re.sub(r",?\s+Women$", "", input)
     input = re.sub(r",?\s+W$", "", input)
     input = re.sub(r"\s+WFC$", "", input)
