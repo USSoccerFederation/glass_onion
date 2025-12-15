@@ -5,7 +5,7 @@ import re
 import pandas as pd
 from pandas.testing import assert_series_equal
 from pandas.core.dtypes.common import is_string_dtype, is_float_dtype
-from glass_onion.utils import apply_cosine_similarity
+from glass_onion.utils import apply_cosine_similarity, string_clean_spaces, string_remove_accents, string_remove_youth_suffixes, string_replace_common_womens_suffixes
 
 
 @pytest.mark.parametrize(
@@ -19,6 +19,7 @@ from glass_onion.utils import apply_cosine_similarity
 )
 def test_string_ngrams_happy_path(input: str, n: int, expected: list[str]):
     actual = string_ngrams(input, n)
+    assert isinstance(actual, list)
     assert actual == expected
 
 
@@ -58,6 +59,79 @@ def test_string_manipulation_NA_returns_null(method: str):
         f"Utils method {method} did not return NULL when passed NULL"
     )
 
+
+@pytest.mark.parametrize(
+    "method, expected",
+    [
+        ("string_remove_accents", "Atlanta Beat  WFC  Under-21"),
+        ("string_clean_spaces", "Átlanta Beat  WFC  Under-21"),
+        ("string_replace_common_womens_suffixes", "Átlanta Beat   Under-21"),
+        ("string_remove_youth_suffixes", "Átlanta Beat  WFC")
+    ],
+)
+def test_string_manipulation_omnibus(method: str, expected: str):
+    actual = getattr(glass_onion, method)("  Átlanta Beat  WFC  Under-21  ")
+    assert actual == expected
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        (" ", ""),
+        ("   ", ""),
+        ("  Átlanta Beat  WFC  Under-21  ", "Atlanta Beat  WFC  Under-21"),
+        ("Átlanta Beat  WFC", "Atlanta Beat  WFC"),
+        ("Atlanta", "Atlanta")
+    ],
+)
+def test_string_remove_accents(input: str, expected: str):
+    actual = string_remove_accents(input)
+    assert actual == expected
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        (" ", ""),
+        ("       ", ""),
+        ("Venezuela (Bolivaran Republic)", "Venezuela (Bolivaran Republic)"),
+        ("Venezuela   (Bolivaran Republic)", "Venezuela   (Bolivaran Republic)"),
+    ],
+)
+def test_string_clean_spaces(input: str, expected: str):
+    actual = string_clean_spaces(input)
+    assert actual == expected
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        ("Atlanta Beat WFC Under-21", "Atlanta Beat WFC"),
+        ("Atlanta Beat WFC Under-21  ", "Atlanta Beat WFC"),
+        ("Atlanta Beat WFC U 21", "Atlanta Beat WFC"),
+        ("Atlanta Beat WFC U-21", "Atlanta Beat WFC"),
+        ("Atlanta Beat WFC Sub-21", "Atlanta Beat WFC"),
+        ("Atlanta Beat WFC Sub 21", "Atlanta Beat WFC"),
+        ("Atlanta Beat WFC", "Atlanta Beat WFC"),
+        ("Atlanta Beat Sub-21 WFC", "Atlanta Beat Sub-21 WFC"),
+    ],
+)
+def test_string_remove_youth_suffixes(input: str, expected: str):
+    actual = string_remove_youth_suffixes(input)
+    assert actual == expected
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        ("Atlanta Beat WFC", "Atlanta Beat"),
+        ("Atlanta Beat.             WFC", "Atlanta Beat."),
+        ("Atlanta Beat Women''s", "Atlanta Beat"),
+        ("Atlanta Beat Women's", "Atlanta Beat"),
+        ("Atlanta Beat WFC    ", "Atlanta Beat"),
+        ("Atlanta Beat Féminas WFC", "Atlanta Beat"),
+        ("LFC Atlanta Beat", "LFC Atlanta Beat"),
+    ],
+)
+def test_string_replace_common_womens_suffixes(input: str, expected: str):
+    actual = string_replace_common_womens_suffixes(input)
+    assert actual == expected
 
 @pytest.mark.parametrize(
     "method",

@@ -44,7 +44,7 @@ def string_remove_accents(input: str) -> str:
     if pd.isna(input):
         return None
 
-    return unidecode(input)
+    return unidecode(input.strip())
 
 
 def string_clean_spaces(input: str) -> str:
@@ -60,7 +60,7 @@ def string_clean_spaces(input: str) -> str:
     if pd.isna(input):
         return None
 
-    return input.replace(" ", " ")
+    return input.strip().replace(" ", " ")
 
 
 def string_replace_common_womens_suffixes(input: str) -> str:
@@ -77,7 +77,7 @@ def string_replace_common_womens_suffixes(input: str) -> str:
         return None
 
     input = input.strip()
-    input = re.sub(r",?\s+Women's$", "", input)
+    input = re.sub(r",?\s+Women'+s$", "", input)
     input = re.sub(r",?\s+Women$", "", input)
     input = re.sub(r",?\s+W$", "", input)
     input = re.sub(r"\s+WFC$", "", input)
@@ -109,7 +109,7 @@ def string_remove_youth_suffixes(input: str) -> str:
     if pd.isna(input):
         return None
 
-    input = re.sub(r" Under-?", " U", input)
+    input = re.sub(r" Under-?", " U", input.strip())
     input = re.sub(r" Sub-?", " U", input)
     input = re.sub(r" Under ", " U", input)
     input = re.sub(r" U-", " U", input)
