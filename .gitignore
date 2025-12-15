@@ -10,3 +10,5 @@ scratch/**
 site/
 */.DS_Store
 .DS_Store
+.coverage
+htmlcov/

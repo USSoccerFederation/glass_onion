@@ -269,3 +269,11 @@ def test_apply_cosine_similarity_mixed_nulls():
 
     should_be_missing = actual.loc[actual["input1"] == "Test Team 2", :]
     assert len(should_be_missing) == 0
+
+
+def test_apply_cosine_similarity_error_series_all_nulls():
+    input1 = pd.Series([pd.NA]*10)
+    input2 = pd.Series(["Test Team 1", pd.NA, "Test Team 3"])
+
+    with pytest.raises(AssertionError, match=re.escape("Both `input1` and `input2` must include > 0 non-null/NA elements.")):
+        apply_cosine_similarity(input1, input2)

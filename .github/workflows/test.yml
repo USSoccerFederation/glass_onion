@@ -32,6 +32,11 @@ jobs:
         run: uv sync --locked --all-extras --dev
       - name: Run tests
         run: uv run pytest
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: htmlcov/*
       # - name: Build
       #   run: uv build
       # Check that basic features work and we didn't miss to include crucial files
