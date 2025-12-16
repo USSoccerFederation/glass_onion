@@ -55,7 +55,7 @@ class PlayerSyncLayer:
         Args:
             match_methodology (glass_onion.player.PlayerSyncSimilarityMethod): see [PlayerSyncSimilarityMethod][glass_onion.player.PlayerSyncSimilarityMethod] for options.
             date_adjustment (pandas.Timedelta): a time period to adjust `birth_date` by for this layer.
-            swap_birth_month_day (bool): a flag for if this layer should swap birth day and month
+            swap_birth_month_day (bool): a flag for if this layer should swap birth day and month AFTER date adjustment.
             input_fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity. Possible options for tuple values: `player_name`, `player_nickname`
             other_equal_fields (list[str]): a list of columns that must be equal between the two PlayerSyncableContent datasets in order for an identifier to be synchronized validly.
             threshold (float): the threshold to use for string similarity when match_methodology is PlayerSyncSimilarityMethod.COSINE` or PlayerSyncSimilarityMethod.FUZZY`.
@@ -304,7 +304,7 @@ class PlayerSyncEngine(SyncEngine):
                 sync_strategies += [
                     PlayerSyncLayer(
                         title="Layer 2: cosine similarity x birth date x team",
-                        date_adjustment=pd.Timedelta(d),
+                        date_adjustment=pd.Timedelta(days=d),
                         input_fields=p,
                     )
                     for d in range(-1, 1)
@@ -312,7 +312,7 @@ class PlayerSyncEngine(SyncEngine):
                 sync_strategies += [
                     PlayerSyncLayer(
                         title="Layer 2: cosine similarity x birth date x team",
-                        date_adjustment=pd.Timedelta(d),
+                        date_adjustment=pd.Timedelta(days=d),
                         swap_birth_month_day=True,
                         input_fields=p,
                     )

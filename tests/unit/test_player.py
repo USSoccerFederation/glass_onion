@@ -1,13 +1,15 @@
 from pathlib import Path
+from typing import Tuple
 import pandas as pd
-from glass_onion.player import PlayerSyncEngine, PlayerSyncableContent
+from glass_onion.engine import SyncableContent
+from glass_onion.player import PlayerSyncEngine, PlayerSyncLayer, PlayerSyncSimilarityMethod, PlayerSyncableContent
 import pytest
 from tests.utils import utils_create_syncables
 
 FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
 
 
-def test_syncengine_init_missing_columns():
+def test_init_missing_columns():
     left = PlayerSyncableContent(
         "provider_a",
         data=pd.DataFrame([{"provider_a_player_id": 1, "player_name": "A"}]),
@@ -22,7 +24,7 @@ def test_syncengine_init_missing_columns():
     assert ["player_name"] == engine.join_columns
 
 
-def test_syncengine_init_unreliable_columns():
+def test_init_unreliable_columns():
     left = PlayerSyncableContent(
         "provider_a",
         data=pd.DataFrame([{"provider_a_player_id": 1, "player_name": "A", "team_id": pd.NA}]),
@@ -36,6 +38,108 @@ def test_syncengine_init_unreliable_columns():
     engine = PlayerSyncEngine([left, right], verbose=True)
     assert ["player_name"] == engine.join_columns
 
+@pytest.mark.parametrize(
+    "layer, method, expected_matches",
+    [
+        # base case: ensure string similarity hits
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                match_methodology=PlayerSyncSimilarityMethod.NAIVE,
+                threshold=0
+            ), 
+            "synchronize_with_naive_match",
+            1
+        ),
+        # what if someone passes NULL to string similarity?
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                match_methodology=None,
+            ), 
+            "synchronize_with_cosine_similarity",
+            1
+        ),
+        # what if we use different string fields? This won't match in a small sample
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                input_fields=("player_name", "player_nickname")
+            ), 
+            "synchronize_with_cosine_similarity",
+            0
+        ),
+        # what if we use different string fields AND drop the threshold? this will now match
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                input_fields=("player_name", "player_nickname"),
+                threshold=0
+            ), 
+            "synchronize_with_cosine_similarity",
+            1
+        ),
+        # what if we require certain fields to be equal? This shouldn't match because jersey numbers are different
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                other_equal_fields=["team_id", "jersey_number"]
+            ), 
+            "synchronize_with_cosine_similarity",
+            0
+        ),
+        # what if we adjust the birth date one day forward? This shouldn't find any matches because the default other_equal_fields includes birth_date
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                date_adjustment=pd.Timedelta(days=1),
+            ), 
+            "synchronize_with_cosine_similarity",
+            0
+        ),
+        # what if we adjust the birth date one day forward AND ignore birth_date? This should find matches
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                date_adjustment=pd.Timedelta(days=1),
+                other_equal_fields=["team_id"]
+            ), 
+            "synchronize_with_cosine_similarity",
+            1
+        ),
+        # what if we adjust the birth date one day forward AND swap the month/day? This shouldn't find any matches because the default other_equal_fields includes birth_date
+        (
+            PlayerSyncLayer(
+                title="test layer",
+                swap_birth_month_day=True
+            ), 
+            "synchronize_with_cosine_similarity",
+            0
+        )
+    ]
+)
+def test_synchronize_using_layer(layer: PlayerSyncLayer, method: str, expected_matches: int, mocker):
+    left = PlayerSyncableContent(
+        "provider_a",
+        data=pd.DataFrame([{"provider_a_player_id": 1, "player_name": "ABCD", "player_nickname": "AB", "team_id": "A", "jersey_number": 1, "birth_date": "1970-01-02"}]),
+    )
+
+    right = PlayerSyncableContent(
+        "provider_b",
+        data=pd.DataFrame([{"provider_b_player_id": 1, "player_name": "ABCD", "player_nickname": "AB", "team_id": "A", "jersey_number": 0, "birth_date": "1970-01-02"}]),
+    )
+
+    engine = PlayerSyncEngine([left, right], verbose=True)
+    spy = mocker.spy(engine, method)
+
+    result = engine.synchronize_using_layer(left, right, layer)
+    if method == "synchronize_with_naive_match":
+        spy.assert_called_once_with(left, right, layer.input_fields)
+    else:
+        spy.assert_called_once_with(left, right, layer.input_fields, layer.similarity_threshold)
+    assert set(["provider_a_player_id", "provider_b_player_id"]) == set(result.columns)
+
+    assert len(result) == expected_matches
 
 @pytest.mark.parametrize(
     "file_path, expected_object_ids",
