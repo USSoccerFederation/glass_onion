@@ -177,6 +177,9 @@ class SyncEngine:
 
         Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
 
+        NOTE: this approach uses a dictionary/map, so a string from `input1` can only be mapped to one string in `input2`. 
+        If there are duplicate instances of a string in `input1` under a different ID, the 2nd...Nth instances of that string will not get matched.
+
         See [thefuzz.process()](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py) for more details.
 
         Args:
@@ -203,9 +206,17 @@ class SyncEngine:
         )
 
         name_population = input1.data[fields[0]]
-        normalized_name_population = series_normalize(name_population)
         name_sample = input2.data[fields[1]]
-        normalized_name_sample = series_normalize(name_sample)
+
+        name_population = input1.data.loc[input1.data[fields[0]].notna(), [fields[0], input1.id_field]]
+        name_sample = input2.data.loc[input2.data[fields[1]].notna(), [fields[1], input2.id_field]]
+
+        assert len(name_population) > 0 and len(name_sample) > 0, (
+            "Both SyncableContent objects must have > 0 non-null elements in `data`."
+        )
+
+        normalized_name_population = series_normalize(name_population[fields[0]])
+        normalized_name_sample = series_normalize(name_sample[fields[1]])
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0) * 100
 
@@ -220,8 +231,10 @@ class SyncEngine:
             if (
                 result
                 and result[1] >= adjusted_threshold
-                and result[0] not in name_map.keys()
             ):
+                if result[0] in name_map.keys():
+                    continue
+
                 self.verbose_log(f"Logging match: {result[0]} -> {i2_raw}")
                 name_map[result[0]] = i2_raw
                 i = normalized_name_population[
@@ -229,15 +242,14 @@ class SyncEngine:
                 ].index[0]
                 results.append(
                     {
-                        f"{input1.id_field}": input1.data.loc[
-                            input1.data.index[i], input1.id_field
+                        f"{input1.id_field}": name_population.loc[
+                            name_population.index[i], input1.id_field
                         ],
-                        f"{input2.id_field}": input2.data.loc[
-                            input2.data.index[j], input2.id_field
+                        f"{input2.id_field}": name_sample.loc[
+                            name_sample.index[j], input2.id_field
                         ],
                     }
                 )
-                break
             elif result and result[1] < adjusted_threshold:
                 self.verbose_log(
                     f"not match: {result[0]} -/-> {i2_raw} (similarity: {result[1]} < ({adjusted_threshold}))"
@@ -285,8 +297,12 @@ class SyncEngine:
             "Both SyncableContent objects must be non-empty."
         )
 
-        input1_fields = input1.data[fields[0]].reset_index(drop=True)
-        input2_fields = input2.data[fields[1]].reset_index(drop=True)
+        input1_fields = input1.data.loc[input1.data[fields[0]].notna(), fields[0]].reset_index(drop=True)
+        input2_fields = input2.data.loc[input2.data[fields[1]].notna(), fields[1]].reset_index(drop=True)
+
+        assert len(input1_fields) > 0 and len(input2_fields) > 0, (
+            "Both SyncableContent objects must have > 0 non-null elements in `data`."
+        )
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0)
 
@@ -325,6 +341,9 @@ class SyncEngine:
 
         Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
 
+        NOTE: this is a _naive_ approach that uses a dictionary/map, so a string from `input1` can only be mapped to one string in `input2`. 
+        If there are duplicate instances of a string in `input1` under a different ID, the 2nd...Nth instances of that string will not get matched.
+
         Args:
             input1 (glass_onion.engine.SyncableContent): a SyncableContent object.
             input2 (glass_onion.engine.SyncableContent): a SyncableContent object.
@@ -343,17 +362,50 @@ class SyncEngine:
         assert fields[1] in input2.data.columns, (
             "Second element of `fields` must exist in `input2.data`."
         )
+
         assert len(input1.data) > 0 and len(input2.data) > 0, (
             "Both SyncableContent objects must be non-empty."
         )
 
         name_population = input1.data.loc[input1.data[fields[0]].notna(), [fields[0], input1.id_field]]
-        normalized_name_population = series_normalize(name_population[fields[0]])
         name_sample = input2.data.loc[input2.data[fields[1]].notna(), [fields[1], input2.id_field]]
+
+        assert len(name_population) > 0 and len(name_sample) > 0, (
+            "Both SyncableContent objects must have > 0 non-null elements in `data`."
+        )
+
+        normalized_name_population = series_normalize(name_population[fields[0]])
         normalized_name_sample = series_normalize(name_sample[fields[1]])
 
         results = []
         name_map: dict[str, str] = {}
+
+        # first pass to encapsulate exact matches
+        for i in range(0, len(normalized_name_population)):
+            i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
+            if i1_raw in name_map.keys():
+                continue
+
+            for j in range(0, len(normalized_name_sample)):
+                i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
+                if i2_raw in name_map.values():
+                    continue
+            
+                if i1_raw == i2_raw:
+                    # this is a match
+                    self.verbose_log(f"Logging match: {i1_raw} -> {i2_raw}")
+                    name_map[i1_raw] = i2_raw
+                    results.append(
+                        {
+                            f"{input1.id_field}": name_population.loc[
+                                name_population.index[i], input1.id_field
+                            ],
+                            f"{input2.id_field}": name_sample.loc[
+                                name_sample.index[j], input2.id_field
+                            ],
+                        }
+                    )
+
         for i in range(0, len(normalized_name_population)):
             i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
             if i1_raw in name_map.keys():

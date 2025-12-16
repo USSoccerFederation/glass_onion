@@ -155,6 +155,17 @@ def test_init_object_type_empty_whitespace():
             ).head(0),
             "Both SyncableContent objects must be non-empty.",
         ),
+        (
+            ("object_name", "object_name"),
+            pd.DataFrame(
+                {
+                        "provider_a_object_id": range(1, 3),
+                    "provider_b_object_id": range(1, 3),
+                    "object_name": [pd.NA] * 2,
+                }
+            ),
+            "Both SyncableContent objects must have > 0 non-null elements in `data`.",
+        ),
     ],
 )
 def test_synchronize_with_error_cases(
@@ -198,7 +209,6 @@ def test_synchronize_with_error_cases(
 #     #   - arabic anglicization
 #     #   - cyrillic anglicization
 #     #   - ridiculous thresholds
-#     #   - nulls in series
 
 def test_synchronize_with_naive_match_sample_mixed_nulls():
     left = SyncableContent(
@@ -219,6 +229,7 @@ def test_synchronize_with_naive_match_sample_mixed_nulls():
 
     assert isinstance(actual, pd.DataFrame)
     assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
     target = actual.loc[actual["provider_a_object_id"] == 1, :]
     assert len(target) == 1
@@ -250,6 +261,7 @@ def test_synchronize_with_naive_match_population_mixed_nulls():
 
     assert isinstance(actual, pd.DataFrame)
     assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
     target = actual.loc[actual["provider_a_object_id"] == 1, :]
     assert len(target) == 1
@@ -263,6 +275,36 @@ def test_synchronize_with_naive_match_population_mixed_nulls():
 
 
 def test_synchronize_with_naive_match_sample_same_name():
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"] }),
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team", "Test Team", "Test Team"] }),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
+
+    actual = engine.synchronize_with_naive_match(left, right, ("object_name", "object_name"))
+
+    assert isinstance(actual, pd.DataFrame)
+    assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
+
+    target = actual.loc[actual["provider_a_object_id"] == 1, :]
+    assert len(target) == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+
+    # name was eliminated from sample on first run, so no matched records here
+    assert len(actual[actual["provider_a_object_id"] == 2]) == 0
+    assert len(actual[actual["provider_a_object_id"] == 3]) == 0
+
+
+def test_synchronize_with_naive_match_should_match_same_name():
     left = SyncableContent(
         "object",
         "provider_a",
@@ -281,6 +323,97 @@ def test_synchronize_with_naive_match_sample_same_name():
 
     assert isinstance(actual, pd.DataFrame)
     assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
+
+    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    assert len(target) == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+
+
+def test_synchronize_with_fuzzy_match_sample_mixed_nulls():
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"] }),
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team 1", pd.NA, "Test Team 3"] }),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
+
+    actual = engine.synchronize_with_fuzzy_match(left, right, ("object_name", "object_name"))
+
+    assert isinstance(actual, pd.DataFrame)
+    assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
+
+    target = actual.loc[actual["provider_a_object_id"] == 1, :]
+    assert len(target) == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+
+    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    assert len(target) == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == 3
+    
+    assert len(actual[actual["provider_a_object_id"] == 2]) == 0
+
+
+def test_synchronize_with_fuzzy_match_population_mixed_nulls():
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", pd.NA, "Test Team 3"] }),
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"] }),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
+
+    actual = engine.synchronize_with_fuzzy_match(left, right, ("object_name", "object_name"))
+
+    assert isinstance(actual, pd.DataFrame)
+    assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
+
+    target = actual.loc[actual["provider_a_object_id"] == 1, :]
+    assert len(target) == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+
+    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    assert len(target) == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == 3
+    
+    assert len(actual[actual["provider_a_object_id"] == 2]) == 0
+
+
+def test_synchronize_with_fuzzy_match_sample_same_name():
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"] }),
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team", "Test Team", "Test Team"] }),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
+
+    actual = engine.synchronize_with_fuzzy_match(left, right, ("object_name", "object_name"))
+
+    assert isinstance(actual, pd.DataFrame)
+    assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
     target = actual.loc[actual["provider_a_object_id"] == 1, :]
     assert len(target) == 1
@@ -289,3 +422,29 @@ def test_synchronize_with_naive_match_sample_same_name():
     # name was eliminated from sample on first run, so no matched records here
     assert len(actual[actual["provider_a_object_id"] == 2]) == 0
     assert len(actual[actual["provider_a_object_id"] == 3]) == 0
+
+
+def test_synchronize_with_fuzzy_match_should_match_same_name():
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team"] }),
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team", "Test Team", "Test Team"] }),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
+
+    actual = engine.synchronize_with_fuzzy_match(left, right, ("object_name", "object_name"))
+
+    assert isinstance(actual, pd.DataFrame)
+    assert len(actual) > 0
+    assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
+
+    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    assert len(target) == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == 1
