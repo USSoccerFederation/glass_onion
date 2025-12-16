@@ -232,6 +232,34 @@ def test_synchronize_using_layer(
             ["jersey_number"],
             1,
         ),
+        (
+            pd.DataFrame(
+                [
+                    {
+                        "provider_a_player_id": 1,
+                        "player_name": "ABCD",
+                        "player_nickname": "AB",
+                        "team_id": "A",
+                        "jersey_number": 1,
+                        "birth_date": "1970-01-02",
+                    }
+                ]
+            ),
+            pd.DataFrame(
+                [
+                    {
+                        "provider_b_player_id": 1,
+                        "player_name": "ABCD",
+                        "player_nickname": "AB",
+                        "team_id": "A",
+                        "jersey_number": 0,
+                        "birth_date": "1970-01-02",
+                    }
+                ]
+            ),
+            ["birth_date"],
+            2,
+        ),
     ],
 )
 def test_synchronize_pair(
