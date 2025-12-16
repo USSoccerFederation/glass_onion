@@ -177,7 +177,7 @@ class SyncEngine:
 
         Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
 
-        NOTE: this approach uses a dictionary/map, so a string from `input1` can only be mapped to one string in `input2`. 
+        NOTE: this approach uses a dictionary/map, so a string from `input1` can only be mapped to one string in `input2`.
         If there are duplicate instances of a string in `input1` under a different ID, the 2nd...Nth instances of that string will not get matched.
 
         See [thefuzz.process()](https://github.com/seatgeek/thefuzz/blob/master/thefuzz/process.py) for more details.
@@ -208,8 +208,12 @@ class SyncEngine:
         name_population = input1.data[fields[0]]
         name_sample = input2.data[fields[1]]
 
-        name_population = input1.data.loc[input1.data[fields[0]].notna(), [fields[0], input1.id_field]]
-        name_sample = input2.data.loc[input2.data[fields[1]].notna(), [fields[1], input2.id_field]]
+        name_population = input1.data.loc[
+            input1.data[fields[0]].notna(), [fields[0], input1.id_field]
+        ]
+        name_sample = input2.data.loc[
+            input2.data[fields[1]].notna(), [fields[1], input2.id_field]
+        ]
 
         assert len(name_population) > 0 and len(name_sample) > 0, (
             "Both SyncableContent objects must have > 0 non-null elements in `data`."
@@ -228,10 +232,7 @@ class SyncEngine:
                 continue
 
             result = process.extractOne(i2_raw, normalized_name_population)
-            if (
-                result
-                and result[1] >= adjusted_threshold
-            ):
+            if result and result[1] >= adjusted_threshold:
                 if result[0] in name_map.keys():
                     continue
 
@@ -240,9 +241,7 @@ class SyncEngine:
                 i = result[2]
                 results.append(
                     {
-                        f"{input1.id_field}": name_population.loc[
-                            i, input1.id_field
-                        ],
+                        f"{input1.id_field}": name_population.loc[i, input1.id_field],
                         f"{input2.id_field}": name_sample.loc[
                             name_sample.index[j], input2.id_field
                         ],
@@ -295,8 +294,12 @@ class SyncEngine:
             "Both SyncableContent objects must be non-empty."
         )
 
-        input1_fields = input1.data.loc[input1.data[fields[0]].notna(), fields[0]].reset_index(drop=True)
-        input2_fields = input2.data.loc[input2.data[fields[1]].notna(), fields[1]].reset_index(drop=True)
+        input1_fields = input1.data.loc[
+            input1.data[fields[0]].notna(), fields[0]
+        ].reset_index(drop=True)
+        input2_fields = input2.data.loc[
+            input2.data[fields[1]].notna(), fields[1]
+        ].reset_index(drop=True)
 
         assert len(input1_fields) > 0 and len(input2_fields) > 0, (
             "Both SyncableContent objects must have > 0 non-null elements in `data`."
@@ -329,10 +332,14 @@ class SyncEngine:
             how="inner",
         )
 
-        # deduplicate if there are duplicate name matches. 
+        # deduplicate if there are duplicate name matches.
         # Must use rank(method="first") in case `similarity` is the same.
-        composite["field_rank"] = composite.groupby(input1.id_field)["similarity"].rank(method="first", ascending=False)
-        return composite.loc[composite["field_rank"] == 1, [input1.id_field, input2.id_field]]
+        composite["field_rank"] = composite.groupby(input1.id_field)["similarity"].rank(
+            method="first", ascending=False
+        )
+        return composite.loc[
+            composite["field_rank"] == 1, [input1.id_field, input2.id_field]
+        ]
 
     def synchronize_with_naive_match(
         self, input1: SyncableContent, input2: SyncableContent, fields: Tuple[str, str]
@@ -342,7 +349,7 @@ class SyncEngine:
 
         Index 0 of `fields` is the column to use for similarity in `input1`, while index 1 is the column to use in `input2`.
 
-        NOTE: this is a _naive_ approach that uses a dictionary/map, so a string from `input1` can only be mapped to one string in `input2`. 
+        NOTE: this is a _naive_ approach that uses a dictionary/map, so a string from `input1` can only be mapped to one string in `input2`.
         If there are duplicate instances of a string in `input1` under a different ID, the 2nd...Nth instances of that string will not get matched.
 
         Args:
@@ -368,8 +375,12 @@ class SyncEngine:
             "Both SyncableContent objects must be non-empty."
         )
 
-        name_population = input1.data.loc[input1.data[fields[0]].notna(), [fields[0], input1.id_field]]
-        name_sample = input2.data.loc[input2.data[fields[1]].notna(), [fields[1], input2.id_field]]
+        name_population = input1.data.loc[
+            input1.data[fields[0]].notna(), [fields[0], input1.id_field]
+        ]
+        name_sample = input2.data.loc[
+            input2.data[fields[1]].notna(), [fields[1], input2.id_field]
+        ]
 
         assert len(name_population) > 0 and len(name_sample) > 0, (
             "Both SyncableContent objects must have > 0 non-null elements in `data`."
@@ -391,7 +402,7 @@ class SyncEngine:
                 i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
                 if i2_raw in name_map.values():
                     continue
-            
+
                 if i1_raw == i2_raw:
                     # this is a match
                     self.verbose_log(f"Logging match: {i1_raw} -> {i2_raw}")

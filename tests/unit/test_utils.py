@@ -5,7 +5,13 @@ import re
 import pandas as pd
 from pandas.testing import assert_series_equal
 from pandas.core.dtypes.common import is_string_dtype, is_float_dtype
-from glass_onion.utils import apply_cosine_similarity, string_clean_spaces, string_remove_accents, string_remove_youth_suffixes, string_replace_common_womens_suffixes
+from glass_onion.utils import (
+    apply_cosine_similarity,
+    string_clean_spaces,
+    string_remove_accents,
+    string_remove_youth_suffixes,
+    string_replace_common_womens_suffixes,
+)
 
 
 @pytest.mark.parametrize(
@@ -66,12 +72,13 @@ def test_string_manipulation_NA_returns_null(method: str):
         ("string_remove_accents", "Atlanta Beat  WFC  Under-21"),
         ("string_clean_spaces", "Átlanta Beat  WFC  Under-21"),
         ("string_replace_common_womens_suffixes", "Átlanta Beat   Under-21"),
-        ("string_remove_youth_suffixes", "Átlanta Beat  WFC")
+        ("string_remove_youth_suffixes", "Átlanta Beat  WFC"),
     ],
 )
 def test_string_manipulation_omnibus(method: str, expected: str):
     actual = getattr(glass_onion, method)("  Átlanta Beat  WFC  Under-21  ")
     assert actual == expected
+
 
 @pytest.mark.parametrize(
     "input, expected",
@@ -80,12 +87,13 @@ def test_string_manipulation_omnibus(method: str, expected: str):
         ("   ", ""),
         ("  Átlanta Beat  WFC  Under-21  ", "Atlanta Beat  WFC  Under-21"),
         ("Átlanta Beat  WFC", "Atlanta Beat  WFC"),
-        ("Atlanta", "Atlanta")
+        ("Atlanta", "Atlanta"),
     ],
 )
 def test_string_remove_accents(input: str, expected: str):
     actual = string_remove_accents(input)
     assert actual == expected
+
 
 @pytest.mark.parametrize(
     "input, expected",
@@ -99,6 +107,7 @@ def test_string_remove_accents(input: str, expected: str):
 def test_string_clean_spaces(input: str, expected: str):
     actual = string_clean_spaces(input)
     assert actual == expected
+
 
 @pytest.mark.parametrize(
     "input, expected",
@@ -117,6 +126,7 @@ def test_string_remove_youth_suffixes(input: str, expected: str):
     actual = string_remove_youth_suffixes(input)
     assert actual == expected
 
+
 @pytest.mark.parametrize(
     "input, expected",
     [
@@ -132,6 +142,7 @@ def test_string_remove_youth_suffixes(input: str, expected: str):
 def test_string_replace_common_womens_suffixes(input: str, expected: str):
     actual = string_replace_common_womens_suffixes(input)
     assert actual == expected
+
 
 @pytest.mark.parametrize(
     "method",
@@ -272,8 +283,13 @@ def test_apply_cosine_similarity_mixed_nulls():
 
 
 def test_apply_cosine_similarity_error_series_all_nulls():
-    input1 = pd.Series([pd.NA]*10)
+    input1 = pd.Series([pd.NA] * 10)
     input2 = pd.Series(["Test Team 1", pd.NA, "Test Team 3"])
 
-    with pytest.raises(AssertionError, match=re.escape("Both `input1` and `input2` must include > 0 non-null/NA elements.")):
+    with pytest.raises(
+        AssertionError,
+        match=re.escape(
+            "Both `input1` and `input2` must include > 0 non-null/NA elements."
+        ),
+    ):
         apply_cosine_similarity(input1, input2)

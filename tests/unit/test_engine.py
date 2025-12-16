@@ -159,7 +159,7 @@ def test_init_object_type_empty_whitespace():
             ("object_name", "object_name"),
             pd.DataFrame(
                 {
-                        "provider_a_object_id": range(1, 3),
+                    "provider_a_object_id": range(1, 3),
                     "provider_b_object_id": range(1, 3),
                     "object_name": [pd.NA] * 2,
                 }
@@ -205,20 +205,30 @@ def test_synchronize_with_error_cases(
     [
         "synchronize_with_naive_match",
         "synchronize_with_fuzzy_match",
-        "synchronize_with_cosine_similarity"
-    ]
+        "synchronize_with_cosine_similarity",
+    ],
 )
 def test_synchronize_sample_mixed_nulls(method: str):
     left = SyncableContent(
         "object",
         "provider_a",
-        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"] }),
+        data=pd.DataFrame(
+            {
+                "provider_a_object_id": list(range(1, 4)),
+                "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"],
+            }
+        ),
     )
 
     right = SyncableContent(
         "object",
         "provider_b",
-        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team 1", pd.NA, "Test Team 3"] }),
+        data=pd.DataFrame(
+            {
+                "provider_b_object_id": list(range(1, 4)),
+                "object_name": ["Test Team 1", pd.NA, "Test Team 3"],
+            }
+        ),
     )
 
     engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
@@ -236,7 +246,7 @@ def test_synchronize_sample_mixed_nulls(method: str):
     target = actual.loc[actual["provider_a_object_id"] == 3, :]
     assert len(target) == 1
     assert target.loc[target.index[0], "provider_b_object_id"] == 3
-    
+
     assert len(actual[actual["provider_a_object_id"] == 2]) == 0
 
 
@@ -245,20 +255,30 @@ def test_synchronize_sample_mixed_nulls(method: str):
     [
         "synchronize_with_naive_match",
         "synchronize_with_fuzzy_match",
-        "synchronize_with_cosine_similarity"
-    ]
+        "synchronize_with_cosine_similarity",
+    ],
 )
 def test_synchronize_population_mixed_nulls(method: str):
     left = SyncableContent(
         "object",
         "provider_a",
-        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", pd.NA, "Test Team 3"] }),
+        data=pd.DataFrame(
+            {
+                "provider_a_object_id": list(range(1, 4)),
+                "object_name": ["Test Team 1", pd.NA, "Test Team 3"],
+            }
+        ),
     )
 
     right = SyncableContent(
         "object",
         "provider_b",
-        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"] }),
+        data=pd.DataFrame(
+            {
+                "provider_b_object_id": list(range(1, 4)),
+                "object_name": ["Test Team 1", "Test Team 2", "Test Team 3"],
+            }
+        ),
     )
 
     engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
@@ -276,7 +296,7 @@ def test_synchronize_population_mixed_nulls(method: str):
     target = actual.loc[actual["provider_a_object_id"] == 3, :]
     assert len(target) == 1
     assert target.loc[target.index[0], "provider_b_object_id"] == 3
-    
+
     assert len(actual[actual["provider_a_object_id"] == 2]) == 0
 
 
@@ -285,20 +305,30 @@ def test_synchronize_population_mixed_nulls(method: str):
     [
         "synchronize_with_naive_match",
         "synchronize_with_fuzzy_match",
-        "synchronize_with_cosine_similarity"
-    ]
+        "synchronize_with_cosine_similarity",
+    ],
 )
 def test_synchronize_should_match_same_name(method: str):
     left = SyncableContent(
         "object",
         "provider_a",
-        data=pd.DataFrame({"provider_a_object_id": list(range(1, 4)), "object_name": ["Test Team 1", "Test Team 2", "Test Team"] }),
+        data=pd.DataFrame(
+            {
+                "provider_a_object_id": list(range(1, 4)),
+                "object_name": ["Test Team 1", "Test Team 2", "Test Team"],
+            }
+        ),
     )
 
     right = SyncableContent(
         "object",
         "provider_b",
-        data=pd.DataFrame({"provider_b_object_id": list(range(1, 4)), "object_name": ["Test Team", "Test Team", "Test Team"] }),
+        data=pd.DataFrame(
+            {
+                "provider_b_object_id": list(range(1, 4)),
+                "object_name": ["Test Team", "Test Team", "Test Team"],
+            }
+        ),
     )
 
     engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)

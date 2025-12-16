@@ -272,12 +272,20 @@ class PlayerSyncEngine(SyncEngine):
                 other_equal_fields=["jersey_number", "team_id"],
             ),
         )
+
         id_mask = input1.data.columns[input1.data.columns.str.endswith("_player_id")]
+        metadata_columns = [
+            "player_name",
+            "player_nickname",
+            "jersey_number",
+            "team_id",
+        ] + id_mask.to_list()
+        actual_metadata_columns = input1.data.columns[
+            input1.data.columns.isin(metadata_columns)
+        ]
+
         sync_result = pd.merge(
-            input1.data[
-                ["player_name", "player_nickname", "jersey_number", "team_id"]
-                + id_mask.to_list()
-            ],
+            input1.data[actual_metadata_columns],
             sync_result,
             on=input1.id_field,
             how="left",
