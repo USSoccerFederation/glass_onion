@@ -329,7 +329,10 @@ class SyncEngine:
             how="inner",
         )
 
-        return composite
+        # deduplicate if there are duplicate name matches. 
+        # Must use rank(method="first") in case `similarity` is the same.
+        composite["field_rank"] = composite.groupby(input1.id_field)["similarity"].rank(method="first", ascending=False)
+        return composite.loc[composite["field_rank"] == 1, [input1.id_field, input2.id_field]]
 
     def synchronize_with_naive_match(
         self, input1: SyncableContent, input2: SyncableContent, fields: Tuple[str, str]
