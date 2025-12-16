@@ -81,7 +81,7 @@ class PlayerSyncEngine(SyncEngine):
         Creates a new PlayerSyncEngine object.
 
         Unlike other SyncEngine subclasses, this subclass does not accept any explicit `join_columns`. Player synchronization is a more finicky task than team or match synchronization, and as a result, the columns used in synchronization have to be checked for null values and validity before synchronization can be attempted.
-        In this case, the base set of columns is ["jersey_number", "team_id", "player_name"], but since some providers may not provide a player's jersey number, we remove this column so that the logic in `SyncEngine.synchronize()` does not use it to group, aggregate, and deduplicate results.
+        For example, the base set of columns is ["jersey_number", "team_id", "player_name"], but since some providers may not provide a player's jersey number, we remove this column so that the logic in `SyncEngine.synchronize()` does not use it to group, aggregate, and deduplicate results.
 
         Args:
             content (list[str]): a list of SyncableContent objects.
@@ -89,13 +89,14 @@ class PlayerSyncEngine(SyncEngine):
         """
         join_cols = ["jersey_number", "team_id", "player_name"]
         super().__init__("player", content, join_cols, verbose)
-        # check if jersey number is empty / unreliable
-        for c in content:
-            for j in join_cols:
+        # check if certain columns are empty / unreliable
+        original_join_columns = join_cols.copy()
+        for j in original_join_columns:
+            for c in content:
                 if j not in c.data.columns:
                     join_cols.remove(j)
                     self.verbose_log(
-                        f"Removing column `{j}` from join logic because of issues with content from data provider {c.provider} does not include it"
+                        f"Removing column `{j}` from join logic because {c.provider} does not include it"
                     )
                     break
 

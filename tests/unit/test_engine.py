@@ -200,16 +200,6 @@ def test_synchronize_with_error_cases(
             getattr(engine, m)(input1=left, input2=right, fields=fields)
 
 
-# def test_synchronize_methods_happy_path():
-#     # Edge cases
-#     #   - same string <-> same string matches properly
-#     #   - same string <-> reverse order matches properly
-#     #   - Same string <-> random order
-#     #   - maiden name <-> married name
-#     #   - arabic anglicization
-#     #   - cyrillic anglicization
-#     #   - ridiculous thresholds
-
 @pytest.mark.parametrize(
     "method",
     [
