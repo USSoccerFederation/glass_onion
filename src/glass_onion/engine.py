@@ -237,13 +237,11 @@ class SyncEngine:
 
                 self.verbose_log(f"Logging match: {result[0]} -> {i2_raw}")
                 name_map[result[0]] = i2_raw
-                i = normalized_name_population[
-                    normalized_name_population == result[0]
-                ].index[0]
+                i = result[2]
                 results.append(
                     {
                         f"{input1.id_field}": name_population.loc[
-                            name_population.index[i], input1.id_field
+                            i, input1.id_field
                         ],
                         f"{input2.id_field}": name_sample.loc[
                             name_sample.index[j], input2.id_field
