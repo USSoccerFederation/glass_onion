@@ -23,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Install Python 3.11
@@ -32,13 +32,12 @@ jobs:
         run: uv sync --locked --all-extras --dev
       - name: Run tests
         run: uv run pytest
-      # - name: Build
-      #   run: uv build
-      # Check that basic features work and we didn't miss to include crucial files
-    #   - name: Smoke test (wheel)
-    #     run: uv run --isolated --no-project --with dist/*.whl tests/smoke_test.py
-    #   - name: Smoke test (source distribution)
-    #     run: uv run --isolated --no-project --with dist/*.tar.gz tests/smoke_test.py
+      - name: Build
+        run: uv build
+      - name: Smoke test (wheel)
+        run: uv run --isolated --no-project --with dist/*.whl tests/integration/test_packaging.py
+      - name: Smoke test (source distribution)
+        run: uv run --isolated --no-project --with dist/*.tar.gz tests/integration/test_packaging.py
   
   coverage:
     runs-on: ubuntu-latest
@@ -47,7 +46,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Install uv
         uses: astral-sh/setup-uv@v6
       - name: Install Python 3.11
