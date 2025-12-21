@@ -1,6 +1,7 @@
 """
 This file is virtually the same as `tests/functional/test_synchronize.py`, but reformatted to allow for use in isolation without `pytest` and any package-specific logic (test utilities, etc).
 """
+
 from pathlib import Path
 import pandas as pd
 from glass_onion.engine import SyncableContent
@@ -10,6 +11,7 @@ from glass_onion.player import PlayerSyncEngine
 from glass_onion.team import TeamSyncEngine
 
 FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
+
 
 def utils_transform_provider_data(
     dataset: pd.DataFrame, provider: str, object_type: str
@@ -39,7 +41,6 @@ def utils_create_syncables(
     ]
     syncables = [k for k in syncables if len(k.data) > 0]
     return syncables
-
 
 
 def test_synchronize(
@@ -84,7 +85,9 @@ if __name__ == "__main__":
         {
             "file_path": "2025-07-05-usa-mex.csv",
             "object_type": "player",
-            "expected_object_ids": [{"provider_a": "332705", "provider_b": "12751", "provider_c": "24629"}],
+            "expected_object_ids": [
+                {"provider_a": "332705", "provider_b": "12751", "provider_c": "24629"}
+            ],
         },
         # same name twice but two different players
         {
@@ -138,7 +141,9 @@ if __name__ == "__main__":
         {
             "file_path": "2025-nwsl.csv",
             "object_type": "team",
-            "expected_object_ids": [{"provider_a": "21983", "provider_b": "13449", "provider_c": "3485"}],
+            "expected_object_ids": [
+                {"provider_a": "21983", "provider_b": "13449", "provider_c": "3485"}
+            ],
         },
         # coverage differences
         {
@@ -151,7 +156,7 @@ if __name__ == "__main__":
         },
     ]
 
-    for (i, c) in enumerate(test_cases):
+    for i, c in enumerate(test_cases):
         print(f"\n\n---- TEST CASE {i} - STARTING ------")
         print(f"---- TEST CASE {i} - PARAMS: {c} ------")
         test_synchronize(**c)
