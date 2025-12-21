@@ -18,8 +18,8 @@ def test_init_competition_context():
         "match_date",
         "competition_id",
         "season_id",
-        "home_match_id",
-        "away_match_id",
+        "home_team_id",
+        "away_team_id",
     ]
 
 @pytest.mark.parametrize(
@@ -46,8 +46,8 @@ def test_synchronize_pair(
                     "provider_a_match_id": 1,
                     "matchday": 1,
                     "match_date": a_match_date,
-                    "home_match_id": 1,
-                    "away_match_id": 2
+                    "home_team_id": 1,
+                    "away_team_id": 2
                 }
             ]
         ),
@@ -61,8 +61,8 @@ def test_synchronize_pair(
                     "provider_b_match_id": 1,
                     "matchday": 1,
                     "match_date": b_match_date,
-                    "home_match_id": 1,
-                    "away_match_id": 2
+                    "home_team_id": 1,
+                    "away_team_id": 2
                 }
             ]
         ),
@@ -79,11 +79,11 @@ def test_synchronize_pair(
     assert spy_synchronize_on_adjusted_dates.call_count == n_synchronize_on_adjusted_dates
     assert spy_synchronize_on_matchday.call_count == n_synchronize_on_matchday
     if not expose_matchday:
-        assert set(["match_date", "home_match_id", "away_match_id", "provider_a_match_id", "provider_b_match_id"]) == set(
+        assert set(["match_date", "home_team_id", "away_team_id", "provider_a_match_id", "provider_b_match_id"]) == set(
             result.data.columns
         )
     else:
-        assert set(["match_date", "home_match_id", "away_match_id", "provider_a_match_id", "provider_b_match_id", "matchday"]) == set(
+        assert set(["match_date", "home_team_id", "away_team_id", "provider_a_match_id", "provider_b_match_id", "matchday"]) == set(
             result.data.columns
         )
     assert len(result.data[(result.data["provider_a_match_id"].notna()) & (result.data["provider_b_match_id"].notna())]) == expected_matches
