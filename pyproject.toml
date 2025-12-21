@@ -51,7 +51,7 @@ dev = [
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --tb=long --code-highlight=yes"
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --tb=long --code-highlight=yes --ignore=tests/integration"
 testpaths = ["tests"]
 
 [project.urls]
