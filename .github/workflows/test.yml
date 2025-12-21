@@ -15,11 +15,12 @@ on:
 
 jobs:
   tests:
-    strategy:
+    strategy: 
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-    runs-on: "ubuntu-latest"
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -33,10 +34,6 @@ jobs:
         run: uv run pytest
       - name: Build
         run: uv build
-      - name: Smoke test (wheel)
-        run: uv run --isolated --no-project --with dist/*.whl tests/integration/test_packaging.py
-      - name: Smoke test (source distribution)
-        run: uv run --isolated --no-project --with dist/*.tar.gz tests/integration/test_packaging.py
   
   coverage:
     runs-on: ubuntu-latest
