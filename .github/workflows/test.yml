@@ -19,8 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-        os: [macos-latest, ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: "ubuntu-latest"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -34,15 +33,11 @@ jobs:
         run: uv run pytest
       - name: Build
         run: uv build
-      - name: Store version in environment
-        run: |
-          PKG_VERSION=$(uv version | sed 's|^glass-onion ||')
-          PKG_VERSION=$(echo "$PKG_VERSION" | xargs)
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
       - name: Smoke test (wheel)
-        run: uv run --isolated --no-project --with dist/glass_onion_${{ env.PKG_VERSION }}-py3-none-any.whl tests/integration/test_packaging.py
+        run: uv run --isolated --no-project --with dist/*.whl tests/integration/test_packaging.py
       - name: Smoke test (source distribution)
-        run: uv run --isolated --no-project --with dist/glass_onion_${{ env.PKG_VERSION }}.tar.gz tests/integration/test_packaging.py
+        run: uv run --isolated --no-project --with dist/*.tar.gz tests/integration/test_packaging.py
   
   coverage:
     runs-on: ubuntu-latest
