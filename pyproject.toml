@@ -1,12 +1,23 @@
 [project]
 name = "glass-onion"
 version = "0.1"
-description = "Add your description here"
+description = "A package for synchronizing soccer object identifiers."
 readme = "README.md"
+license = { file = "LICENSE" }
 authors = [
-    { name = "Data Analytics", email = "sportingdata@ussoccer.org" }
+    { name = "US Soccer - Data Analytics", email = "sportingdata@ussoccer.org" }
 ]
 requires-python = ">=3.11"
+keywords = ["soccer", "tracking data", "event data", "sports analytics"]
+classifiers = [
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: BSD License",
+]
 dependencies = [
     "numpy>=2.3.3",
     "pandas>=2.3.3",
@@ -40,8 +51,12 @@ dev = [
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib"
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --tb=long --code-highlight=yes"
 testpaths = ["tests"]
+
+[project.urls]
+Repository = "https://github.com/USSoccerFederation/glass_onion"
+Documentation = "https://github.com/USSoccerFederation/glass_onion/blob/main/docs/"
 
 [tool.coverage.run]
 source = ["src"]
