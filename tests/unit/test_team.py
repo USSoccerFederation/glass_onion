@@ -28,7 +28,7 @@ def test_init_competition_context():
         ("Atlanta Beat", "South Georgia Tormenta FC", 2, 1),
     ],
 )
-def test_synchronize_using_layer(
+def test_synchronize_pair(
     a_team_name: str, b_team_name: str, tries: int, expected_matches: int, mocker
 ):
     left = TeamSyncableContent(

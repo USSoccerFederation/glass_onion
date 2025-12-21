@@ -235,11 +235,12 @@ class MatchSyncEngine(SyncEngine):
                 ] = sync_result.loc[
                     (sync_result[f"{input2.id_field}_x"].isna()), f"{input2.id_field}_y"
                 ]
-                sync_result.drop([f"{input2.id_field}_y"], axis=1, inplace=True)
+                sync_result.drop([f"{input2.id_field}_y", "matchday_y"], axis=1, inplace=True)
 
                 sync_result.rename(
                     {
                         f"{input2.id_field}_x": input2.id_field,
+                        "matchday_x": "matchday",
                     },
                     axis=1,
                     inplace=True,
