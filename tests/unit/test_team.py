@@ -1,6 +1,5 @@
 import pytest
 from glass_onion.team import TeamSyncEngine, TeamSyncableContent
-from tests.utils import utils_create_syncables, FIXTURE_DATA_PATH
 import pandas as pd
 
 
@@ -63,41 +62,3 @@ def test_synchronize_pair(
         result.data.columns
     )
     assert len(result.data) == expected_matches
-
-
-@pytest.mark.parametrize(
-    "file_path, expected_object_ids",
-    [
-        # base case
-        (
-            "2025-nwsl.csv",
-            [{"provider_a": "21983", "provider_b": "13449", "provider_c": "3485"}],
-        ),
-        # coverage differences
-        (
-            "2024-25-ucl.csv",
-            [
-                {"provider_a": "1028", "provider_b": "197"},
-                {"provider_a": "957", "provider_b": None},
-            ],
-        ),
-    ],
-)
-def test_synchronize_complex_cases(file_path: str, expected_object_ids: dict[str, str]):
-    dataset = pd.read_csv(FIXTURE_DATA_PATH / "team" / file_path)
-
-    syncables = utils_create_syncables(dataset, "team")
-    engine = TeamSyncEngine(syncables, use_competition_context=False, verbose=False)
-
-    result = engine.synchronize()
-
-    # check different ID conditions/expectations
-    for expected_ids in expected_object_ids:
-        team_data = result.data
-        for provider, provider_id in expected_ids.items():
-            if provider_id is None:
-                team_data = team_data[team_data[f"{provider}_team_id"].isna()]
-            else:
-                team_data = team_data[team_data[f"{provider}_team_id"] == provider_id]
-
-        assert len(team_data) == 1

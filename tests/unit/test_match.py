@@ -1,6 +1,5 @@
 import pytest
 from glass_onion.match import MatchSyncEngine, MatchSyncableContent
-from tests.utils import utils_create_syncables, FIXTURE_DATA_PATH
 import pandas as pd
 
 
@@ -119,46 +118,3 @@ def test_synchronize_pair(
         )
         == expected_matches
     )
-
-
-@pytest.mark.parametrize(
-    "file_path, expected_object_ids",
-    [
-        # base case + rescheduled
-        (
-            "2025-mls.csv",
-            [
-                {
-                    "provider_a": "3981151",
-                    "provider_b": "4513981",
-                    "provider_c": "2004931",
-                }
-            ],
-        ),
-        # coverage differences
-        (
-            "2024-25-ucl.csv",
-            [{"provider_a": "3945546", "provider_b": None}],
-        ),
-    ],
-)
-def test_synchronize_complex_cases(file_path: str, expected_object_ids: dict[str, str]):
-    dataset = pd.read_csv(FIXTURE_DATA_PATH / "match" / file_path)
-
-    syncables = utils_create_syncables(dataset, "match")
-    engine = MatchSyncEngine(syncables, use_competition_context=False, verbose=False)
-
-    result = engine.synchronize()
-
-    # check different ID conditions/expectations
-    for expected_ids in expected_object_ids:
-        match_data = result.data
-        for provider, provider_id in expected_ids.items():
-            if provider_id is None:
-                match_data = match_data[match_data[f"{provider}_match_id"].isna()]
-            else:
-                match_data = match_data[
-                    match_data[f"{provider}_match_id"] == provider_id
-                ]
-
-        assert len(match_data) == 1

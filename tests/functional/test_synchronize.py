@@ -13,6 +13,7 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
 @pytest.mark.parametrize(
     "file_path, object_type, expected_object_ids",
     [
+        ## player
         # base case
         (
             "2025-07-05-usa-mex.csv",
@@ -45,6 +46,41 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
             [
                 {"provider_a": None, "provider_b": "190928"},
                 {"provider_a": "429448", "provider_b": None},
+            ],
+        ),
+        ## match
+        # base case + rescheduled
+        (
+            "2025-mls.csv",
+            "match",
+            [
+                {
+                    "provider_a": "3981151",
+                    "provider_b": "4513981",
+                    "provider_c": "2004931",
+                }
+            ],
+        ),
+        # coverage differences
+        (
+            "2024-25-ucl.csv",
+            "match",
+            [{"provider_a": "3945546", "provider_b": None}],
+        ),
+        ## team
+        # base case
+        (
+            "2025-nwsl.csv",
+            "team",
+            [{"provider_a": "21983", "provider_b": "13449", "provider_c": "3485"}],
+        ),
+        # coverage differences
+        (
+            "2024-25-ucl.csv",
+            "team",
+            [
+                {"provider_a": "1028", "provider_b": "197"},
+                {"provider_a": "957", "provider_b": None},
             ],
         ),
     ],
