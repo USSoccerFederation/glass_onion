@@ -14,6 +14,7 @@ from glass_onion.utils import (
     string_replace_common_womens_suffixes,
 )
 
+
 @pytest.mark.parametrize(
     "input, n, expected",
     [

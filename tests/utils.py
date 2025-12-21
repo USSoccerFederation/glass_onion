@@ -4,6 +4,7 @@ from glass_onion.engine import SyncableContent
 
 FIXTURE_DATA_PATH = Path(__file__).resolve().parent / "fixtures"
 
+
 def utils_transform_provider_data(
     dataset: pd.DataFrame, provider: str, object_type: str
 ) -> pd.DataFrame:

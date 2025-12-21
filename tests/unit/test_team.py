@@ -76,7 +76,10 @@ def test_synchronize_pair(
         # coverage differences
         (
             "2024-25-ucl.csv",
-            [{"provider_a": "1028", "provider_b": "197"}, {"provider_a": "957", "provider_b": None}],
+            [
+                {"provider_a": "1028", "provider_b": "197"},
+                {"provider_a": "957", "provider_b": None},
+            ],
         ),
     ],
 )
@@ -95,8 +98,6 @@ def test_synchronize_complex_cases(file_path: str, expected_object_ids: dict[str
             if provider_id is None:
                 team_data = team_data[team_data[f"{provider}_team_id"].isna()]
             else:
-                team_data = team_data[
-                    team_data[f"{provider}_team_id"] == provider_id
-                ]
+                team_data = team_data[team_data[f"{provider}_team_id"] == provider_id]
 
         assert len(team_data) == 1

@@ -22,6 +22,7 @@ def test_init_competition_context():
         "away_team_id",
     ]
 
+
 @pytest.mark.parametrize(
     "a_match_date, b_match_date, expose_matchday, n_synchronize_on_adjusted_dates, n_synchronize_on_matchday, expected_matches",
     [
@@ -31,12 +32,18 @@ def test_init_competition_context():
         ("2025-01-01", "2025-01-02", False, 12, 0, 1),
         # ensure no matches if not the same date + no matchday
         ("2025-01-01", "2025-01-08", False, 12, 0, 0),
-         # ensure match if not the same date + exposed matchday
+        # ensure match if not the same date + exposed matchday
         ("2025-01-01", "2025-01-08", True, 12, 1, 1),
     ],
 )
 def test_synchronize_pair(
-    a_match_date: str, b_match_date: str, expose_matchday: bool, n_synchronize_on_adjusted_dates: int, n_synchronize_on_matchday: int, expected_matches: int, mocker
+    a_match_date: str,
+    b_match_date: str,
+    expose_matchday: bool,
+    n_synchronize_on_adjusted_dates: int,
+    n_synchronize_on_matchday: int,
+    expected_matches: int,
+    mocker,
 ):
     left = MatchSyncableContent(
         "provider_a",
@@ -47,7 +54,7 @@ def test_synchronize_pair(
                     "matchday": 1,
                     "match_date": a_match_date,
                     "home_team_id": 1,
-                    "away_team_id": 2
+                    "away_team_id": 2,
                 }
             ]
         ),
@@ -62,7 +69,7 @@ def test_synchronize_pair(
                     "matchday": 1,
                     "match_date": b_match_date,
                     "home_team_id": 1,
-                    "away_team_id": 2
+                    "away_team_id": 2,
                 }
             ]
         ),
@@ -73,20 +80,45 @@ def test_synchronize_pair(
         right.data.drop("matchday", axis=1, inplace=True)
 
     engine = MatchSyncEngine([left, right], verbose=True)
-    spy_synchronize_on_adjusted_dates = mocker.spy(engine, "synchronize_on_adjusted_dates")
+    spy_synchronize_on_adjusted_dates = mocker.spy(
+        engine, "synchronize_on_adjusted_dates"
+    )
     spy_synchronize_on_matchday = mocker.spy(engine, "synchronize_on_matchday")
     result = engine.synchronize_pair(left, right)
-    assert spy_synchronize_on_adjusted_dates.call_count == n_synchronize_on_adjusted_dates
+    assert (
+        spy_synchronize_on_adjusted_dates.call_count == n_synchronize_on_adjusted_dates
+    )
     assert spy_synchronize_on_matchday.call_count == n_synchronize_on_matchday
     if not expose_matchday:
-        assert set(["match_date", "home_team_id", "away_team_id", "provider_a_match_id", "provider_b_match_id"]) == set(
-            result.data.columns
-        )
+        assert set(
+            [
+                "match_date",
+                "home_team_id",
+                "away_team_id",
+                "provider_a_match_id",
+                "provider_b_match_id",
+            ]
+        ) == set(result.data.columns)
     else:
-        assert set(["match_date", "home_team_id", "away_team_id", "provider_a_match_id", "provider_b_match_id", "matchday"]) == set(
-            result.data.columns
+        assert set(
+            [
+                "match_date",
+                "home_team_id",
+                "away_team_id",
+                "provider_a_match_id",
+                "provider_b_match_id",
+                "matchday",
+            ]
+        ) == set(result.data.columns)
+    assert (
+        len(
+            result.data[
+                (result.data["provider_a_match_id"].notna())
+                & (result.data["provider_b_match_id"].notna())
+            ]
         )
-    assert len(result.data[(result.data["provider_a_match_id"].notna()) & (result.data["provider_b_match_id"].notna())]) == expected_matches
+        == expected_matches
+    )
 
 
 @pytest.mark.parametrize(
@@ -95,7 +127,13 @@ def test_synchronize_pair(
         # base case + rescheduled
         (
             "2025-mls.csv",
-            [{"provider_a": "3981151", "provider_b": "4513981", "provider_c": "2004931"}],
+            [
+                {
+                    "provider_a": "3981151",
+                    "provider_b": "4513981",
+                    "provider_c": "2004931",
+                }
+            ],
         ),
         # coverage differences
         (
