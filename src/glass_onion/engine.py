@@ -130,7 +130,7 @@ class SyncEngine:
         Args:
             object_type (str): the object type this SyncEngine is working with.
             content (list[SyncableContent]): a list of SyncableContent objects that correspond to `object_type`.
-            join_columns (list[str]): a list of columns used to aggregate and deduplicate identifiers
+            join_columns (list[str]): a list of columns used to aggregate and deduplicate identifiers. In some subclasses, these columns are used to do an initial, naive synchronization pass before moving on to more complex checks.
             verbose (bool, optional): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
         assert isinstance(content, list), (

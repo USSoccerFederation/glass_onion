@@ -29,7 +29,7 @@ class MatchSyncEngine(SyncEngine):
 
         Args:
             content (list[str]): a list of SyncableContent objects.
-            use_competition_context (bool): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize match identifiers?
+            use_competition_context (bool): should the competition context (IE: columns `competition_id` and `season_id`) be used to synchronize/aggregate match identifiers?
             verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
         """
         self.object_type = "match"
