@@ -33,7 +33,6 @@ jobs:
         run: uv run pytest
       - name: Build
         run: uv build
-          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
       - name: Smoke test (wheel)
         run: uv run --isolated --no-project --with dist/*.whl tests/integration/test_packaging.py
       - name: Smoke test (source distribution)
