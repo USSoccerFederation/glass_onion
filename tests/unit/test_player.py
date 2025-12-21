@@ -9,9 +9,7 @@ from glass_onion.player import (
     PlayerSyncableContent,
 )
 import pytest
-from tests.utils import utils_create_syncables
-
-FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
+from tests.utils import utils_create_syncables, FIXTURE_DATA_PATH
 
 
 def test_init_missing_columns():
