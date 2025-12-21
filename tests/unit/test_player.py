@@ -10,6 +10,7 @@ from glass_onion.player import (
 )
 import pytest
 
+
 def test_init_missing_columns():
     left = PlayerSyncableContent(
         "provider_a",
