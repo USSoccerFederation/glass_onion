@@ -124,7 +124,9 @@ class TeamSyncEngine(SyncEngine):
                         inplace=True,
                     )
                     # update remainders check
-                    synced = sync_result.dropna(subset=[input1.id_field, input2.id_field])
+                    synced = sync_result.dropna(
+                        subset=[input1.id_field, input2.id_field]
+                    )
 
         # third pass: cosine similarity but we don't care about the threshold
         remaining_1 = TeamSyncableContent(
