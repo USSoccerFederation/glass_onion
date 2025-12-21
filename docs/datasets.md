@@ -14,32 +14,32 @@ We've manually reviewed these identifiers for any errors after synchronization a
 
 ## Major League Soccer (MLS)
 
-### 2025 
+### 2025
 
 | Object Type | Supported Providers | Notes | Link |
 |----------|----------|--------|------|
-| Player    | Statsbomb, TransferMarkt, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/mls/2025/player.csv)
-| Team    | Statsbomb, TransferMarkt, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/mls/2025/team.csv)
-| Match    | Statsbomb, TransferMarkt, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/mls/2025/match.csv)
+| Player    | Statsbomb, TransferMarkt, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/mls/2025/player.csv)
+| Team    | Statsbomb, TransferMarkt, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/mls/2025/team.csv)
+| Match    | Statsbomb, TransferMarkt, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/mls/2025/match.csv)
 
 
 ## National Women's Soccer League (NWSL)
 
-### 2025 
+### 2025
 
 | Object Type | Supported Providers | Notes | Link |
 |----------|----------|--------|------|
-| Player    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/nwsl/2025/player.csv)
-| Team    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/nwsl/2025/team.csv)
-| Match    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/nwsl/2025/match.csv)
+| Player    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/nwsl/2025/player.csv)
+| Team    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/nwsl/2025/team.csv)
+| Match    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/nwsl/2025/match.csv)
 
 
 ## USL Super League
 
-### 2025 
+### 2024-2025
 
 | Object Type | Supported Providers | Notes | Link |
 |----------|----------|--------|------|
-| Player    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/uslsl/2025/player.csv)
-| Team    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/uslsl/2025/team.csv)
-| Match    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/blob/main/datasets/uslsl/2025/match.csv)
+| Player    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/uslsl/2024-2025/player.csv)
+| Team    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/uslsl/2024-2025/team.csv)
+| Match    | Statsbomb, Soccerdonna, SkillCorner | Initial release. | [Download](https://github.com/USSoccerFederation/glass_onion/raw/refs/heads/main/datasets/uslsl/2024-2025/match.csv)
