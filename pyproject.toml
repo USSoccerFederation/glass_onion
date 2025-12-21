@@ -40,7 +40,7 @@ dev = [
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config"
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib"
 testpaths = ["tests"]
 
 [tool.coverage.run]
