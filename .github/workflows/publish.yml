@@ -23,12 +23,16 @@ jobs:
         run: uv python install 3.13
       - name: Build
         run: uv build
-      - name: Run Tests
-        run: uv run pytest tests
-      # Check that basic features work and we didn't miss to include crucial files
+      - name: Run tests
+        run: uv run pytest
+      - name: Store version in environment
+        run: |
+          PKG_VERSION=$(uv version | sed 's|^glass-onion ||')
+          PKG_VERSION=$(echo "$PKG_VERSION" | xargs)
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
       - name: Smoke test (wheel)
-        run: uv run --isolated --no-project --with dist/*.whl tests/smoke_test.py
+        run: uv run --isolated --no-project --with dist/glass_onion_${{ env.PKG_VERSION }}-py3-none-any.whl tests/integration/test_packaging.py
       - name: Smoke test (source distribution)
-        run: uv run --isolated --no-project --with dist/*.tar.gz tests/smoke_test.py
+        run: uv run --isolated --no-project --with dist/glass_onion_${{ env.PKG_VERSION }}.tar.gz tests/integration/test_packaging.py
       - name: Publish
         run: uv publish
