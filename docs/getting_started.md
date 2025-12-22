@@ -45,7 +45,7 @@ statsbomb_player_df = pd.DataFrame(statsbomb_players)
 
 ### Assigning unified team identifiers
 
-We now need to unify the team identifiers across these two dataframes. With just two teams, we can do this manually (as below). If we wanted to do this across the entire competition, we could build a more complex workflow with Glass Onion.
+We need to unify team identifiers across these two dataframes so Glass Onion can properly use `team_id` in its synchronization logic. With just two teams, we can do this manually (as below). If we wanted to do this across the entire competition, we could build a more complex workflow with Glass Onion.
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
 
