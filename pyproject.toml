@@ -47,6 +47,9 @@ dev = [
     "types-python-dateutil>=2.9.0.20251115",
     "types-xlrd>=2.0.0.20251020",
     "pytest-mock>=3.15.1",
+    "kloppy>=3.18.0",
+    "markdown-exec[ansi]>=1.12.1",
+    "pandas[output-formatting]>=2.3.3",
 ]
 
 [tool.pytest.ini_options]

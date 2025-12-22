@@ -34,18 +34,19 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.details
   - pymdownx.tasklist
+  - md_in_html
 
 plugins:
 - search
 - mkdocstrings
 - autorefs
+- markdown-exec
 
 nav:
   - Home: index.md
   - Installation: installation.md
+  - "Getting Started": getting_started.md
   - Methodology: methodology.md
-  - "Integrating Glass Onion": integrating.md
-  - Datasets: datasets.md
   - Reference:
       - reference/index.md
       - Engine: reference/engine.md
@@ -53,6 +54,8 @@ nav:
       - Team: reference/team.md
       - Player: reference/player.md
       - Utilities: reference/utils.md
+  - Datasets: datasets.md
+  - "Integrating Glass Onion": integrating.md
   - Contributing: contributing.md
 
 extra_css:
