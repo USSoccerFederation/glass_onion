@@ -1,6 +1,6 @@
 # Getting Started
 
-Need a very quick introduction to Glass Onion? Here's an example of identifier synchronization across two public datasets for the 2023-2024 1. Bundesliga season: [Statsbomb](https://github.com/statsbomb/open-data) and [Impect](https://github.com/ImpectAPI/open-data). If you're already familiar with how Glass Onion works, feel free to move on to another tab!
+Need a very quick introduction to Glass Onion? Here's an example of identifier synchronization across two public datasets for the 2023-2024 1. Bundesliga season: [Statsbomb](https://github.com/statsbomb/open-data) and [Impect](https://github.com/ImpectAPI/open-data). If you're already familiar with how Glass Onion works, feel free to move on to the [integration guide](./integrating.md), where you can learn how to make Glass Onion part of a production workflow.
 
 ## Installing Glass Onion
 
