@@ -54,7 +54,6 @@ nav:
       - Team: reference/team.md
       - Player: reference/player.md
       - Utilities: reference/utils.md
-  - Datasets: datasets.md
   - "Integrating Glass Onion": integrating.md
   - Contributing: contributing.md
 
