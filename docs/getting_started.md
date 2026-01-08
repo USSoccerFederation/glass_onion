@@ -126,7 +126,7 @@ You can then join other dataframes using `result.data` to link the Impect and St
 
 Let's say you want to compare a player's Statsbomb Shot xG to their Impect Packing xG. We'll need to parse out both KPIs from their JSON files:
 
-```python exec="true" source="above" session="getting-started"
+```python linenums="1" exec="true" source="above" session="getting-started"
 # Kloppy doesn't cover this case, so we have to parse both JSON files ourselves.
 import json
 import requests
@@ -160,7 +160,7 @@ html_result = re.sub("class=\"dataframe\"", "", impect_player_match.head().to_ht
 print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>""")
 ```
 
-```python exec="true" source="above" session="getting-started"
+```python linenums="1" exec="true" source="above" session="getting-started"
 import pandas as pd
 statsbomb_player_match_df = pd.read_json("https://raw.githubusercontent.com/statsbomb/open-data/refs/heads/master/data/events/3895052.json")
 statsbomb_player_match_df["match_id"] = "3895052"
@@ -199,7 +199,7 @@ print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{ht
 
 But once we have both datasets, we can join them easily:
 
-```python exec="true" source="above" session="getting-started"
+```python linenums="1" exec="true" source="above" session="getting-started"
 composite_df = pd.merge(
     left=impect_player_match,
     right=result.data,

@@ -4,7 +4,7 @@ When building an object identifier sync pipeline, there are a bunch of other tas
 
 In general, our process looks something like this for every object type:
 
-<img src="/assets/img/integration/Slide1.jpeg" height="100%" />
+<img src="/assets/img/integration/Slide1.png" height="100%" />
 
 In our pipeline, each object type depends on a "higher-order" object type to have unified identifiers in order to reduce the search space of potential matches (more details in [Step 2](#step-2-glass-onion-synchronization)). Data providers modify competitions and seasons least often, so we synchronize those by hand. That manual work allows us to automate the synchronization process for teams, which unlocks that process for matches, which then unlocks that process for players.
 
@@ -26,7 +26,7 @@ We collect data from the provider-specific tables into a single Spark DataFrame 
 
 Here's what this might look like in code for player synchronization:
 
-```python
+```python linenums="1"
 from functools import reduce
 
 ## Notes:
@@ -170,7 +170,7 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 
 With these prerequisites in place, we can actually run `GroupedData.applyInPandas(func, schema)`:
 
-```python
+```python linenums="1"
 all_synced_records = (
     all_remaining_records
         .groupBy("grouping_key")
@@ -355,7 +355,7 @@ Our "knockout logic" effectively ignores the existence of duplicates in the "kno
 
 In code:
 
-```python
+```python linenums="1"
 
 id_counts = {
     f"{k}_num": F.row_number().over(
@@ -424,7 +424,7 @@ But the next task poses a philosophical question: if our table for this object i
 
 We might structure our data formatting like so:
 
-```python
+```python linenums="1"
 # assuming you have joined provider-specific tables with aliases `prov_a`, `prov_b`, `prov_c`:
 
 knockout_list = (
@@ -507,7 +507,7 @@ Here's what our example table would look like if we apply this strategy:
 
 Here's what this looks like in code:
 
-```python
+```python linenums="1"
 
 knockout_list = (
     knockout_list
@@ -563,7 +563,7 @@ With our pipeline generating a "knockout list" that meets our target criteria:
 
 We can simply execute a `MERGE INTO` statement into the table for this object in our unified schema:
 
-```python
+```python linenums="1"
 
 data_providers = ["provider_a", "provider_b", "provider_c"]
 table_fields = data_providers + [
