@@ -9,7 +9,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import re
 
 
-def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str]) -> pd.DataFrame:
+def dataframe_coalesce(
+    df: pd.DataFrame, columns: Union[pd.Index, list[str], str]
+) -> pd.DataFrame:
     """
     Unifies dataframe columns after a [`pandas.DataFrame.merge`](https://pandas.pydata.org/docs/reference/api/pandas.merge.html#pandas.merge) or [`pandas.DataFrame.join`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.join.html#pandas.DataFrame.join) operation using a SQL-style COALESCE.
 
@@ -30,7 +32,7 @@ def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str
 
     if isinstance(columns, str):
         columns = [columns]
-    
+
     if len(df.columns) == 0:
         return df
 
@@ -40,14 +42,16 @@ def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str
             values_available_y = df[f"{o}_x"].isna() & df[f"{o}_y"].notna()
             df.loc[values_available_y, f"{o}_x"] = df.loc[values_available_y, f"{o}_y"]
             # remove the spare column
-            df.rename({ f"{o}_x": o }, axis=1, inplace=True)
+            df.rename({f"{o}_x": o}, axis=1, inplace=True)
             df.drop([f"{o}_y"], axis=1, inplace=True)
         # else: do nothing, don't care about the data
 
     return df
 
 
-def dataframe_clean_merged_fields(df: pd.DataFrame, columns: Union[pd.Index, list[str], str]) -> pd.DataFrame:
+def dataframe_clean_merged_fields(
+    df: pd.DataFrame, columns: Union[pd.Index, list[str], str]
+) -> pd.DataFrame:
     """
     Cleans up dataframe columns after a [`pandas.DataFrame.merge`](https://pandas.pydata.org/docs/reference/api/pandas.merge.html#pandas.merge) or [`pandas.DataFrame.join`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.join.html#pandas.DataFrame.join) operation by keeping the first instance of the column and dropping others.
 
@@ -68,13 +72,13 @@ def dataframe_clean_merged_fields(df: pd.DataFrame, columns: Union[pd.Index, lis
 
     if isinstance(columns, str):
         columns = [columns]
-    
+
     if len(df.columns) == 0:
         return df
-    
+
     for o in columns:
         if f"{o}_x" in df.columns and f"{o}_y" in df.columns:
-            df.rename({ f"{o}_x": o }, axis=1, inplace=True)
+            df.rename({f"{o}_x": o}, axis=1, inplace=True)
             df.drop([f"{o}_y"], axis=1, inplace=True)
 
     return df

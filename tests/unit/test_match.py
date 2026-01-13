@@ -3,6 +3,7 @@ from glass_onion.match import MatchSyncEngine, MatchSyncableContent
 import pandas as pd
 from itertools import permutations
 
+
 def test_init_competition_context():
     engine = MatchSyncEngine(
         content=[
@@ -234,7 +235,7 @@ def test_synchronize_three_levels_no_B_match_iterations():
             [
                 {
                     "provider_b_match_id": "1",
-                    "matchday": "2", 
+                    "matchday": "2",
                     "match_date": "2025-02-01",
                     "home_team_id": 1,
                     "away_team_id": 2,
@@ -275,9 +276,13 @@ def test_synchronize_three_levels_no_B_match_iterations():
                 "provider_b_match_id",
                 "provider_c_match_id",
             ]
-        ) == set(result.data.columns), f"Expected columns did not match actual columns for iteration ({id_mask})"
+        ) == set(result.data.columns), (
+            f"Expected columns did not match actual columns for iteration ({id_mask})"
+        )
 
-        assert len(result.data) == 2, f"Expected rows did not match actual rows for iteration ({id_mask})"
+        assert len(result.data) == 2, (
+            f"Expected rows did not match actual rows for iteration ({id_mask})"
+        )
         assert (
             len(
                 result.data[
@@ -286,5 +291,6 @@ def test_synchronize_three_levels_no_B_match_iterations():
                 ]
             )
             == 1
-        ), f"Expected A & C matches did not match actual A & C matches for iteration ({id_mask})"
-        
+        ), (
+            f"Expected A & C matches did not match actual A & C matches for iteration ({id_mask})"
+        )

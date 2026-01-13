@@ -4,8 +4,13 @@ import re
 from typing import Any, Optional, Tuple, Union
 import pandas as pd
 from thefuzz import process
-from glass_onion.utils import apply_cosine_similarity, dataframe_coalesce, series_normalize
+from glass_onion.utils import (
+    apply_cosine_similarity,
+    dataframe_coalesce,
+    series_normalize,
+)
 from itertools import combinations
+
 
 class SyncableContent:
     """
@@ -20,9 +25,10 @@ class SyncableContent:
         self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
-
         assert data is not None, f"Field `data` can not be null"
-        assert isinstance(data, pd.DataFrame), "Field `data` must be a pandas.DataFrame object"
+        assert isinstance(data, pd.DataFrame), (
+            "Field `data` must be a pandas.DataFrame object"
+        )
         assert self.id_field in self.data.columns, (
             f"Field `{self.id_field}` must be available as a column in `data`"
         )
@@ -468,8 +474,10 @@ class SyncEngine:
             return pd.DataFrame(data=[], columns=[input1.id_field, input2.id_field])
 
         return pd.DataFrame(results)
-    
-    def synchronize_all_combinations(self, content: Optional[list[SyncableContent]] = None) -> SyncableContent:
+
+    def synchronize_all_combinations(
+        self, content: Optional[list[SyncableContent]] = None
+    ) -> SyncableContent:
         """
         Internal wrapper around `synchronize_pair()` that generates all possible combinations of the elements in `content` to run `synchronize_pair` on.
 
@@ -481,7 +489,7 @@ class SyncEngine:
         """
         if content is None:
             content = self.content
-    
+
         results = []
         combos = list(combinations(content, 2))
         for x, y in combos:
@@ -555,9 +563,7 @@ class SyncEngine:
         id_mask = list(map(lambda x: x.id_field, self.content))
 
         synced = SyncableContent(
-            self.object_type,
-            self.content[0].provider,
-            sync_result.data
+            self.object_type, self.content[0].provider, sync_result.data
         )
 
         self.verbose_log(
