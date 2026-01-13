@@ -26,7 +26,6 @@ def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str
         A pandas.DataFrame object with the specified columns COALESCEd.
     """
     assert isinstance(df, pd.DataFrame), "`df` must be a pandas.DataFrame object"
-    assert len(columns) > 0, "`columns` must be non-empty"
 
     if isinstance(columns, str):
         columns = [columns]
