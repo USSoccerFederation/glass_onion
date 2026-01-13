@@ -1,18 +1,29 @@
 [project]
 name = "glass-onion"
 version = "0.1"
-description = "Add your description here"
+description = "A package for synchronizing soccer object identifiers."
 readme = "README.md"
+license = { file = "LICENSE" }
 authors = [
-    { name = "Data Analytics", email = "sportingdata@ussoccer.org" }
+    { name = "US Soccer - Data Analytics", email = "sportingdata@ussoccer.org" }
 ]
 requires-python = ">=3.11"
+keywords = ["soccer", "tracking data", "event data", "sports analytics"]
+classifiers = [
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: BSD License",
+]
 dependencies = [
     "numpy>=2.3.3",
     "pandas>=2.3.3",
     "scikit-learn>=1.7.2",
     "thefuzz>=0.22.1",
-    "unidecode>=1.4.0"
+    "unidecode>=1.4.0",
 ]
 
 [build-system]
@@ -21,6 +32,50 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.0",
+    "mkdocstrings>=1.0.0",
+    "mkdocstrings-python>=2.0.1",
+    "mypy>=1.19.0",
+    "pre-commit>=4.5.0",
     "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
     "ruff>=0.14.0",
+    "scipy-stubs>=1.16.3.3",
+    "pandas-stubs>=2.3.3.251201",
+    "types-openpyxl>=3.1.5.20250919",
+    "types-python-dateutil>=2.9.0.20251115",
+    "types-xlrd>=2.0.0.20251020",
+    "pytest-mock>=3.15.1",
+    "kloppy>=3.18.0",
+    "markdown-exec[ansi]>=1.12.1",
+    "pandas[output-formatting]>=2.3.3",
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --tb=long --code-highlight=yes --ignore=tests/integration"
+testpaths = ["tests"]
+
+[project.urls]
+Repository = "https://github.com/USSoccerFederation/glass_onion"
+Documentation = "https://github.com/USSoccerFederation/glass_onion/blob/main/docs/"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
 ]

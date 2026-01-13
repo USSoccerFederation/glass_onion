@@ -1,0 +1,43 @@
+data_provider,provider_team_id,team_name,team_gender,team_youth,team_age_group,team_international,ussf_country_id,team_confederation,competition_id,season_id
+provider_b,8670,San Diego Wave FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,8101,Angel City FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,5027,Portland Thorns FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,316,NJ/NY Gotham FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,13449,Bay FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,6081,Orlando Pride,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,5526,Houston Dash,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,5026,Seattle Reign FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,8586,Kansas City Current,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,6170,North Carolina Courage,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,5028,Washington Spirit,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,7417,Racing Louisville FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,6330,Utah Royals FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_b,89,Chicago Stars FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,760,Seattle Reign,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,763,NJ/NY Gotham FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,766,North Carolina Courage,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,21983,Bay FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,767,Utah Royals,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,5106,Kansas City,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,5105,Racing Louisville FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,759,Washington Spirit,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,9101,San Diego Wave,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,762,Houston Dash,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,761,Chicago Red Stars,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,9100,Angel City,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,765,Portland Thorns,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_a,764,Orlando Pride,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2332,San Diego Wave,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,1830,Racing Louisville FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2335,NJ/NY Gotham FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2338,Angel City FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2337,Chicago Red Stars,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2333,Washington Spirit,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2334,Orlando Pride SC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,1833,North Carolina Courage,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2331,OL Reign FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,1831,Houston Dash,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,1832,Portland Thorns FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,3484,Utah Royals Fc,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,3485,Bay FC,female,false,senior,false,USA,CONCACAF,NWSL,2025
+provider_c,2329,KC Current,female,false,senior,false,USA,CONCACAF,NWSL,2025

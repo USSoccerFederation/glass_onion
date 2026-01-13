@@ -7,3 +7,9 @@ __pycache__/
 scratch/**
 !scratch/README.md
 .ruff_cache
+site/
+*/.DS_Store
+.DS_Store
+.coverage
+htmlcov/
+coverage.xml

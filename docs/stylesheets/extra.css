@@ -1,0 +1,176 @@
+/* USSF 90min Display */
+@font-face {
+    font-family: 'ussf-display';
+    src: url('../assets/fonts/USSF 90min Display/ussf90mindisplay-medium.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-display';
+    src: url('../assets/fonts/USSF 90min Display/ussf90mindisplay-bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-display';
+    src: url('../assets/fonts/USSF 90min Display/ussf90mindisplay-light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-display';
+    src: url('../assets/fonts/USSF 90min Display/ussf90mindisplay-thin.otf') format('opentype');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-display';
+    src: url('../assets/fonts/USSF 90min Display/ussf90mindisplay-black.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* USSF 90min Display Condensed (Under Consideration)
+@font-face {
+    font-family: "ussf-display-condensed";
+    src: url("../assets/fonts/USSF 90min Display Condensed/ussf90mindisplaycond-light.otf")
+        format("opentype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+} */
+
+/* USSF 90min Text */
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-medium.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-mediumitalic.otf') format('opentype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-bold.otf') format('opentype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-bolditalic.otf') format('opentype');
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-lightitalic.otf') format('opentype');
+    font-weight: 300;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-thin.otf') format('opentype');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-thinitalic.otf') format('opentype');
+    font-weight: 100;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-black.otf') format('opentype');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ussf-text';
+    src: url('../assets/fonts/USSF 90min Text/ussf90mintext-blackitalic.otf') format('opentype');
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+.font-ussf {
+    font-family: 'ussf-display', sans-serif;
+}
+
+/* .font-ussf-condensed {
+    font-family: "ussf-display-condensed", sans-serif;
+} */
+
+.font-ussf-text {
+    font-family: 'ussf-text', sans-serif;
+}
+
+
+.md-typeset h1, h2, h3, h4, h5, h6 {
+    --md-text-font: "ussf-display"; 
+}
+
+:root {
+    --md-text-font: "ussf-text"; 
+    --md-header-font: "ussf-display"; 
+}
+
+:root  > * {
+  --md-primary-fg-color:        #c2002f;
+  --md-primary-fg-color--light: #4a5a9a;
+  --md-primary-fg-color--dark:  #212844;
+}
+
+.md-header__button.md-logo > img {
+    height: 50px;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  border-color: #c2002f !important;
+}
+
+.md-typeset summary {
+  background-color: #c2002f0f !important;
+}
+
+.md-typeset .admonition-title:before, .md-typeset summary:before {
+    background-color: #c2002f;
+}

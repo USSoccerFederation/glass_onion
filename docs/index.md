@@ -1,20 +1,8 @@
-# glass_onion
+# Glass Onion
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/glass_onion.svg)](https://pypi.org/project/glass_onion/)
 ![](https://img.shields.io/github/license/PySport/glass_onion)
 ![](https://img.shields.io/pypi/pyversions/glass_onion)
-
-
-## Table of Contents
-
-- [Summary](#summary)
-- [Installation](#installation)
-- [Documentation](#documentation)
-- [Background](#background)
-- [Methodology](#methodology)
-- [Contributing](#contributing)
-- [License](#license)
-- [Why the name `Glass Onion`?](#why-the-name-glass-onion)
 
 
 ## Summary
@@ -28,7 +16,8 @@ Glass Onion aims to do one thing -- synchronizing soccer data object identifiers
 | Player   | `jersey_number`, `team_id`, `player_name`, `player_nickname`, `birth_date` | Teams | Works best within a single match. |
 
 Any identifiers _other than the ones being synchronized_ are assumed to be universal across data providers (e.g. `team_id` when synchronizing players). Why? Each object type depends on a "higher-order" object type to have unified identifiers in order to reduce the search space of potential matches (more details in [Integrating Glass Onion: Step 2](./docs/integrating.md#step-2-glass-onion-synchronization)). Having unified competitions and seasons unlocks the synchronizations for teams, which unlocks that process for matches, and the same for players.
-When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A example workflow can be found in the **[integration guide](docs/integrating.md)**. Our **[Getting Started page](getting_started.md)** provides a simpler example that allows you to get up and running with Glass Onion quickly.
+
+When building an object identifier sync pipeline, there are a bunch of other tasks that you may need to do that Glass Onion does not provide support for: deduplication, false positive detection, etc. A example workflow can be found in the **[integration guide](integrating.md)**. Our **[Getting Started page](getting_started.md)** provides a simpler example that allows you to get up and running with Glass Onion quickly.
 
 **Please note**: this package simply combines common synchronization techniques to get the closest match for two objects from different data providers. The _accuracy_ of these matches is not necessarily guaranteed. Please review matches for accuracy (either as part of your pipeline or manually).
 
@@ -48,11 +37,8 @@ You can also install from GitHub for the latest updates:
 pip install git+https://github.com/USSoccerFederation/glass_onion.git
 ```
 
-For more details, refer to the [installation guide](docs/installation.md).
+For more details, refer to the [installation guide](installation.md).
 
-## Documentation
-
-Please see the [docs](docs/index.md).
 
 ## Background
 
@@ -62,16 +48,15 @@ Our hope is this package will help new data analysts and analytics groups get up
 
 ## Methodology
 
-Please see the [docs](docs/methodology.md).
+Please see the **[docs](methodology.md)**.
 
 ## Contributing
-
-All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. More information can be found in the **[contributing guide](docs/contributing.md)**.
+All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. More information can be found in the **[contributing guide](contributing.md)**.
 
 ## License
 
-Glass Onion is distributed under the terms of the [BSD 3 license](LICENSE).
+Glass Onion is distributed under the terms of the [BSD 3 license](https://github.com/USSoccerFederation/glass_onion/blob/main/LICENSE).
 
 ## Why the name `Glass Onion`?
 
-Syncing identifiers is often fragile because of the human error involved in recording object names and metadata. It also often takes multiple ~~approaches~~ layers to synchronize objects. So: glass onion.
+Syncing identifiers is often fragile because of the human error involved in recording object names and metadata. It also often takes multiple <del>approaches</del> layers to synchronize objects. So: glass onion.
