@@ -4,8 +4,13 @@ import re
 from typing import Any, Optional, Tuple, Union
 import pandas as pd
 from thefuzz import process
-from glass_onion.utils import apply_cosine_similarity, dataframe_coalesce, series_normalize
+from glass_onion.utils import (
+    apply_cosine_similarity,
+    dataframe_coalesce,
+    series_normalize,
+)
 from itertools import combinations
+
 
 class SyncableContent:
     """
@@ -20,9 +25,10 @@ class SyncableContent:
         self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
-
         assert data is not None, f"Field `data` can not be null"
-        assert isinstance(data, pd.DataFrame), "Field `data` must be a pandas.DataFrame object"
+        assert isinstance(data, pd.DataFrame), (
+            "Field `data` must be a pandas.DataFrame object"
+        )
         assert self.id_field in self.data.columns, (
             f"Field `{self.id_field}` must be available as a column in `data`"
         )
@@ -468,16 +474,28 @@ class SyncEngine:
             return pd.DataFrame(data=[], columns=[input1.id_field, input2.id_field])
 
         return pd.DataFrame(results)
-    
-    def synchronize_all_combinations(self, content: Optional[list[SyncableContent]] = None) -> SyncableContent:
+
+    def synchronize_all_combinations(
+        self, content: Optional[list[SyncableContent]] = None
+    ) -> SyncableContent:
+        """
+        Internal wrapper around `synchronize_pair()` that generates all possible combinations of the elements in `content` to run `synchronize_pair` on.
+
+        Args:
+            content (list[SyncableContent]): a list of SyncableContent objects that correspond to `object_type`. If `None`, defaults to `self.content`.
+
+        Returns:
+            A SyncableContent object with the combined results of all executions of `synchronize_pair`.
+        """
         if content is None:
             content = self.content
-    
+
         results = []
-        combos = list(combinations(self.content, 2))
+        combos = list(combinations(content, 2))
         for x, y in combos:
             z = self.synchronize_pair(x, y)
             results.append(z)
+
         return reduce(lambda x, y: x.merge(y), results[1:], results[0])
 
     def synchronize_pair(
@@ -516,7 +534,7 @@ class SyncEngine:
 
         There are three distinct layers here:
 
-        1. The aforementioned sync process that results in a data frame of synced identifiers.
+        1. The sync process that results in a data frame of synced identifiers, defined in each `SyncEngine` subclass's `synchronize_pair()` implementation.
         2. Collect remaining unsynced rows and run the sync process on those. Append any newly synced rows to the result dataframe from Layer 1.
         3. Append any remaining unsynced rows to the bottom of the result data frame.
 
@@ -545,9 +563,7 @@ class SyncEngine:
         id_mask = list(map(lambda x: x.id_field, self.content))
 
         synced = SyncableContent(
-            self.object_type,
-            self.content[0].provider,
-            sync_result.data #.dropna(subset=id_mask),
+            self.object_type, self.content[0].provider, sync_result.data
         )
 
         self.verbose_log(
@@ -573,7 +589,7 @@ class SyncEngine:
             )
             # self.verbose_log([d.data for d in rem_results])
             remainders_result = self.synchronize_all_combinations(remainders)
-            rem_id_mask = list(map(lambda x: x.id_field, self.content))
+            rem_id_mask = list(map(lambda x: x.id_field, remainders))
             rem_id_mask = [
                 x for x in rem_id_mask if x in remainders_result.data.columns
             ]

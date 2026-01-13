@@ -75,7 +75,10 @@ def test_synchronize(
                     object_data[f"{provider}_{object_type}_id"] == provider_id
                 ]
 
-        assert len(object_data) == 1, f"Expecting IDs: {expected_ids}, Actual IDs: " + object_data.to_json(orient="records", index=False)
+        assert len(object_data) == 1, (
+            f"Expecting IDs: {expected_ids}, Actual IDs: "
+            + object_data.to_json(orient="records", index=False)
+        )
 
 
 if __name__ == "__main__":
@@ -159,10 +162,14 @@ if __name__ == "__main__":
             "file_path": "2022-25-usa.csv",
             "object_type": "match",
             "expected_object_ids": [
-                {"provider_a": "3961387", "provider_b": "4447768", "provider_c": "1702326"},
-                {"provider_a": "3939974", "provider_b": None, "provider_c":	"1586695"}
+                {
+                    "provider_a": "3961387",
+                    "provider_b": "4447768",
+                    "provider_c": "1702326",
+                },
+                {"provider_a": "3939974", "provider_b": None, "provider_c": "1586695"},
             ],
-        }
+        },
     ]
 
     for i, c in enumerate(test_cases):

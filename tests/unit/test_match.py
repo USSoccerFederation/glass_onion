@@ -1,6 +1,7 @@
 import pytest
 from glass_onion.match import MatchSyncEngine, MatchSyncableContent
 import pandas as pd
+from itertools import permutations
 
 
 def test_init_competition_context():
@@ -210,3 +211,86 @@ def test_synchronize_three_levels(
         )
         == expected_matches
     )
+
+
+def test_synchronize_three_levels_no_B_match_iterations():
+    left = MatchSyncableContent(
+        "provider_a",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_a_match_id": "1",
+                    "matchday": "1",
+                    "match_date": "2025-01-01",
+                    "home_team_id": 1,
+                    "away_team_id": 2,
+                }
+            ]
+        ),
+    )
+
+    middle = MatchSyncableContent(
+        "provider_b",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_b_match_id": "1",
+                    "matchday": "2",
+                    "match_date": "2025-02-01",
+                    "home_team_id": 1,
+                    "away_team_id": 2,
+                }
+            ]
+        ),
+    )
+
+    right = MatchSyncableContent(
+        "provider_c",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_c_match_id": "1",
+                    "matchday": "1",
+                    "match_date": "2025-01-02",
+                    "home_team_id": 1,
+                    "away_team_id": 2,
+                }
+            ]
+        ),
+    )
+
+    options = permutations([left, middle, right], 3)
+    for p in options:
+        content = list(p)
+        id_mask = list([c.id_field for c in content])
+        engine = MatchSyncEngine(content, verbose=True)
+        result = engine.synchronize()
+
+        assert set(
+            [
+                "match_date",
+                "provider",
+                "home_team_id",
+                "away_team_id",
+                "provider_a_match_id",
+                "provider_b_match_id",
+                "provider_c_match_id",
+            ]
+        ) == set(result.data.columns), (
+            f"Expected columns did not match actual columns for iteration ({id_mask})"
+        )
+
+        assert len(result.data) == 2, (
+            f"Expected rows did not match actual rows for iteration ({id_mask})"
+        )
+        assert (
+            len(
+                result.data[
+                    result.data["provider_a_match_id"].notna()
+                    & result.data["provider_c_match_id"].notna()
+                ]
+            )
+            == 1
+        ), (
+            f"Expected A & C matches did not match actual A & C matches for iteration ({id_mask})"
+        )
