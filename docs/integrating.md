@@ -82,7 +82,7 @@ all_remaining_records = (
 
 Stuffing all of our data into a common schema is a architectural choice forced by PySpark's [`GroupedData.applyInPandas(func, schema)`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.GroupedData.applyInPandas.html) to parallelize the work of identifier synchronization across a Spark cluster's nodes. This choice also has the benefit of naturally reducing the search space for synchronization if we have unified identifiers for higher-order objects. For matches and teams, we group by internal identifiers for competition and season, and for players, we group by an internal match identifier. 
 
-To use `GroupedData.applyInPandas(func, schema)` properly, we predefine a target schema (`schema`) and wrap `SyncEngine.synchronize()` a function (`func`) to produce that schema consistently. If given providers A to C, our target schema looks something like this:
+To use `GroupedData.applyInPandas(func, schema)` properly, we predefine a target schema (`schema`) and wrap [SyncEngine.synchronize][glass_onion.engine.SyncEngine.synchronize] a function (`func`) to produce that schema consistently. If given providers A to C, our target schema looks something like this:
 ```python linenums="1"
 from pyspark.sql import types as T
 
