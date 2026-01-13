@@ -11,7 +11,7 @@ import re
 
 def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str]) -> pd.DataFrame:
     """
-    Unifies dataframe columns after a [pandas.DataFrame.merge] or [pandas.join] operation using a SQL-style COALESCE.
+    Unifies dataframe columns after a [`pandas.DataFrame.merge`](https://pandas.pydata.org/docs/reference/api/pandas.merge.html#pandas.merge) or [`pandas.DataFrame.join`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.join.html#pandas.DataFrame.join) operation using a SQL-style COALESCE.
 
     Assumes that the suffixes used in the `merge` or `join` operation are the defaults (IE: `_x` and `_y`). IE: if `a` is passed in `columns`,
     the columns COALESCEd will be `a_x` and `a_y`. Rows where `a_x` is NA/None will get new values from `a_y`, then `a_x` will be renamed to `a` and `a_y` will be dropped.
@@ -48,7 +48,7 @@ def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str
 
 def dataframe_clean_merged_fields(df: pd.DataFrame, columns: Union[pd.Index, list[str], str]) -> pd.DataFrame:
     """
-    Cleans up dataframe columns after a [pandas.DataFrame.merge] or [pandas.join] operation by keeping the first instance of the column and dropping others.
+    Cleans up dataframe columns after a [`pandas.DataFrame.merge`](https://pandas.pydata.org/docs/reference/api/pandas.merge.html#pandas.merge) or [`pandas.DataFrame.join`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.join.html#pandas.DataFrame.join) operation by keeping the first instance of the column and dropping others.
 
     Assumes that the suffixes used in the `merge` or `join` operation are the defaults (IE: `_x` and `_y`). IE: if `a` is passed in `columns`,
     the columns considered for cleanup will be `a_x` and `a_y`. `a_x` will be renamed `a`, and `a_y` will be dropped.
@@ -312,7 +312,7 @@ def series_remove_youth_prefixes(input: "pd.Series[str]") -> "pd.Series[str]":
 
 def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
     """
-    Applies a full suite of normalizations to a pandas.Series of strings.
+    Applies a full suite of normalizations to a [`pandas.Series`](https://pandas.pydata.org/docs/reference/api/pandas.Series.html) of strings.
 
     Please see the following methods for more details:
 
@@ -339,7 +339,7 @@ def series_normalize(input: "pd.Series[str]") -> "pd.Series[str]":
 
 def series_normalize_team_names(input: "pd.Series[str]") -> "pd.Series[str]":
     """
-    Applies a full suite of normalizations to a pandas.Series of team name strings.
+    Applies a full suite of normalizations to a [`pandas.Series`](https://pandas.pydata.org/docs/reference/api/pandas.Series.html) of team name strings.
 
     Please see the following methods for more details:
 
@@ -363,7 +363,7 @@ def apply_cosine_similarity(
     input1: "pd.Series[str]", input2: "pd.Series[str]"
 ) -> pd.DataFrame:
     """
-    Generates a dataframe of cosine similarity results from two pandas.Series. The inputs have NULL/NA values removed before being vectorized for use in the similarity algorithm.
+    Generates a dataframe of cosine similarity results from two [`pandas.Series`](https://pandas.pydata.org/docs/reference/api/pandas.Series.html). The inputs have NULL/NA values removed before being vectorized for use in the similarity algorithm.
 
     For more technical details on cosine similarity, please see [`sklearn.feature_extraction.text.TfidfVectorizer`](https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html) and [`sklearn.metrics.pairwise.cosine_similarity`](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html).
 
