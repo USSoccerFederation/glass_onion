@@ -1,5 +1,6 @@
 import pandas as pd
 from glass_onion.engine import SyncableContent, SyncEngine
+from glass_onion.utils import dataframe_coalesce
 
 
 class MatchSyncableContent(SyncableContent):
@@ -186,20 +187,7 @@ class MatchSyncEngine(SyncEngine):
                     sync_result, attempt_syncs, on=input1.id_field, how="left"
                 )
 
-                sync_result.loc[
-                    (sync_result[f"{input2.id_field}_x"].isna()), f"{input2.id_field}_x"
-                ] = sync_result.loc[
-                    (sync_result[f"{input2.id_field}_x"].isna()), f"{input2.id_field}_y"
-                ]
-                sync_result.drop([f"{input2.id_field}_y"], axis=1, inplace=True)
-
-                sync_result.rename(
-                    {
-                        f"{input2.id_field}_x": input2.id_field,
-                    },
-                    axis=1,
-                    inplace=True,
-                )
+                dataframe_coalesce(sync_result, [input2.id_field])
 
         # third pass: use matchday (if available) instead of match_date (for situations where the game was postponed or delayed to another date outside of the [-3, 3] range)
         synced = sync_result.dropna(subset=[input1.id_field, input2.id_field])
@@ -230,22 +218,6 @@ class MatchSyncEngine(SyncEngine):
                     sync_result, result_df, on=input1.id_field, how="left"
                 )
 
-                sync_result.loc[
-                    (sync_result[f"{input2.id_field}_x"].isna()), f"{input2.id_field}_x"
-                ] = sync_result.loc[
-                    (sync_result[f"{input2.id_field}_x"].isna()), f"{input2.id_field}_y"
-                ]
-                sync_result.drop(
-                    [f"{input2.id_field}_y", "matchday_y"], axis=1, inplace=True
-                )
-
-                sync_result.rename(
-                    {
-                        f"{input2.id_field}_x": input2.id_field,
-                        "matchday_x": "matchday",
-                    },
-                    axis=1,
-                    inplace=True,
-                )
+                dataframe_coalesce(sync_result, [input2.id_field])
 
         return MatchSyncableContent(input1.provider, data=sync_result)

@@ -5,6 +5,8 @@ import pandas as pd
 from glass_onion.engine import SyncableContent, SyncEngine
 from typing import Optional, Tuple
 
+from glass_onion.utils import dataframe_coalesce
+
 
 class PlayerSyncableContent(SyncableContent):
     """
@@ -404,22 +406,7 @@ class PlayerSyncEngine(SyncEngine):
                 sync_result = pd.merge(
                     sync_result, attempt_syncs, on=input1.id_field, how="left"
                 )
-                sync_result.loc[
-                    sync_result[input1.id_field].isin(attempt_syncs[input1.id_field]),
-                    f"{input2.id_field}_x",
-                ] = sync_result.loc[
-                    sync_result[input1.id_field].isin(attempt_syncs[input1.id_field]),
-                    f"{input2.id_field}_y",
-                ]
-                sync_result.drop([f"{input2.id_field}_y"], axis=1, inplace=True)
-
-                sync_result.rename(
-                    {
-                        f"{input2.id_field}_x": input2.id_field,
-                    },
-                    axis=1,
-                    inplace=True,
-                )
+                dataframe_coalesce(sync_result, [input2.id_field])
                 synced = sync_result.dropna(subset=[input1.id_field, input2.id_field])
 
         final_result = PlayerSyncableContent(

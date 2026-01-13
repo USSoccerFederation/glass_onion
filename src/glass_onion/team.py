@@ -1,6 +1,7 @@
 from __future__ import annotations
 import pandas as pd
 from glass_onion.engine import SyncableContent, SyncEngine
+from glass_onion.utils import dataframe_coalesce
 
 
 class TeamSyncableContent(SyncableContent):
@@ -106,23 +107,8 @@ class TeamSyncEngine(SyncEngine):
                     sync_result = pd.merge(
                         sync_result, attempt_syncs, on=input1.id_field, how="left"
                     )
+                    dataframe_coalesce(sync_result, [input2.id_field])
 
-                    sync_result.loc[
-                        (sync_result[f"{input2.id_field}_x"].isna()),
-                        f"{input2.id_field}_x",
-                    ] = sync_result.loc[
-                        (sync_result[f"{input2.id_field}_x"].isna()),
-                        f"{input2.id_field}_y",
-                    ]
-                    sync_result.drop([f"{input2.id_field}_y"], axis=1, inplace=True)
-
-                    sync_result.rename(
-                        {
-                            f"{input2.id_field}_x": input2.id_field,
-                        },
-                        axis=1,
-                        inplace=True,
-                    )
                     # update remainders check
                     synced = sync_result.dropna(
                         subset=[input1.id_field, input2.id_field]
@@ -162,21 +148,6 @@ class TeamSyncEngine(SyncEngine):
                         sync_result, attempt_syncs, on=input1.id_field, how="left"
                     )
 
-                    sync_result.loc[
-                        (sync_result[f"{input2.id_field}_x"].isna()),
-                        f"{input2.id_field}_x",
-                    ] = sync_result.loc[
-                        (sync_result[f"{input2.id_field}_x"].isna()),
-                        f"{input2.id_field}_y",
-                    ]
-                    sync_result.drop([f"{input2.id_field}_y"], axis=1, inplace=True)
-
-                    sync_result.rename(
-                        {
-                            f"{input2.id_field}_x": input2.id_field,
-                        },
-                        axis=1,
-                        inplace=True,
-                    )
+                    dataframe_coalesce(sync_result, [input2.id_field])
 
         return TeamSyncableContent(input1.provider, data=sync_result)

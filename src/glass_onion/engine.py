@@ -1,11 +1,11 @@
 from functools import reduce
 from datetime import datetime
 import re
-from typing import Any, Tuple, Union
+from typing import Any, Optional, Tuple, Union
 import pandas as pd
 from thefuzz import process
-from glass_onion.utils import apply_cosine_similarity, series_normalize
-
+from glass_onion.utils import apply_cosine_similarity, dataframe_coalesce, series_normalize
+from itertools import combinations
 
 class SyncableContent:
     """
@@ -56,7 +56,24 @@ class SyncableContent:
             right.data.columns.str.contains(f"_{self.object_type}_id")
         ]
 
+        overlapping_mask = right.data.columns[
+            (right.data.columns.isin(self.data.columns))
+            & (right.data.columns != right.id_field)
+        ]
+
+        overlapping_id_mask = right.data.columns[
+            (right.data.columns.isin(overlapping_mask))
+            & (right.data.columns.isin(id_mask))
+        ]
+
         merged = pd.merge(self.data, right.data[id_mask], how="left", on=right.id_field)
+        dataframe_coalesce(merged, overlapping_id_mask)
+
+        # don't take right values for non IDs
+        # for o in overlapping_mask:
+        #     if o not in overlapping_id_mask:
+        #         merged.rename({ f"{o}_x": o }, axis=1, inplace=True)
+        #         merged.drop([f"{o}_y"], axis=1, inplace=True)
 
         return SyncableContent(
             object_type=self.object_type, provider=self.provider, data=merged
@@ -455,6 +472,17 @@ class SyncEngine:
             return pd.DataFrame(data=[], columns=[input1.id_field, input2.id_field])
 
         return pd.DataFrame(results)
+    
+    def synchronize_all_combinations(self, content: Optional[list[SyncableContent]] = None) -> SyncableContent:
+        if content is None:
+            content = self.content
+    
+        results = []
+        combos = list(combinations(self.content, 2))
+        for x, y in combos:
+            z = self.synchronize_pair(x, y)
+            results.append(z)
+        return reduce(lambda x, y: x.merge(y), results[1:], results[0])
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
@@ -517,20 +545,13 @@ class SyncEngine:
         )
 
         self.verbose_log(f"Layer 1: agglomeration")
-        results = []
-        for i in range(0, len(self.content) - 1):
-            x = self.content[i]
-            y = self.content[i + 1]
-            z = self.synchronize_pair(x, y)
-            results.append(z)
-
-        sync_result = reduce(lambda x, y: x.merge(y), results[1:], results[0])
+        sync_result = self.synchronize_all_combinations()
         id_mask = list(map(lambda x: x.id_field, self.content))
 
         synced = SyncableContent(
             self.object_type,
             self.content[0].provider,
-            sync_result.data.dropna(subset=id_mask),
+            sync_result.data #.dropna(subset=id_mask),
         )
 
         self.verbose_log(
@@ -554,17 +575,8 @@ class SyncEngine:
             self.verbose_log(
                 f"Layer 2: Agglomeration on remaining unsynced rows across {len(remainders)} datasets"
             )
-            rem_results = []
-            for i in range(0, len(remainders) - 1):
-                x = remainders[i]
-                y = remainders[i + 1]
-                z = self.synchronize_pair(x, y)
-                rem_results.append(z)
-
-            self.verbose_log([d.data for d in rem_results])
-            remainders_result = reduce(
-                lambda x, y: x.merge(y), rem_results[1:], rem_results[0]
-            )
+            # self.verbose_log([d.data for d in rem_results])
+            remainders_result = self.synchronize_all_combinations(remainders)
             rem_id_mask = list(map(lambda x: x.id_field, self.content))
             rem_id_mask = [
                 x for x in rem_id_mask if x in remainders_result.data.columns

@@ -1,11 +1,29 @@
 """Utilities for performing object synchronization."""
 
+from typing import Union
 import pandas as pd
 from unidecode import unidecode
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
+
+
+def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str]) -> pd.DataFrame:
+    if isinstance(columns, str):
+        columns = [columns]
+    
+    for o in columns:
+        # if we have IDs that overlap, fill in the gaps in self.data from right.data
+        if f"{o}_x" in df.columns and f"{o}_y" in df.columns:
+            values_available_y = df[f"{o}_x"].isna() & df[f"{o}_y"].notna()
+            df.loc[values_available_y, f"{o}_x"] = df.loc[values_available_y, f"{o}_y"]
+            # remove the spare column
+            df.rename({ f"{o}_x": o }, axis=1, inplace=True)
+            df.drop([f"{o}_y"], axis=1, inplace=True)
+        # else: do nothing, don't care about the data
+
+    return df
 
 
 def string_ngrams(input: str, n: int = 3) -> list[str]:
