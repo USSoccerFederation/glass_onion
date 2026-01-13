@@ -83,7 +83,7 @@ FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
                 {"provider_a": "957", "provider_b": None},
             ],
         ),
-        # USA games
+        # USA games with mixed coverage
         (
             "2022-25-usa.csv",
             "match",
