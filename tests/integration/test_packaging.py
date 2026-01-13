@@ -64,18 +64,18 @@ def test_synchronize(
 
     # check different ID conditions/expectations
     for expected_ids in expected_object_ids:
-        player_data = result.data
+        object_data = result.data
         for provider, provider_id in expected_ids.items():
             if provider_id is None:
-                player_data = player_data[
-                    player_data[f"{provider}_{object_type}_id"].isna()
+                object_data = object_data[
+                    object_data[f"{provider}_{object_type}_id"].isna()
                 ]
             else:
-                player_data = player_data[
-                    player_data[f"{provider}_{object_type}_id"] == provider_id
+                object_data = object_data[
+                    object_data[f"{provider}_{object_type}_id"] == provider_id
                 ]
 
-        assert len(player_data) == 1
+        assert len(object_data) == 1, f"Expecting IDs: {expected_ids}, Actual IDs: " + object_data.to_json(orient="records", index=False)
 
 
 if __name__ == "__main__":

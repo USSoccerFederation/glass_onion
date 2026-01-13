@@ -26,8 +26,8 @@ jobs:
       - name: Run tests
         run: uv run pytest
       - name: Smoke test (wheel)
-        run: uv run --isolated --no-project --with dist/*.whl tests/integration/test_packaging.py
+        run: uv run --isolated --no-project --no-cache --with dist/*.whl tests/integration/test_packaging.py
       - name: Smoke test (source distribution)
-        run: uv run --isolated --no-project --with dist/*.tar.gz tests/integration/test_packaging.py
+        run: uv run --isolated --no-project --no-cache --with dist/*.tar.gz tests/integration/test_packaging.py
       - name: Publish
         run: uv publish
