@@ -119,6 +119,7 @@ def test_synchronize_pair(
         == expected_matches
     )
 
+
 @pytest.mark.parametrize(
     "middle_match_date, middle_matchday, expected_rows, expected_matches",
     [
@@ -126,14 +127,18 @@ def test_synchronize_pair(
         ("2025-01-02", "1", 1, 1),
         # # one day off, same game, don't use matchday -- A/B/C should sync
         ("2025-01-02", None, 1, 1),
-
         # clearly a different game -- A and C should sync, B separate
         ("2025-02-01", "2", 2, 1),
         # clearly a different game, no matchday -- A and C should sync, B separate
         ("2025-02-01", None, 2, 1),
     ],
 )
-def test_synchronize_three_levels(middle_match_date: str, middle_matchday: str, expected_rows: int, expected_matches: int):
+def test_synchronize_three_levels(
+    middle_match_date: str,
+    middle_matchday: str,
+    expected_rows: int,
+    expected_matches: int,
+):
     left = MatchSyncableContent(
         "provider_a",
         data=pd.DataFrame(
@@ -196,9 +201,12 @@ def test_synchronize_three_levels(middle_match_date: str, middle_matchday: str, 
     ) == set(result.data.columns)
 
     assert len(result.data) == expected_rows
-    assert len(
-        result.data[
-            result.data["provider_a_match_id"].notna()
-            & result.data["provider_c_match_id"].notna()
-        ]
-    ) == expected_matches
+    assert (
+        len(
+            result.data[
+                result.data["provider_a_match_id"].notna()
+                & result.data["provider_c_match_id"].notna()
+            ]
+        )
+        == expected_matches
+    )
