@@ -25,6 +25,7 @@ def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str
     Returns:
         A pandas.DataFrame object with the specified columns COALESCEd.
     """
+    assert df is not None, "`df` must be non-null"
     assert isinstance(df, pd.DataFrame), "`df` must be a pandas.DataFrame object"
 
     if isinstance(columns, str):
@@ -62,8 +63,8 @@ def dataframe_clean_merged_fields(df: pd.DataFrame, columns: Union[pd.Index, lis
     Returns:
         A pandas.DataFrame object.
     """
+    assert df is not None, "`df` must be non-null"
     assert isinstance(df, pd.DataFrame), "`df` must be a pandas.DataFrame object"
-    assert len(columns) > 0, "`columns` must be non-empty"
 
     if isinstance(columns, str):
         columns = [columns]

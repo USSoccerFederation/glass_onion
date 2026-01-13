@@ -8,12 +8,91 @@ from pandas.testing import assert_series_equal
 from pandas.core.dtypes.common import is_string_dtype, is_float_dtype
 from glass_onion.utils import (
     apply_cosine_similarity,
+    dataframe_clean_merged_fields,
     string_clean_spaces,
     string_remove_accents,
     string_remove_youth_suffixes,
     string_replace_common_womens_suffixes,
+    dataframe_coalesce
 )
 
+@pytest.mark.parametrize(
+    "input, expected_error",
+    [
+        (None, "`df` must be non-null"),
+        ("test", "`df` must be a pandas.DataFrame object"),
+    ],
+)
+def test_dataframe_coalesce_dataframe(input: pd.DataFrame, expected_error: str):
+    with pytest.raises(match=re.escape(expected_error)):
+        dataframe_coalesce(input, [])
+
+@pytest.mark.parametrize(
+    "columns, expected_df_columns, test_value",
+    [
+        (["test"], ["id", "test"], 0),
+        (["id"], ["id", "test_x", "test_y"], None),
+        (["test2"], ["id", "test_x", "test_y"], None),
+        (["test_x"], ["id", "test_x", "test_y"], None)
+    ],
+)
+def test_dataframe_coalesce_columns(columns: list[str], expected_df_columns: list[str], test_value: int):
+    input = pd.DataFrame([
+        {
+            "id": 0,
+            "test_x": pd.NA,
+            "test_y": 0
+        }
+    ])
+    df = dataframe_coalesce(input, columns)
+    assert set(df.columns) == set(expected_df_columns)
+
+    if test_value is not None:
+        assert "test" in df.columns
+        assert df.loc[df.index[0], "test"] == test_value
+    else:
+        assert "test" not in df.columns
+
+@pytest.mark.parametrize(
+    "input, expected_error",
+    [
+        (None, "`df` must be non-null"),
+        ("test", "`df` must be a pandas.DataFrame object")
+    ],
+)
+def test_dataframe_clean_merged_fields(input: pd.DataFrame, expected_error: str):
+    with pytest.raises(match=re.escape(expected_error)):
+        dataframe_clean_merged_fields(input, [])
+
+
+@pytest.mark.parametrize(
+    "columns, expected_df_columns, test_value",
+    [
+        (["test"], ["id", "test"], pd.NA),
+        (["id"], ["id", "test_x", "test_y"], None),
+        (["test2"], ["id", "test_x", "test_y"], None),
+        (["test_x"], ["id", "test_x", "test_y"], None)
+    ],
+)
+def test_dataframe_clean_merged_fields(columns: list[str], expected_df_columns: list[str], test_value: int):
+    input = pd.DataFrame([
+        {
+            "id": 0,
+            "test_x": pd.NA,
+            "test_y": 0
+        }
+    ])
+    df = dataframe_clean_merged_fields(input, columns)
+    assert set(df.columns) == set(expected_df_columns)
+
+    if test_value is not None:
+        assert "test" in df.columns
+        if pd.isna(test_value):
+            assert pd.isna(df.loc[df.index[0], "test"])
+        else:
+            assert df.loc[df.index[0], "test"] == test_value
+    else:
+        assert "test" not in df.columns
 
 @pytest.mark.parametrize(
     "input, n, expected",
