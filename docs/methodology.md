@@ -16,6 +16,8 @@ In general, Glass Onion takes a list of [SyncableContent][glass_onion.engine.Syn
 
 There are three distinct layers within [synchronize()][glass_onion.engine.SyncEngine.synchronize]'s wrapper logic:
 
+<img style="margin: auto !important; display: block;" src="/assets/img/methodology/Slide2.png" />
+
 1. The aforementioned sync process that results in a data frame of synced identifiers. How each object type is handled is described below.
 2. Collect remaining unsynced rows and run the sync process on those. Append any newly synced rows to the result dataframe from Layer 1.
 3. Append any remaining unsynced rows to the bottom of the result data frame.

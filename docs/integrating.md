@@ -4,7 +4,7 @@ When building an object identifier sync pipeline, there are a bunch of other tas
 
 In general, our process looks something like this for every object type:
 
-<img src="/assets/img/integration/Slide1.png" height="100%" />
+<img src="/assets/img/integration/Slide1.png" style="margin: auto !important; display: block;" />
 
 In our pipeline, each object type depends on a "higher-order" object type to have unified identifiers in order to reduce the search space of potential matches (more details in [Step 2](#step-2-glass-onion-synchronization)). Data providers modify competitions and seasons least often, so we synchronize those by hand. That manual work allows us to automate the synchronization process for teams, which unlocks that process for matches, which then unlocks that process for players.
 
