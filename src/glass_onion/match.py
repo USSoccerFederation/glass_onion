@@ -1,6 +1,6 @@
 import pandas as pd
 from glass_onion.engine import SyncableContent, SyncEngine
-from glass_onion.utils import dataframe_coalesce
+from glass_onion.utils import dataframe_coalesce, dataframe_clean_merged_fields
 
 
 class MatchSyncableContent(SyncableContent):
@@ -147,6 +147,9 @@ class MatchSyncEngine(SyncEngine):
         sync_result = pd.merge(
             input1.data, input2.data, on=self.join_columns, how="left"
         )
+        dataframe_coalesce(sync_result, [input1.id_field, input2.id_field])
+        dataframe_clean_merged_fields(sync_result, self.join_columns + ["matchday"])
+
         synced = sync_result.dropna(subset=[input1.id_field, input2.id_field])
 
         # second pass: dates are off by [-3, 3]

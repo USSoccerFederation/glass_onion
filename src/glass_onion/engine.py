@@ -20,7 +20,9 @@ class SyncableContent:
         self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
+
         assert data is not None, f"Field `data` can not be null"
+        assert isinstance(data, pd.DataFrame), "Field `data` must be a pandas.DataFrame object"
         assert self.id_field in self.data.columns, (
             f"Field `{self.id_field}` must be available as a column in `data`"
         )
@@ -68,12 +70,6 @@ class SyncableContent:
 
         merged = pd.merge(self.data, right.data[id_mask], how="left", on=right.id_field)
         dataframe_coalesce(merged, overlapping_id_mask)
-
-        # don't take right values for non IDs
-        # for o in overlapping_mask:
-        #     if o not in overlapping_id_mask:
-        #         merged.rename({ f"{o}_x": o }, axis=1, inplace=True)
-        #         merged.drop([f"{o}_y"], axis=1, inplace=True)
 
         return SyncableContent(
             object_type=self.object_type, provider=self.provider, data=merged

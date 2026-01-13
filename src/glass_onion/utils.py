@@ -10,9 +10,30 @@ import re
 
 
 def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str]) -> pd.DataFrame:
+    """
+    Unifies dataframe columns after a [pandas.DataFrame.merge] or [pandas.join] operation using a SQL-style COALESCE.
+
+    Assumes that the suffixes used in the `merge` or `join` operation are the defaults (IE: `_x` and `_y`). IE: if `a` is passed in `columns`,
+    the columns COALESCEd will be `a_x` and `a_y`. Rows where `a_x` is NA/None will get new values from `a_y`, then `a_x` will be renamed to `a` and `a_y` will be dropped.
+
+    If a column (or its suffixed versions) in `columns` does not exist in `df`, it will be ignored.
+
+    Args:
+        df (pandas.DataFrame): the dataframe to run COALESCE operations on.
+        columns (pandas.Index[str], list[str], str): the columns to COALESCE.
+
+    Returns:
+        A pandas.DataFrame object with the specified columns COALESCEd.
+    """
+    assert isinstance(df, pd.DataFrame), "`df` must be a pandas.DataFrame object"
+    assert len(columns) > 0, "`columns` must be non-empty"
+
     if isinstance(columns, str):
         columns = [columns]
     
+    if len(df.columns) == 0:
+        return df
+
     for o in columns:
         # if we have IDs that overlap, fill in the gaps in self.data from right.data
         if f"{o}_x" in df.columns and f"{o}_y" in df.columns:
@@ -22,6 +43,39 @@ def dataframe_coalesce(df: pd.DataFrame, columns: Union[pd.Index, list[str], str
             df.rename({ f"{o}_x": o }, axis=1, inplace=True)
             df.drop([f"{o}_y"], axis=1, inplace=True)
         # else: do nothing, don't care about the data
+
+    return df
+
+
+def dataframe_clean_merged_fields(df: pd.DataFrame, columns: Union[pd.Index, list[str], str]) -> pd.DataFrame:
+    """
+    Cleans up dataframe columns after a [pandas.DataFrame.merge] or [pandas.join] operation by keeping the first instance of the column and dropping others.
+
+    Assumes that the suffixes used in the `merge` or `join` operation are the defaults (IE: `_x` and `_y`). IE: if `a` is passed in `columns`,
+    the columns considered for cleanup will be `a_x` and `a_y`. `a_x` will be renamed `a`, and `a_y` will be dropped.
+
+    If a column (or its suffixed versions) in `columns` does not exist in `df`, it will be ignored.
+
+    Args:
+        df (pandas.DataFrame): the dataframe to clean up columns on
+        columns (pandas.Index[str], list[str], str): the columns to look for for cleanup
+
+    Returns:
+        A pandas.DataFrame object.
+    """
+    assert isinstance(df, pd.DataFrame), "`df` must be a pandas.DataFrame object"
+    assert len(columns) > 0, "`columns` must be non-empty"
+
+    if isinstance(columns, str):
+        columns = [columns]
+    
+    if len(df.columns) == 0:
+        return df
+    
+    for o in columns:
+        if f"{o}_x" in df.columns and f"{o}_y" in df.columns:
+            df.rename({ f"{o}_x": o }, axis=1, inplace=True)
+            df.drop([f"{o}_y"], axis=1, inplace=True)
 
     return df
 

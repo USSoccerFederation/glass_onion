@@ -25,11 +25,11 @@ def test_init_competition_context():
 @pytest.mark.parametrize(
     "a_match_date, b_match_date, expose_matchday, n_synchronize_on_adjusted_dates, n_synchronize_on_matchday, expected_matches",
     [
-        # ensure no methods hit with perfect match
+        # # ensure no methods hit with perfect match
         ("2025-01-01", "2025-01-01", False, 0, 0, 1),
-        # ensure only adjusted dates if one day away and no matchday
+        # # ensure only adjusted dates if one day away and no matchday
         ("2025-01-01", "2025-01-02", False, 12, 0, 1),
-        # ensure no matches if not the same date + no matchday
+        # # ensure no matches if not the same date + no matchday
         ("2025-01-01", "2025-01-08", False, 12, 0, 0),
         # ensure match if not the same date + exposed matchday
         ("2025-01-01", "2025-01-08", True, 12, 1, 1),
@@ -133,7 +133,7 @@ def test_synchronize_pair(
         ("2025-02-01", None, 2, 1),
     ],
 )
-def test_synchronize_three_levels(middle_match_date: str, middle_matchday: str, expected_rows: int, expected_matches: int, mocker):
+def test_synchronize_three_levels(middle_match_date: str, middle_matchday: str, expected_rows: int, expected_matches: int):
     left = MatchSyncableContent(
         "provider_a",
         data=pd.DataFrame(
@@ -201,4 +201,4 @@ def test_synchronize_three_levels(middle_match_date: str, middle_matchday: str, 
             result.data["provider_a_match_id"].notna()
             & result.data["provider_c_match_id"].notna()
         ]
-    ) == 1
+    ) == expected_matches
