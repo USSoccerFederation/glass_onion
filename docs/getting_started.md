@@ -32,20 +32,33 @@ We can pull out the player information from both of these event datasets into Pa
 ```python linenums="1" exec="true" source="above" session="getting-started"
 import pandas as pd 
 
-impect_players = []
-for t in impect_dataset.metadata.teams:
-    impect_players += list(map(lambda x: {"impect_player_id": x.player_id, "jersey_number": x.jersey_no, "team_id": x.team.team_id, "team_name": x.team.name, "player_name": x.full_name, "player_nickname": x.name}, t.players))
-impect_player_df = pd.DataFrame(impect_players)
+def get_players(dataset, provider):
+    return pd.DataFrame([
+        {
+            f"{provider}_player_id": player.player_id,
+            "jersey_number": player.jersey_no,
+            "team_id": team.team_id,
+            "team_name": team.name,
+            "player_name": player.full_name,
+            "player_nickname": player.name
+        }
+        for team in dataset.metadata.teams
+        for player in team.players
+    ])
 
-statsbomb_players = []
-for t in statsbomb_dataset.metadata.teams:
-    statsbomb_players += list(map(lambda x: {"statsbomb_player_id": x.player_id, "jersey_number": x.jersey_no, "team_id": x.team.team_id, "team_name": x.team.name, "player_name": x.full_name, "player_nickname": x.name}, t.players))
-statsbomb_player_df = pd.DataFrame(statsbomb_players)
+impect_player_df = get_players(
+    impect_dataset, 
+    provider="impect"
+)
+statsbomb_player_df = get_players(
+    statsbomb_dataset, 
+    provider="statsbomb"
+)
 ```
 
 ### Assigning unified team identifiers
 
-We need to unify team identifiers across these two dataframes so Glass Onion can properly use `team_id` in its synchronization logic. With just two teams, we can do this manually (as below). If we wanted to do this across the entire competition, we could build a more complex workflow with Glass Onion.
+We need to unify team identifiers across these two dataframes so Glass Onion can properly use `team_id` in its synchronization logic. With just two teams, we can do this manually (as below) by simply setting RB Leipzig's `team_id` to RBL and Bayer Leverkusen's to B04. If we wanted to do this across the entire competition, we could build a [more complex](./integrating.md) workflow with Glass Onion.
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
 
@@ -122,7 +135,7 @@ print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{ht
 ```
 You can then join other dataframes using `result.data` to link the Impect and Statsbomb datasets together. 
 
-### Using the synced identifiers
+### Future: Using the synced identifiers
 
 Let's say you want to compare a player's Statsbomb Shot xG to their Impect Packing xG. We'll need to parse out both KPIs from their JSON files:
 
