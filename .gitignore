@@ -1,0 +1,15 @@
+.databricks/
+build/
+dist/
+__pycache__/
+*.egg-info
+.venv/
+scratch/**
+!scratch/README.md
+.ruff_cache
+site/
+*/.DS_Store
+.DS_Store
+.coverage
+htmlcov/
+coverage.xml

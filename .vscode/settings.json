@@ -1,0 +1,17 @@
+{
+    "python.analysis.stubPath": ".vscode",
+    "jupyter.interactiveWindow.cellMarker.default": "# COMMAND ----------",
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "python.analysis.extraPaths": ["src"],
+    "files.exclude": {
+        "**/*.egg-info": true,
+        "**/__pycache__": true,
+        ".pytest_cache": true,
+    },
+    "testing.defaultGutterClickAction": "debug",
+}

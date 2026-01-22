@@ -1,0 +1,161 @@
+competition_id,season_id,provider_competition_id,provider_season_id,provider_match_id,match_date,home_team_id,away_team_id,matchday,data_provider,match_gender,kick_off,home_score,away_score
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,3794468,2022-06-11,usa,grn,3,provider_b,male,02:00:00.000,5.0,0.0
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,3794472,2022-06-15,slv,usa,4,provider_b,male,02:00:00.000,1.0,1.0
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,3794476,2023-03-25,grn,usa,5,provider_b,male,00:00:00.000,1.0,7.0
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,3794480,2023-03-27,usa,slv,6,provider_b,male,23:30:00.000,1.0,0.0
+CONCACAF Nations League Finals,2022/2023,CONCACAF Nations League Finals,2022/2023,4086897,2023-06-16,usa,mex,1,provider_b,male,02:00:00.000,3.0,0.0
+CONCACAF Nations League Finals,2022/2023,CONCACAF Nations League Finals,2022/2023,4087984,2023-06-19,can,usa,3,provider_b,male,00:30:00.000,0.0,2.0
+International Friendlies,2023/2024,International Friendlies,2023/2024,4173894,2023-09-09,usa,uzb,2022/2023,provider_b,male,21:30:00.000,3.0,0.0
+International Friendlies,2023/2024,International Friendlies,2023/2024,4173896,2023-09-13,usa,oma,2023,provider_b,male,00:30:00.000,4.0,0.0
+International Friendlies,2023/2024,International Friendlies,2023/2024,4082540,2023-10-14,usa,ger,41,provider_b,male,19:00:00.000,1.0,3.0
+International Friendlies,2023/2024,International Friendlies,2023/2024,4173897,2023-10-18,usa,gha,33,provider_b,male,00:30:00.000,4.0,0.0
+CONCACAF Nations League A,2023/2024,CNNF,2023,4227793,2023-11-17,usa,tri,1,provider_b,male,02:00:00.000,3.0,0.0
+CONCACAF Nations League A,2023/2024,CNNF,2023,4227797,2023-11-21,tri,usa,2,provider_b,male,00:00:00.000,2.0,1.0
+International Friendlies,2023/2024,International Friendlies,2023/2024,4270810,2024-01-20,usa,svn,19,provider_b,male,20:00:00.000,0.0,1.0
+CONCACAF Nations League A,2023/2024,CNNF,2023,4232651,2024-03-21,usa,jam,3,provider_b,male,23:00:00.000,3.0,1.0
+CONCACAF Nations League A,2023/2024,CNNF,2023,4318469,2024-03-25,mex,usa,6,provider_b,male,01:15:00.000,0.0,2.0
+International Friendlies,2023/2024,International Friendlies,2023/2024,4347263,2024-06-08,usa,col,10,provider_b,male,21:30:00.000,1.0,5.0
+International Friendlies,2023/2024,International Friendlies,2023/2024,4347279,2024-06-12,usa,bra,11,provider_b,male,23:00:00.000,1.0,1.0
+Copa America,2024,Copa America,2024,4238571,2024-06-27,pan,usa,2,provider_b,male,22:00:00.000,2.0,1.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4447768,2024-09-07,usa,can,4,provider_b,male,20:00:00.000,1.0,2.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4447785,2024-09-10,usa,nzl,2,provider_b,male,23:00:00.000,1.0,1.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4459507,2024-10-13,usa,pan,3,provider_b,male,01:00:00.000,2.0,0.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4466981,2024-10-16,mex,usa,4,provider_b,male,02:30:00.000,2.0,0.0
+CONCACAF Nations League Finals,2024/2025,CONCACAF Nations League Finals,2024/2025,4476836,2024-11-15,jam,usa,3,provider_b,male,01:00:00.000,0.0,1.0
+CONCACAF Nations League Finals,2024/2025,CONCACAF Nations League Finals,2024/2025,4476842,2024-11-19,usa,jam,4,provider_b,male,01:00:00.000,4.0,2.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4539608,2025-01-18,usa,ven,12,provider_b,male,20:00:00.000,3.0,1.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4507251,2025-01-23,usa,crc,47,provider_b,male,00:00:00.000,3.0,0.0
+CONCACAF Nations League Finals,2024/2025,CONCACAF Nations League Finals,2024/2025,4497374,2025-03-20,usa,pan,5,provider_b,male,23:00:00.000,0.0,1.0
+CONCACAF Nations League Finals,2024/2025,CONCACAF Nations League Finals,2024/2025,4580382,2025-03-23,can,usa,6,provider_b,male,22:00:00.000,2.0,1.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4575402,2025-06-07,usa,tur,52,provider_b,male,19:30:00.000,1.0,2.0
+International Friendlies,2024/2025,International Friendlies,2024/2025,4575687,2025-06-11,usa,sui,52,provider_b,male,00:00:00.000,0.0,4.0
+Gold Cup,2025,Gold Cup,2025,4620488,2025-06-15,usa,tri,1,provider_b,male,22:00:00.000,5.0,0.0
+Gold Cup,2025,Gold Cup,2025,4620496,2025-06-20,ksa,usa,2,provider_b,male,01:15:00.000,0.0,1.0
+Gold Cup,2025,Gold Cup,2025,4620505,2025-06-22,usa,hai,3,provider_b,male,23:00:00.000,2.0,1.0
+Gold Cup,2025,Gold Cup,2025,4620675,2025-06-29,usa,crc,4,provider_b,male,23:00:00.000,6.0,5.0
+Gold Cup,2025,Gold Cup,2025,4620676,2025-07-02,usa,gua,5,provider_b,male,23:00:00.000,2.0,1.0
+Gold Cup,2025,Gold Cup,2025,4620677,2025-07-06,usa,mex,6,provider_b,male,23:00:00.000,1.0,2.0
+International Friendlies,2025/2026,International Friendlies,2025/2026,4718847,2025-09-06,usa,kor,1,provider_b,male,21:00:00.000,0.0,2.0
+International Friendlies,2025/2026,International Friendlies,2025/2026,4623057,2025-09-09,usa,jpn,2,provider_b,male,23:30:00.000,2.0,0.0
+International Friendlies,2025/2026,International Friendlies,2025/2026,4740786,2025-10-11,usa,ecu,3,provider_b,male,00:30:00.000,1.0,1.0
+International Friendlies,2025/2026,International Friendlies,2025/2026,4740818,2025-10-15,usa,aus,4,provider_b,male,01:00:00.000,2.0,1.0
+International Friendlies,2025/2026,International Friendlies,2025/2026,4763206,2025-11-15,usa,par,5,provider_b,male,22:00:00.000,2.0,1.0
+International Friendlies,2025/2026,International Friendlies,2025/2026,4740843,2025-11-19,usa,uru,6,provider_b,male,00:00:00.000,5.0,1.0
+International Friendlies,2025/2026,International Friendlies,2025/2026,4780804,2026-06-06,usa,ger,3,provider_b,male,18:30:00.000,,
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811567,2021-09-03,slv,usa,1,provider_a,male,04:05:00.000,0.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811570,2021-09-06,usa,can,2,provider_a,male,02:10:00.000,1.0,1.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811605,2021-09-09,hon,usa,3,provider_a,male,04:30:00.000,1.0,4.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811600,2021-10-08,usa,jam,4,provider_a,male,01:30:00.000,2.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811573,2021-10-11,pan,usa,5,provider_a,male,,1.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811580,2021-10-14,usa,crc,6,provider_a,male,01:00:00.000,2.0,1.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811604,2021-11-13,usa,mex,7,provider_a,male,04:10:00.000,2.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811564,2021-11-17,jam,usa,8,provider_a,male,,1.0,1.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811610,2022-01-28,usa,slv,9,provider_a,male,02:00:00.000,1.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811593,2022-01-30,can,usa,10,provider_a,male,22:05:00.000,2.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811581,2022-02-03,usa,hon,11,provider_a,male,02:30:00.000,3.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811594,2022-03-25,mex,usa,12,provider_a,male,04:00:00.000,0.0,0.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811613,2022-03-28,usa,pan,13,provider_a,male,01:00:00.000,5.0,1.0
+CONCACAF World Cup Qualifiers,2022,CONCACAF World Cup Qualifiers,2022,3811590,2022-03-31,crc,usa,14,provider_a,male,03:05:00.000,2.0,0.0
+FIFA World Cup,2022,FIFA World Cup,2022,3857282,2022-11-21,usa,wal,1,provider_a,male,21:00:00.000,1.0,1.0
+FIFA World Cup,2022,FIFA World Cup,2022,3857272,2022-11-25,eng,usa,2,provider_a,male,21:00:00.000,0.0,0.0
+FIFA World Cup,2022,FIFA World Cup,2022,3857278,2022-11-29,irn,usa,3,provider_a,male,21:00:00.000,0.0,1.0
+FIFA World Cup,2022,FIFA World Cup,2022,3869117,2022-12-03,ned,usa,4,provider_a,male,17:00:00.000,3.0,1.0
+CONCACAF Nations League Finals,2022/2023,CONCACAF Nations League Finals,2022/2023,3881931,2023-03-28,usa,slv,6,provider_a,male,01:30:00.000,1.0,0.0
+CONCACAF Nations League Finals,2022/2023,CONCACAF Nations League Finals,2022/2023,3891066,2023-06-19,can,usa,8,provider_a,male,03:30:00.000,0.0,2.0
+Gold Cup,2023,Gold Cup,2023,3889540,2023-06-25,usa,jam,1,provider_a,male,04:30:00.000,1.0,1.0
+Gold Cup,2023,Gold Cup,2023,3889548,2023-06-29,skn,usa,2,provider_a,male,04:30:00.000,0.0,6.0
+Gold Cup,2023,Gold Cup,2023,3889556,2023-07-02,usa,tri,3,provider_a,male,23:00:00.000,6.0,0.0
+Gold Cup,2023,Gold Cup,2023,3890226,2023-07-10,usa,can,4,provider_a,male,02:30:00.000,2.0,2.0
+Gold Cup,2023,Gold Cup,2023,3890887,2023-07-12,usa,pan,5,provider_a,male,23:30:00.000,1.0,1.0
+International Friendlies,2023,International Friendlies,2023,3960746,2023-09-09,usa,uzb,1,provider_a,male,21:30:00.000,3.0,0.0
+International Friendlies,2023,International Friendlies,2023,3960747,2023-09-13,usa,oma,2,provider_a,male,00:30:00.000,4.0,0.0
+International Friendlies,2023,International Friendlies,2023,3960748,2023-10-15,usa,ger,3,provider_a,male,19:00:00.000,1.0,3.0
+International Friendlies,2023,International Friendlies,2023,3960749,2023-10-18,usa,gha,4,provider_a,male,00:30:00.000,4.0,0.0
+CONCACAF Nations League Finals,2023/2024,CONCACAF Nations League Finals,2023/2024,3960172,2024-03-25,mex,usa,4,provider_a,male,03:15:00.000,0.0,2.0
+International Friendlies,2024,International Friendlies,2024,3960752,2024-06-08,usa,col,7,provider_a,male,21:30:00.000,1.0,5.0
+International Friendlies,2024,International Friendlies,2024,3960753,2024-06-12,usa,bra,8,provider_a,male,23:00:00.000,1.0,1.0
+Copa America,2024,Copa America,2024,3939974,2024-06-24,usa,bol,1,provider_a,male,01:00:00.000,2.0,0.0
+Copa America,2024,Copa America,2024,3939981,2024-06-28,pan,usa,2,provider_a,male,01:00:00.000,2.0,1.0
+Copa America,2024,Copa America,2024,3939990,2024-07-02,usa,uru,3,provider_a,male,04:00:00.000,0.0,1.0
+International Friendlies,2024,International Friendlies,2024,3961387,2024-09-08,usa,can,9,provider_a,male,20:00:00.000,1.0,2.0
+International Friendlies,2024,International Friendlies,2024,3961389,2024-09-10,usa,nzl,10,provider_a,male,23:00:00.000,1.0,1.0
+International Friendlies,2024,International Friendlies,2024,3965977,2024-10-13,usa,pan,11,provider_a,male,01:00:00.000,2.0,0.0
+International Friendlies,2024,International Friendlies,2024,3965978,2024-10-16,mex,usa,12,provider_a,male,02:30:00.000,2.0,0.0
+CONCACAF Nations League Finals,2024/2025,CONACAF Nations League Finals,2024/2025,3968646,2024-11-15,jam,usa,5,provider_a,male,03:00:00.000,0.0,1.0
+CONCACAF Nations League Finals,2024/2025,CONACAF Nations League Finals,2024/2025,3968647,2024-11-19,usa,jam,6,provider_a,male,03:00:00.000,4.0,2.0
+International Friendlies,2025,International Friendlies,2025,3975510,2025-01-18,usa,ven,1,provider_a,male,20:00:00.000,3.0,1.0
+International Friendlies,2025,International Friendlies,2025,3975511,2025-01-23,usa,crc,2,provider_a,male,00:00:00.000,3.0,0.0
+CONCACAF Nations League Finals,2024/2025,CONACAF Nations League Finals,2024/2025,3969241,2025-03-21,usa,pan,7,provider_a,male,01:00:00.000,0.0,1.0
+CONCACAF Nations League Finals,2024/2025,CONACAF Nations League Finals,2024/2025,3990494,2025-03-23,can,usa,8,provider_a,male,22:00:00.000,2.0,1.0
+International Friendlies,2025,International Friendlies,2025,3995478,2025-06-07,usa,tur,9,provider_a,male,19:30:00.000,1.0,2.0
+International Friendlies,2025,International Friendlies,2025,3995479,2025-06-11,usa,sui,10,provider_a,male,00:00:00.000,0.0,4.0
+Gold Cup,2025,Gold Cup,2025,3997876,2025-06-15,usa,tri,1,provider_a,male,22:00:00.000,5.0,0.0
+Gold Cup,2025,Gold Cup,2025,3997879,2025-06-20,ksa,usa,2,provider_a,male,01:15:00.000,0.0,1.0
+Gold Cup,2025,Gold Cup,2025,3997887,2025-06-22,usa,hai,3,provider_a,male,23:00:00.000,2.0,1.0
+Gold Cup,2025,Gold Cup,2025,3998553,2025-06-29,usa,crc,4,provider_a,male,23:00:00.000,2.0,2.0
+Gold Cup,2025,Gold Cup,2025,3998801,2025-07-02,usa,gua,5,provider_a,male,23:00:00.000,2.0,1.0
+Gold Cup,2025,Gold Cup,2025,3999114,2025-07-06,usa,mex,6,provider_a,male,23:00:00.000,1.0,2.0
+International Friendlies,2025,International Friendlies,2025,4025929,2025-09-06,usa,kor,12,provider_a,male,21:00:00.000,0.0,2.0
+International Friendlies,2025,International Friendlies,2025,4025930,2025-09-09,usa,jpn,12,provider_a,male,23:30:00.000,2.0,0.0
+International Friendlies,2025,International Friendlies,2025,4025931,2025-10-11,usa,ecu,13,provider_a,male,00:30:00.000,1.0,1.0
+International Friendlies,2025,International Friendlies,2025,4025932,2025-10-15,usa,aus,14,provider_a,male,01:00:00.000,2.0,1.0
+International Friendlies,2025,International Friendlies,2025,4035659,2025-11-15,usa,par,16,provider_a,male,22:00:00.000,2.0,1.0
+International Friendlies,2025,International Friendlies,2025,4035658,2025-11-19,usa,uru,17,provider_a,male,00:00:00.000,5.0,1.0
+International Friendlies,2026,International Friendlies,2026,4045154,2026-03-28,usa,bel,1,provider_a,male,19:30:00.000,,
+International Friendlies,2026,International Friendlies,2026,4045155,2026-03-31,usa,por,2,provider_a,male,23:00:00.000,,
+International Friendlies,2026,International Friendlies,2026,4045156,2026-05-31,usa,sen,3,provider_a,male,19:30:00.000,,
+International Friendlies,2026,International Friendlies,2026,4045157,2026-06-06,usa,ger,4,provider_a,male,18:30:00.000,,
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,242096,2022-06-15,slv,usa,4,provider_c,male,02:00:00.000,1.0,1.0
+FIFA World Cup,2022,FIFA World Cup,2022,431879,2022-11-21,usa,wal,1,provider_c,male,19:00:00.000,1.0,1.0
+FIFA World Cup,2022,FIFA World Cup,2022,436669,2022-11-25,eng,usa,2,provider_c,male,19:00:00.000,0.0,0.0
+FIFA World Cup,2022,FIFA World Cup,2022,447299,2022-11-29,irn,usa,3,provider_c,male,19:00:00.000,0.0,1.0
+FIFA World Cup,2022,FIFA World Cup,2022,459774,2022-12-03,ned,usa,1,provider_c,male,15:00:00.000,3.0,1.0
+International Friendlies,2023,International Friendlies,2023,580930,2023-01-26,usa,srb,1,provider_c,male,03:00:00.000,1.0,2.0
+International Friendlies,2023,International Friendlies,2023,580929,2023-01-29,usa,col,1,provider_c,male,00:30:00.000,0.0,0.0
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,729979,2023-03-27,usa,slv,6,provider_c,male,23:30:00.000,1.0,0.0
+International Friendlies,2023,International Friendlies,2023,859139,2023-04-20,usa,mex,4,provider_c,male,02:00:00.000,1.0,1.0
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,902525,2023-06-16,usa,mex,1,provider_c,male,02:00:00.000,0.0,0.0
+CONCACAF Nations League A,2022/2023,CONCACAF Nations League A,2022/2023,907958,2023-06-19,can,usa,1,provider_c,male,00:30:00.000,0.0,0.0
+Gold Cup,2023,Gold Cup,2023,921252,2023-06-25,usa,jam,1,provider_c,male,02:00:00.000,1.0,1.0
+Gold Cup,2023,Gold Cup,2023,929753,2023-06-29,skn,usa,2,provider_c,male,01:30:00.000,0.0,6.0
+Gold Cup,2023,Gold Cup,2023,937538,2023-07-02,usa,tri,3,provider_c,male,23:00:00.000,6.0,0.0
+Gold Cup,2023,Gold Cup,2023,951957,2023-07-09,usa,can,4,provider_c,male,23:30:00.000,2.0,2.0
+Gold Cup,2023,Gold Cup,2023,957495,2023-07-12,usa,pan,1,provider_c,male,23:30:00.000,1.0,1.0
+International Friendlies,2023,International Friendlies,2023,1084367,2023-09-09,usa,uzb,9,provider_c,male,21:30:00.000,3.0,0.0
+International Friendlies,2023,International Friendlies,2023,1090286,2023-09-13,usa,oma,9,provider_c,male,00:30:00.000,4.0,0.0
+International Friendlies,2023,International Friendlies,2023,1251601,2023-10-14,usa,ger,10,provider_c,male,19:00:00.000,1.0,3.0
+International Friendlies,2023,International Friendlies,2023,1251600,2023-10-18,usa,gha,10,provider_c,male,00:30:00.000,4.0,0.0
+CONCACAF Nations League A,2023/2024,CONCACAF Nations League A,2023/2024,1253656,2023-11-17,usa,tri,1,provider_c,male,02:00:00.000,3.0,0.0
+CONCACAF Nations League A,2023/2024,CONCACAF Nations League A,2023/2024,1279713,2023-11-21,tri,usa,2,provider_c,male,00:00:00.000,2.0,1.0
+International Friendlies,2024,International Friendlies,2024,1371651,2024-01-20,usa,svn,1,provider_c,male,20:00:00.000,0.0,0.0
+CONCACAF Nations League A,2023/2024,CONCACAF Nations League A,2023/2024,1451979,2024-03-21,usa,jam,1,provider_c,male,23:00:00.000,3.0,1.0
+CONCACAF Nations League A,2023/2024,CONCACAF Nations League A,2023/2024,1455175,2024-03-25,mex,usa,1,provider_c,male,01:15:00.000,0.0,2.0
+International Friendlies,2024,International Friendlies,2024,1586694,2024-06-08,usa,col,0,provider_c,male,21:30:00.000,1.0,5.0
+International Friendlies,2024,International Friendlies,2024,1585408,2024-06-12,usa,bra,0,provider_c,male,23:00:00.000,1.0,1.0
+Copa America,2024,Copa America,2024,1586695,2024-06-23,usa,bol,1,provider_c,male,22:00:00.000,2.0,0.0
+Copa America,2024,Copa America,2024,1594550,2024-06-27,pan,usa,2,provider_c,male,22:00:00.000,2.0,1.0
+Copa America,2024,Copa America,2024,1599173,2024-07-02,usa,uru,3,provider_c,male,01:00:00.000,0.0,1.0
+International Friendlies,2024,International Friendlies,2024,1702326,2024-09-07,usa,can,9,provider_c,male,20:00:00.000,1.0,2.0
+International Friendlies,2024,International Friendlies,2024,1744637,2024-09-10,usa,nzl,9,provider_c,male,23:00:00.000,1.0,1.0
+International Friendlies,2024,International Friendlies,2024,1784838,2024-10-13,usa,pan,10,provider_c,male,01:00:00.000,0.0,0.0
+International Friendlies,2024,International Friendlies,2024,1794274,2024-10-16,mex,usa,10,provider_c,male,02:30:00.000,2.0,0.0
+CONCACAF Nations League A,2024/2025,CONCACAF Nations League A,2024/2025,1857936,2024-11-15,jam,usa,1,provider_c,male,01:00:00.000,0.0,0.0
+CONCACAF Nations League A,2024/2025,CONCACAF Nations League A,2024/2025,1865793,2024-11-19,usa,jam,2,provider_c,male,01:00:00.000,4.0,2.0
+International Friendlies,2025,International Friendlies,2025,1973094,2025-01-18,usa,ven,1,provider_c,male,20:00:00.000,0.0,0.0
+International Friendlies,2025,International Friendlies,2025,1979174,2025-01-22,usa,crc,0,provider_c,male,23:00:00.000,0.0,0.0
+CONCACAF Nations League A,2024/2025,CONCACAF Nations League A,2024/2025,2008319,2025-03-20,usa,pan,4,provider_c,male,23:00:00.000,0.0,1.0
+CONCACAF Nations League A,2024/2025,CONCACAF Nations League A,2024/2025,2008452,2025-03-24,can,usa,4,provider_c,male,04:00:00.000,0.0,0.0
+International Friendlies,2025,International Friendlies,2025,2020274,2025-06-07,usa,tur,0,provider_c,male,19:30:00.000,0.0,0.0
+International Friendlies,2025,International Friendlies,2025,2020645,2025-06-10,usa,sui,0,provider_c,male,22:00:00.000,0.0,0.0
+Gold Cup,2025,Gold Cup,2025,2020985,2025-06-15,usa,tri,1,provider_c,male,20:00:00.000,0.0,0.0
+Gold Cup,2025,Gold Cup,2025,2021246,2025-06-19,ksa,usa,1,provider_c,male,23:15:00.000,0.0,0.0
+Gold Cup,2025,Gold Cup,2025,2021525,2025-06-22,usa,hai,3,provider_c,male,23:00:00.000,2.0,1.0
+Gold Cup,2025,Gold Cup,2025,2021904,2025-06-29,usa,crc,1,provider_c,male,19:00:00.000,0.0,0.0
+Gold Cup,2025,Gold Cup,2025,2022064,2025-07-02,usa,gua,1,provider_c,male,23:00:00.000,2.0,1.0
+Gold Cup,2025,Gold Cup,2025,2022210,2025-07-06,usa,mex,1,provider_c,male,23:00:00.000,1.0,2.0
+International Friendlies,2025,International Friendlies,2025,2029861,2025-09-06,usa,kor,0,provider_c,male,19:00:00.000,0.0,0.0
+International Friendlies,2025,International Friendlies,2025,2030119,2025-09-09,usa,jpn,0,provider_c,male,23:30:00.000,0.0,0.0
+International Friendlies,2025,International Friendlies,2025,2035743,2025-10-11,usa,ecu,0,provider_c,male,00:30:00.000,1.0,1.0
+International Friendlies,2025,International Friendlies,2025,2036226,2025-10-15,usa,aus,0,provider_c,male,01:00:00.000,0.0,0.0
+International Friendlies,2025,International Friendlies,2025,2043668,2025-11-15,usa,par,0,provider_c,male,22:00:00.000,2.0,1.0
+International Friendlies,2025,International Friendlies,2025,2043670,2025-11-19,usa,uru,0,provider_c,male,00:05:00.000,5.0,1.0

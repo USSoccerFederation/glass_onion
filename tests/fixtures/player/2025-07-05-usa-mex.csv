@@ -1,0 +1,139 @@
+match_id,provider_player_id,jersey_number,player_name,player_nickname,birth_date,team_id,player_gender,data_provider
+2025-07-06-USA-MEX,1066953,26,Mateo Chávez,Mateo Chávez,2004-05-12,MEX,male,provider_a
+2025-07-06-USA-MEX,1089574,24,Patrick Agyemang,Patrick Agyemang,2000-11-07,USA,male,provider_a
+2025-07-06-USA-MEX,1155723,7,Gilberto Mora,Gilberto Mora,2008-10-14,MEX,male,provider_a
+2025-07-06-USA-MEX,145466,13,Tim Ream,Tim Ream,1987-10-05,USA,male,provider_a
+2025-07-06-USA-MEX,160700,18,Ángel Sepúlveda,Ángel Sepúlveda,1991-02-15,MEX,male,provider_a
+2025-07-06-USA-MEX,206040,9,Raúl Jiménez,Raúl Jiménez,1991-05-05,MEX,male,provider_a
+2025-07-06-USA-MEX,245337,5,Walker Zimmerman,Walker Zimmerman,1993-05-19,USA,male,provider_a
+2025-07-06-USA-MEX,29559,13,Guillermo Ochoa,Guillermo Ochoa,1985-07-13,MEX,male,provider_a
+2025-07-06-USA-MEX,315762,14,Luca de la Torre,Luca de la Torre,1998-05-23,USA,male,provider_a
+2025-07-06-USA-MEX,332705,4,Tyler Adams,Tyler Adams,1999-02-14,USA,male,provider_a
+2025-07-06-USA-MEX,334042,17,Orbelín Pineda,Orbelín Pineda,1996-03-24,MEX,male,provider_a
+2025-07-06-USA-MEX,344854,23,Jesús Gallardo,Jesús Gallardo,1994-08-15,MEX,male,provider_a
+2025-07-06-USA-MEX,353583,25,Roberto Alvarado,Roberto Alvarado,1998-09-07,MEX,male,provider_a
+2025-07-06-USA-MEX,356044,2,Jorge Sánchez,Jorge Sánchez,1997-12-10,MEX,male,provider_a
+2025-07-06-USA-MEX,387687,3,César Montes,César Montes,1997-02-24,MEX,male,provider_a
+2025-07-06-USA-MEX,393323,11,Brenden Aaronson,Brenden Aaronson,2000-10-22,USA,male,provider_a
+2025-07-06-USA-MEX,401356,4,Edson Álvarez,Edson Álvarez,1997-10-24,MEX,male,provider_a
+2025-07-06-USA-MEX,416090,16,Julián Quiñones,Julián Quiñones,1997-03-24,MEX,male,provider_a
+2025-07-06-USA-MEX,423619,1,Luis Malagón,Luis Malagón,1997-03-02,MEX,male,provider_a
+2025-07-06-USA-MEX,424689,10,Alexis Vega,Alexis Vega,1997-11-25,MEX,male,provider_a
+2025-07-06-USA-MEX,425306,1,Matt Turner,Matt Turner,1994-06-24,USA,male,provider_a
+2025-07-06-USA-MEX,429259,22,Mark McKenzie,Mark McKenzie,1999-02-25,USA,male,provider_a
+2025-07-06-USA-MEX,467437,17,Malik Tillman,Malik Tillman,2002-05-28,USA,male,provider_a
+2025-07-06-USA-MEX,468022,12,Miles Robinson,Miles Robinson,1997-03-14,USA,male,provider_a
+2025-07-06-USA-MEX,500309,25,Matt Freese,Matt Freese,1998-09-02,USA,male,provider_a
+2025-07-06-USA-MEX,532937,5,Johan Vásquez,Johan Vásquez,1998-10-22,MEX,male,provider_a
+2025-07-06-USA-MEX,534620,8,Carlos Rodríguez,Carlos Rodríguez,1997-01-03,MEX,male,provider_a
+2025-07-06-USA-MEX,540315,21,César Huerta,César Huerta,2000-12-03,MEX,male,provider_a
+2025-07-06-USA-MEX,552955,11,Santiago Gimenez,Santiago Gimenez,2001-04-18,MEX,male,provider_a
+2025-07-06-USA-MEX,562555,23,Brian White,Brian White,1996-02-03,USA,male,provider_a
+2025-07-06-USA-MEX,578539,3,Chris Richards,Chris Richards,2000-03-28,USA,male,provider_a
+2025-07-06-USA-MEX,597728,14,Marcel Ruiz,Marcel Ruiz,2000-10-26,MEX,male,provider_a
+2025-07-06-USA-MEX,602324,6,Érik Lira,Érik Lira,2000-05-08,MEX,male,provider_a
+2025-07-06-USA-MEX,610627,20,Nathan Harriel,Nathan Harriel,2001-04-23,USA,male,provider_a
+2025-07-06-USA-MEX,683812,2,John Tolkin,John Tolkin,2002-07-31,USA,male,provider_a
+2025-07-06-USA-MEX,687558,15,Israel Reyes,Israel Reyes,2000-05-23,MEX,male,provider_a
+2025-07-06-USA-MEX,724547,6,Jack McGlynn,Jack McGlynn,2003-07-07,USA,male,provider_a
+2025-07-06-USA-MEX,734761,8,Sebastian Berhalter,Sebastian Berhalter,2001-05-10,USA,male,provider_a
+2025-07-06-USA-MEX,765504,26,Chris Brady,Chris Brady,2004-03-03,USA,male,provider_a
+2025-07-06-USA-MEX,795232,7,Quinn Sullivan,Quinn Sullivan,2004-03-27,USA,male,provider_a
+2025-07-06-USA-MEX,802855,12,Raúl Rangel,Raúl Rangel,2000-02-25,MEX,male,provider_a
+2025-07-06-USA-MEX,820241,9,Damion Downs,Damion Downs,2004-07-06,USA,male,provider_a
+2025-07-06-USA-MEX,880626,10,Diego Luna,Diego Luna,2003-09-07,USA,male,provider_a
+2025-07-06-USA-MEX,915155,19,Jesús Orozco Chiquete,Jesús Orozco Chiquete,2002-02-19,MEX,male,provider_a
+2025-07-06-USA-MEX,985806,16,Alex Freeman,Alex Freeman,2004-08-09,USA,male,provider_a
+2025-07-06-USA-MEX,993063,18,Max Arfsten,Max Arfsten,2001-04-19,USA,male,provider_a
+2025-07-06-USA-MEX,5567,4,Edson Omar Álvarez Velázquez,Edson Álvarez,1997-10-24,MEX,male,provider_b
+2025-07-06-USA-MEX,5568,9,Raúl Alonso Jiménez Rodríguez,Raúl Jiménez,1991-05-05,MEX,male,provider_b
+2025-07-06-USA-MEX,5576,23,Jesús Daniel Gallardo Vasconcelos,Jesús Gallardo,1994-08-15,MEX,male,provider_b
+2025-07-06-USA-MEX,5577,13,Francisco Guillermo Ochoa Magaña,Guillermo Ochoa,1985-07-13,MEX,male,provider_b
+2025-07-06-USA-MEX,12352,1,Matthew Charles Turner,Matt Turner,1994-06-24,USA,male,provider_b
+2025-07-06-USA-MEX,12524,5,Walker Zimmerman,Walker Zimmerman,1993-05-19,USA,male,provider_b
+2025-07-06-USA-MEX,12601,12,Miles Gordon Robinson,Miles Gordon Robinson,1997-03-14,USA,male,provider_b
+2025-07-06-USA-MEX,12751,4,Tyler Adams,Tyler Adams,1999-02-14,USA,male,provider_b
+2025-07-06-USA-MEX,13492,23,Brian White,Brian White,1996-02-03,USA,male,provider_b
+2025-07-06-USA-MEX,18242,13,Tim Ream,Tim Ream,1987-10-05,USA,male,provider_b
+2025-07-06-USA-MEX,18897,22,Mark McKenzie,Mark McKenzie,1999-02-25,USA,male,provider_b
+2025-07-06-USA-MEX,24243,11,Brenden Aaronson,Brenden Aaronson,2000-10-22,USA,male,provider_b
+2025-07-06-USA-MEX,24876,25,Matthew Freese,Matthew Freese,1998-09-02,USA,male,provider_b
+2025-07-06-USA-MEX,26280,17,Orbelín Pineda Alvarado,Orbelín Pineda,1996-03-24,MEX,male,provider_b
+2025-07-06-USA-MEX,26297,8,Carlos Alberto Rodríguez Gómez,Carlos Alberto Rodríguez,1997-01-03,MEX,male,provider_b
+2025-07-06-USA-MEX,26301,10,Ernesto Alexis Vega Rojas,Alexis Vega,1997-11-25,MEX,male,provider_b
+2025-07-06-USA-MEX,26329,14,Marcel Alejandro Ruiz Suárez,Marcel Ruiz,2000-10-26,MEX,male,provider_b
+2025-07-06-USA-MEX,26336,5,Johan Felipe Vásquez Ibarra,Johan Vásquez,1998-10-22,MEX,male,provider_b
+2025-07-06-USA-MEX,26353,18,Ángel Baltazar Sepúlveda Sánchez,Ángel Sepúlveda,1991-02-15,MEX,male,provider_b
+2025-07-06-USA-MEX,26368,3,César Jasib Montes Castro,César Montes,1997-02-24,MEX,male,provider_b
+2025-07-06-USA-MEX,26375,25,Roberto Carlos Alvarado Hernández,Roberto Alvarado,1998-09-07,MEX,male,provider_b
+2025-07-06-USA-MEX,26406,2,Jorge Eduardo Sánchez Ramos,Jorge Sánchez,1997-12-10,MEX,male,provider_b
+2025-07-06-USA-MEX,27889,21,César Saúl Huerta Valera,César Huerta,2000-12-03,MEX,male,provider_b
+2025-07-06-USA-MEX,31053,11,Santiago Tomás Giménez,Santiago Giménez,2001-04-18,MEX,male,provider_b
+2025-07-06-USA-MEX,33098,1,Luis Ángel Malagón Velázquez,Luis Malagón,1997-03-02,MEX,male,provider_b
+2025-07-06-USA-MEX,33126,15,Israel Reyes Romero,Israel Reyes,2000-05-23,MEX,male,provider_b
+2025-07-06-USA-MEX,33274,14,Luca de la Torre,Luca de la Torre,1998-05-23,USA,male,provider_b
+2025-07-06-USA-MEX,35375,16,Julián Andrés Quiñones Quiñones,Julián Quiñones,1997-03-24,MEX,male,provider_b
+2025-07-06-USA-MEX,35395,20,Nathan Harriel,Nathan Harriel,2001-04-23,USA,male,provider_b
+2025-07-06-USA-MEX,36805,2,John Tolkin,John Tolkin,2002-07-31,USA,male,provider_b
+2025-07-06-USA-MEX,36806,8,Sebastian Berhalter,Sebastian Berhalter,2001-05-10,USA,male,provider_b
+2025-07-06-USA-MEX,38013,6,Jack McGlynn,Jack McGlynn,2003-07-07,USA,male,provider_b
+2025-07-06-USA-MEX,39259,17,Malik Tillman,Malik Tillman,2002-05-28,USA,male,provider_b
+2025-07-06-USA-MEX,41266,3,Chris Richards,Chris Richards,2000-03-28,USA,male,provider_b
+2025-07-06-USA-MEX,42983,7,Quinn Sullivan,Quinn Sullivan,2004-03-27,USA,male,provider_b
+2025-07-06-USA-MEX,43622,6,Erik Antonio Lira Méndez,Erik Lira,2000-05-08,MEX,male,provider_b
+2025-07-06-USA-MEX,111731,19,Jesús Gilberto Orozco Chiquete,Jesús Chiquete,2002-02-19,MEX,male,provider_b
+2025-07-06-USA-MEX,114239,26,Christopher Brady,Christopher Brady,2004-03-03,USA,male,provider_b
+2025-07-06-USA-MEX,117628,10,Diego Luna,Diego Luna,2003-09-07,USA,male,provider_b
+2025-07-06-USA-MEX,224439,16,Alexander Freeman,Alexander Freeman,2004-08-09,USA,male,provider_b
+2025-07-06-USA-MEX,225933,18,Maximilian Arfsten,Maximilian Arfsten,2001-04-19,USA,male,provider_b
+2025-07-06-USA-MEX,232966,12,José Raúl Rangel Aguilar,José Raúl Rangel Aguilar,2000-02-25,MEX,male,provider_b
+2025-07-06-USA-MEX,241323,7,Gilberto Rafael Mora Zambrano,Gilberto Rafael Mora Zambrano,2008-10-14,MEX,male,provider_b
+2025-07-06-USA-MEX,328562,26,Mateo Chávez García,Mateo Chávez García,2004-05-12,MEX,male,provider_b
+2025-07-06-USA-MEX,382352,9,Damion Lamar Downs,Damion Downs,2004-07-06,USA,male,provider_b
+2025-07-06-USA-MEX,385976,24,Patrick Agyemang,Patrick Agyemang,2000-11-07,USA,male,provider_b
+2025-07-06-USA-MEX,4139,13,Francisco Guillermo Ochoa Magaña,G. Ochoa,1985-07-13,MEX,male,provider_c
+2025-07-06-USA-MEX,8891,9,Raúl Alonso Jiménez Rodríguez,R. Jiménez,1991-05-05,MEX,male,provider_c
+2025-07-06-USA-MEX,10373,13,Timothy Michael Ream,T. Ream,1987-10-05,USA,male,provider_c
+2025-07-06-USA-MEX,11901,23,Jesús Daniel Gallardo Vasconcelos,J. Gallardo,1994-08-15,MEX,male,provider_c
+2025-07-06-USA-MEX,11906,4,Edson Omar Álvarez Velázquez,E. Álvarez,1997-10-24,MEX,male,provider_c
+2025-07-06-USA-MEX,14020,14,Luca de la Torre,L. de la Torre,1998-05-23,USA,male,provider_c
+2025-07-06-USA-MEX,18033,25,Roberto Carlos Alvarado Hernández,R. Alvarado,1998-09-07,MEX,male,provider_c
+2025-07-06-USA-MEX,23286,17,Orbelín Pineda Alvarado,O. Pineda,1996-03-24,MEX,male,provider_c
+2025-07-06-USA-MEX,23347,2,Jorge Eduardo Sánchez Ramos,J. Sánchez,1997-12-10,MEX,male,provider_c
+2025-07-06-USA-MEX,23434,18,Ángel Baltazar Sepúlveda Sánchez,A. Sepúlveda,1991-02-15,MEX,male,provider_c
+2025-07-06-USA-MEX,24629,4,Tyler Adams,T. Adams,1999-02-14,USA,male,provider_c
+2025-07-06-USA-MEX,25467,5,Walker Dwain Zimmerman,W. Zimmerman,1993-05-19,USA,male,provider_c
+2025-07-06-USA-MEX,25828,3,Chris Richards,C. Richards,2000-03-28,USA,male,provider_c
+2025-07-06-USA-MEX,27087,12,Miles Robinson,M. Robinson,1997-03-14,USA,male,provider_c
+2025-07-06-USA-MEX,27173,23,Brian White,B. White,1996-02-03,USA,male,provider_c
+2025-07-06-USA-MEX,27183,11,Brenden  Aaronson,B. Aaronson,2000-10-22,USA,male,provider_c
+2025-07-06-USA-MEX,29797,17,Malik Tillman,M. Tillman,2002-05-28,USA,male,provider_c
+2025-07-06-USA-MEX,34810,1,Luis Ángel Malagón Velázquez,L. Malagón,1997-03-02,MEX,male,provider_c
+2025-07-06-USA-MEX,34831,14,Marcel Alejandro Ruiz Suárez,M. Ruiz,2000-10-26,MEX,male,provider_c
+2025-07-06-USA-MEX,36067,22,Mark McKenzie,M. McKenzie,1999-02-25,USA,male,provider_c
+2025-07-06-USA-MEX,36145,16,Julián Andrés Quiñones Quiñones,J. Quiñones,1997-03-24,MEX,male,provider_c
+2025-07-06-USA-MEX,36149,6,Erick Antonio Lira Méndez,E. Lira,2000-05-08,MEX,male,provider_c
+2025-07-06-USA-MEX,36150,5,Johan Felipe Vásquez Ibarra,J. Vásquez,1998-10-22,MEX,male,provider_c
+2025-07-06-USA-MEX,36177,3,César Jasib Montes Castro,C. Montes,1997-02-24,MEX,male,provider_c
+2025-07-06-USA-MEX,36178,8,Carlos Alberto Rodríguez Gómez,C. Rodríguez,1997-01-03,MEX,male,provider_c
+2025-07-06-USA-MEX,36190,11,Santiago Tomás Giménez,S. Giménez,2001-04-18,MEX,male,provider_c
+2025-07-06-USA-MEX,36205,15,Israel Reyes Romero,I. Reyes,2000-05-23,MEX,male,provider_c
+2025-07-06-USA-MEX,36208,21,César Saúl Huerta Valera,C. Huerta,2000-12-03,MEX,male,provider_c
+2025-07-06-USA-MEX,36210,10,Ernesto Alexis Vega Rojas,A. Vega,1997-11-25,MEX,male,provider_c
+2025-07-06-USA-MEX,36448,1,Matt Turner,M. Turner,1994-06-24,USA,male,provider_c
+2025-07-06-USA-MEX,36470,25,Matt Freese,M. Freese,1998-09-02,USA,male,provider_c
+2025-07-06-USA-MEX,36579,8,Sebastian Berhalter,S. Berhalter,2001-05-10,USA,male,provider_c
+2025-07-06-USA-MEX,36620,2,John Tolkin,J. Tolkin,2002-07-31,USA,male,provider_c
+2025-07-06-USA-MEX,43206,7,Quinn Sullivan,Q. Sullivan,2004-03-27,USA,male,provider_c
+2025-07-06-USA-MEX,43207,6,Jack  McGlynn,J. McGlynn,2003-07-07,USA,male,provider_c
+2025-07-06-USA-MEX,43234,20,Nathan  Harriel,N. Harriel,2001-04-23,USA,male,provider_c
+2025-07-06-USA-MEX,43293,26,Chris Brady,C. Brady,2004-03-03,USA,male,provider_c
+2025-07-06-USA-MEX,63264,19,Jesús Gilberto Orozco Chiquete,J. Orozco,2002-02-19,MEX,male,provider_c
+2025-07-06-USA-MEX,101500,9,Damion Downs,D. Downs,2004-07-06,USA,male,provider_c
+2025-07-06-USA-MEX,144580,12,José Raúl Rangel Aguilar,R. Rangel,2000-02-25,MEX,male,provider_c
+2025-07-06-USA-MEX,165145,10,Diego Ángel Luna,D. Luna,2003-09-07,USA,male,provider_c
+2025-07-06-USA-MEX,166528,16,Alex Freeman,A. Freeman,2004-08-09,USA,male,provider_c
+2025-07-06-USA-MEX,332886,18,Maximilian Arfsten,M. Arfsten,2001-04-19,USA,male,provider_c
+2025-07-06-USA-MEX,581148,24,Patrick Agyemang,P. Agyemang,2000-11-07,USA,male,provider_c
+2025-07-06-USA-MEX,808649,26,Mateo Chávez García,M. Chávez,2004-05-12,MEX,male,provider_c
+2025-07-06-USA-MEX,865585,7,Gilberto Rafael Mora Zambrano,G. Mora,2008-10-14,MEX,male,provider_c

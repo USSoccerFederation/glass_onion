@@ -1,0 +1,61 @@
+site_name: Glass Onion v0.1
+# site_url: https://kloppy.pysport.org
+repo_url: https://github.com/USSoccerFederation/glass_onion
+repo_name: 'USSoccerFederation/glass_onion'
+edit_uri: blob/main/docs/
+
+theme:
+  name: material
+  logo: assets/img/USSF-Primary.svg
+  favicon: assets/img/USSF-Primary.svg
+  font: false
+  language: en
+  palette:
+    scheme: default
+    primary: custom
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.tracking
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+    - content.tooltips
+    - toc.integrate
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tasklist
+  - md_in_html
+
+plugins:
+- search
+- mkdocstrings
+- autorefs
+- markdown-exec
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - "Getting Started": getting_started.md
+  - Methodology: methodology.md
+  - Reference:
+      - reference/index.md
+      - Engine: reference/engine.md
+      - Match: reference/match.md
+      - Team: reference/team.md
+      - Player: reference/player.md
+      - Utilities: reference/utils.md
+  - "Integrating Glass Onion": integrating.md
+  - Contributing: contributing.md
+
+extra_css:
+  - stylesheets/extra.css

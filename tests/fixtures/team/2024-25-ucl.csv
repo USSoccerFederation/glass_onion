@@ -1,0 +1,85 @@
+data_provider,provider_team_id,team_name,team_gender,team_youth,team_age_group,team_international,ussf_country_id,team_confederation,competition_id,season_id
+provider_b,383,PSV Eindhoven,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,46,Inter Milan,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,294,SL Benfica,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,31,Liverpool FC,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,281,Manchester City,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,234,Feyenoord Rotterdam,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,79,VfB Stuttgart,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,27,Bayern Munich,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,660,Shakhtar Donetsk,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,23826,RB Leipzig,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,5,AC Milan,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,15,Bayer 04 Leverkusen,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,409,Red Bull Salzburg,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,1025,Bologna FC 1909,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,162,AS Monaco,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,336,Sporting CP,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,197,AC Sparta Prague,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,13,Atlético de Madrid,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,405,Aston Villa,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,12321,Girona FC,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,418,Real Madrid,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,16,Borussia Dortmund,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,3911,Stade Brestois 29,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,419,GNK Dinamo Zagreb,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,122,SK Sturm Graz,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,1082,LOSC Lille,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,131,FC Barcelona,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,452,BSC Young Boys,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,159,Red Star Belgrade,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,800,Atalanta BC,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,506,Juventus FC,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,583,Paris Saint-Germain,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,540,Slovan Bratislava,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,11,Arsenal FC,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,2282,Club Brugge KV,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_b,371,Celtic FC,male,false,senior,false,UEFA,UEFA,UEFA Champions League,2024/2025
+provider_a,321,Maccabi Tel Aviv,male,false,senior,false,ISR,UEFA,UEFA Champions League,2024/2025
+provider_a,6193,Union Saint-Gilloise,male,false,senior,false,BEL,UEFA,UEFA Champions League,2024/2025
+provider_a,240,Bologna,male,false,senior,false,ITA,UEFA,UEFA Champions League,2024/2025
+provider_a,673,BSC Young Boys,male,false,senior,false,SUI,UEFA,UEFA Champions League,2024/2025
+provider_a,665,FC FCSB,male,false,senior,false,ROU,UEFA,UEFA Champions League,2024/2025
+provider_a,904,Bayer Leverkusen,male,false,senior,false,GER,UEFA,UEFA Champions League,2024/2025
+provider_a,143,Lille,male,false,senior,false,FRA,UEFA,UEFA Champions League,2024/2025
+provider_a,220,Real Madrid,male,false,senior,false,ESP,UEFA,UEFA Champions League,2024/2025
+provider_a,323,Slavia Praha,male,false,senior,false,CZE,UEFA,UEFA Champions League,2024/2025
+provider_a,977,Club Brugge,male,false,senior,false,BEL,UEFA,UEFA Champions League,2024/2025
+provider_a,1000,Qarabağ FK,male,false,senior,false,AZE,UEFA,UEFA Champions League,2024/2025
+provider_a,845,Salzburg,male,false,senior,false,AUT,UEFA,UEFA Champions League,2024/2025
+provider_a,180,Borussia Dortmund,male,false,senior,false,GER,UEFA,UEFA Champions League,2024/2025
+provider_a,815,Feyenoord,male,false,senior,false,NED,UEFA,UEFA Champions League,2024/2025
+provider_a,174,VfB Stuttgart,male,false,senior,false,GER,UEFA,UEFA Champions League,2024/2025
+provider_a,131,Paris Saint-Germain,male,false,senior,false,FRA,UEFA,UEFA Champions League,2024/2025
+provider_a,816,PSV Eindhoven,male,false,senior,false,NED,UEFA,UEFA Champions League,2024/2025
+provider_a,495,Malmö FF,male,false,senior,false,SWE,UEFA,UEFA Champions League,2024/2025
+provider_a,1170,Slovan Bratislava,male,false,senior,false,SVK,UEFA,UEFA Champions League,2024/2025
+provider_a,979,Shakhtar Donetsk,male,false,senior,false,UKR,UEFA,UEFA Champions League,2024/2025
+provider_a,810,Twente,male,false,senior,false,NED,UEFA,UEFA Champions League,2024/2025
+provider_a,212,Atlético Madrid,male,false,senior,false,ESP,UEFA,UEFA Champions League,2024/2025
+provider_a,984,Fenerbahçe,male,false,senior,false,TUR,UEFA,UEFA Champions League,2024/2025
+provider_a,217,Barcelona,male,false,senior,false,ESP,UEFA,UEFA Champions League,2024/2025
+provider_a,243,AC Milan,male,false,senior,false,ITA,UEFA,UEFA Champions League,2024/2025
+provider_a,153,Stade Brestois,male,false,senior,false,FRA,UEFA,UEFA Champions League,2024/2025
+provider_a,957,PAOK Thessaloniki,male,false,senior,false,GRE,UEFA,UEFA Champions League,2024/2025
+provider_a,975,FK Crvena Zvezda,male,false,senior,false,SRB,UEFA,UEFA Champions League,2024/2025
+provider_a,688,Dynamo Kyiv,male,false,senior,false,UKR,UEFA,UEFA Champions League,2024/2025
+provider_a,169,Bayern Munich,male,false,senior,false,GER,UEFA,UEFA Champions League,2024/2025
+provider_a,258,Benfica,male,false,senior,false,POR,UEFA,UEFA Champions League,2024/2025
+provider_a,1334,Lugano,male,false,senior,false,SUI,UEFA,UEFA Champions League,2024/2025
+provider_a,182,RB Leipzig,male,false,senior,false,GER,UEFA,UEFA Champions League,2024/2025
+provider_a,1236,KÍ,male,false,senior,false,FRO,UEFA,UEFA Champions League,2024/2025
+provider_a,238,Inter Milan,male,false,senior,false,ITA,UEFA,UEFA Champions League,2024/2025
+provider_a,59,Aston Villa,male,false,senior,false,ENG,UEFA,UEFA Champions League,2024/2025
+provider_a,36,Manchester City,male,false,senior,false,ENG,UEFA,UEFA Champions League,2024/2025
+provider_a,228,Atalanta,male,false,senior,false,ITA,UEFA,UEFA Champions League,2024/2025
+provider_a,1,Arsenal,male,false,senior,false,ENG,UEFA,UEFA Champions League,2024/2025
+provider_a,1028,Sparta Praha,male,false,senior,false,CZE,UEFA,UEFA Champions League,2024/2025
+provider_a,224,Juventus,male,false,senior,false,ITA,UEFA,UEFA Champions League,2024/2025
+provider_a,867,Celtic,male,false,senior,false,SCO,UEFA,UEFA Champions League,2024/2025
+provider_a,211,Girona,male,false,senior,false,ESP,UEFA,UEFA Champions League,2024/2025
+provider_a,24,Liverpool,male,false,senior,false,ENG,UEFA,UEFA Champions League,2024/2025
+provider_a,898,Sporting CP,male,false,senior,false,POR,UEFA,UEFA Champions League,2024/2025
+provider_a,997,Dinamo Zagreb,male,false,senior,false,CRO,UEFA,UEFA Champions League,2024/2025
+provider_a,1871,Shamrock Rovers,male,false,senior,false,IRL,UEFA,UEFA Champions League,2024/2025
+provider_a,843,Sturm Graz,male,false,senior,false,AUT,UEFA,UEFA Champions League,2024/2025

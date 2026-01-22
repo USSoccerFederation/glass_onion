@@ -1,0 +1,70 @@
+match_id,provider_player_id,jersey_number,player_name,player_nickname,birth_date,team_id,player_gender,data_provider
+2024-09-22-CHI-SD-W,1323,,Alyssa Naeher,Alyssa Naeher,1988-04-20,CHI,female,provider_a
+2024-09-22-CHI-SD-W,13556,,Cari Roccaro,Cari Roccaro,,CHI,female,provider_a
+2024-09-22-CHI-SD-W,17984,,Delphine Cascarino,Delphine Cascarino,1997-02-05,SD,female,provider_a
+2024-09-22-CHI-SD-W,18197,,Kailen Sheridan,Kailen Sheridan,1995-07-16,SD,female,provider_a
+2024-09-22-CHI-SD-W,19793,,Natalia Kuikka,Natalia Kuikka,,CHI,female,provider_a
+2024-09-22-CHI-SD-W,2003,,Emily Van Egmond,Emily Van Egmond,,SD,female,provider_a
+2024-09-22-CHI-SD-W,22120,,Perle Morroni,Perle Morroni,,SD,female,provider_a
+2024-09-22-CHI-SD-W,22756,,Danielle Colaprico,Danielle Colaprico,,SD,female,provider_a
+2024-09-22-CHI-SD-W,24252,,Ludmila ,Ludmila ,,CHI,female,provider_a
+2024-09-22-CHI-SD-W,24973,,Makenzy Robbe,Makenzy Robbe,,SD,female,provider_a
+2024-09-22-CHI-SD-W,24980,,Mallory Swanson,Mallory Swanson,1998-04-29,CHI,female,provider_a
+2024-09-22-CHI-SD-W,27535,,Shea Groom,Shea Groom,,CHI,female,provider_a
+2024-09-22-CHI-SD-W,27889,,María Sánchez,María Sánchez,,SD,female,provider_a
+2024-09-22-CHI-SD-W,31755,,Naomi Girma,Naomi Girma,2000-06-14,SD,female,provider_a
+2024-09-22-CHI-SD-W,31805,,Kennedy Wesley,Kennedy Wesley,2001-03-08,SD,female,provider_a
+2024-09-22-CHI-SD-W,33125,,Kristen McNabb,Kristen McNabb,,SD,female,provider_a
+2024-09-22-CHI-SD-W,33877,,Julia Grosso,Julia Grosso,2000-08-29,CHI,female,provider_a
+2024-09-22-CHI-SD-W,39369,,Hanna Lundkvist,Hanna Lundkvist,2002-07-17,SD,female,provider_a
+2024-09-22-CHI-SD-W,44620,,Leilanni Nesbeth,Leilanni Nesbeth,,CHI,female,provider_a
+2024-09-22-CHI-SD-W,44669,,Mya Jones,Mya Jones,,SD,female,provider_a
+2024-09-22-CHI-SD-W,66349,,Amirah Ali,Amirah Ali,1998-12-07,SD,female,provider_a
+2024-09-22-CHI-SD-W,66351,,Elyse Bennett,Elyse Bennett,,SD,female,provider_a
+2024-09-22-CHI-SD-W,70916,,Taylor Malham,Taylor Malham,1999-05-20,CHI,female,provider_a
+2024-09-22-CHI-SD-W,74149,,Jaedyn Shaw,Jaedyn Shaw,2004-11-20,SD,female,provider_a
+2024-09-22-CHI-SD-W,74259,,Jenna Bike,Jenna Bike,1998-02-02,CHI,female,provider_a
+2024-09-22-CHI-SD-W,84602,,Ally Schlegel,Ally Schlegel,2000-02-07,CHI,female,provider_a
+2024-09-22-CHI-SD-W,84695,,Mel Barcenas,Mel Barcenas,2007-10-30,SD,female,provider_a
+2024-09-22-CHI-SD-W,96864,,Jameese Joseph,Jameese Joseph,2002-05-03,CHI,female,provider_a
+2024-09-22-CHI-SD-W,97028,,Hannah Anderson,Hannah Anderson,,CHI,female,provider_a
+2024-09-22-CHI-SD-W,97165,,Bea Franklin,Bea Franklin,,CHI,female,provider_a
+2024-09-22-CHI-SD-W,4947,24,Danielle Colaprico,Danielle Colaprico,1993-05-06,SD,female,provider_b
+2024-09-22-CHI-SD-W,4981,1,Kailen Mary Iacovoni Sheridan,Kailen Sheridan,1995-07-16,SD,female,provider_b
+2024-09-22-CHI-SD-W,4986,10,Shea Groom,Shea Groom,1993-03-04,CHI,female,provider_b
+2024-09-22-CHI-SD-W,5008,14,Kristen McNabb,Kristen McNabb,1994-04-17,SD,female,provider_b
+2024-09-22-CHI-SD-W,5017,20,Christen Westphal,Christen Westphal,1993-09-02,SD,female,provider_b
+2024-09-22-CHI-SD-W,5023,9,Mallory Diane Swanson,Mallory Swanson,1998-04-29,CHI,female,provider_b
+2024-09-22-CHI-SD-W,5041,4,Cari Roccaro,Cari Roccaro,1994-07-18,CHI,female,provider_b
+2024-09-22-CHI-SD-W,5076,5,Emily Louise van Egmond,Emily van Egmond,1993-07-12,SD,female,provider_b
+2024-09-22-CHI-SD-W,5100,1,Alyssa Michele Naeher,Alyssa Naeher,1988-04-20,CHI,female,provider_b
+2024-09-22-CHI-SD-W,13865,12,Natalia Kuikka,Natalia Kuikka,1995-12-01,CHI,female,provider_b
+2024-09-22-CHI-SD-W,15355,75,Perle Morroni,Perle Morroni,1997-10-15,SD,female,provider_b
+2024-09-22-CHI-SD-W,15470,69,Delphine Cascarino,Delphine Cascarino,1997-02-05,SD,female,provider_b
+2024-09-22-CHI-SD-W,25542,14,Ludmila da Silva,Ludmila da Silva,1994-12-01,CHI,female,provider_b
+2024-09-22-CHI-SD-W,30520,15,Makenzy Doniak,Makenzy Doniak,1994-02-25,SD,female,provider_b
+2024-09-22-CHI-SD-W,33135,77,Maria Guadalupe Sanchez Morales,Maria Guadalupe Sanchez Morales,1996-02-20,SD,female,provider_b
+2024-09-22-CHI-SD-W,106835,23,Tatumn Milazzo,Tatumn Milazzo,1997-04-17,CHI,female,provider_b
+2024-09-22-CHI-SD-W,131573,5,Júlia Bianchi,Julia,1997-10-07,CHI,female,provider_b
+2024-09-22-CHI-SD-W,131645,21,Julia Angela Grosso,Julia Grosso,2000-08-29,CHI,female,provider_b
+2024-09-22-CHI-SD-W,182764,6,Hanna Lundkvist,Hanna Lundkvist,2002-07-17,SD,female,provider_b
+2024-09-22-CHI-SD-W,218500,22,Hillary Elizabeth Beall,Hillary Elizabeth Beall,1999-01-27,SD,female,provider_b
+2024-09-22-CHI-SD-W,218505,32,Taylor Malham,Taylor Malham,1999-05-20,CHI,female,provider_b
+2024-09-22-CHI-SD-W,218507,23,Elyse Bennett,Elyse Bennett,1999-12-27,SD,female,provider_b
+2024-09-22-CHI-SD-W,218510,11,Chardonnay Curran,Chardonnay Curran,1999-08-18,CHI,female,provider_b
+2024-09-22-CHI-SD-W,219421,7,Amirah Ali,Amirah Ali,1998-12-07,SD,female,provider_b
+2024-09-22-CHI-SD-W,219423,4,Naomi Haile Girma,Naomi Haile Girma,2000-06-14,SD,female,provider_b
+2024-09-22-CHI-SD-W,219562,15,Sarah Griffith,Sarah Griffith,1999-04-30,CHI,female,provider_b
+2024-09-22-CHI-SD-W,270219,11,Jaedyn Reese Shaw,Jaedyn Reese Shaw,2004-11-20,SD,female,provider_b
+2024-09-22-CHI-SD-W,273718,24,Jenna Bike,Jenna Bike,1998-07-18,CHI,female,provider_b
+2024-09-22-CHI-SD-W,389324,19,Mackenzie Wood,Mackenzie Wood,2000-07-04,CHI,female,provider_b
+2024-09-22-CHI-SD-W,389325,34,Allyson Schlegel,Allyson Schlegel,2000-02-07,CHI,female,provider_b
+2024-09-22-CHI-SD-W,390488,25,Melanie Barcenas,Melanie Barcenas,2007-10-30,SD,female,provider_b
+2024-09-22-CHI-SD-W,428973,26,Nádia Filipa Gomes Coelho,Nádia Gomes,1996-11-09,CHI,female,provider_b
+2024-09-22-CHI-SD-W,428974,13,Leilanni Nesbeth,Leilanni Nesbeth,2001-07-17,CHI,female,provider_b
+2024-09-22-CHI-SD-W,428977,20,Bea Franklin,B.Franklin,2000-10-04,CHI,female,provider_b
+2024-09-22-CHI-SD-W,428978,41,Hannah Anderson,H.Anderson,2001-04-03,CHI,female,provider_b
+2024-09-22-CHI-SD-W,429170,8,Jameese Joseph,Jameese Joseph,2002-05-03,CHI,female,provider_b
+2024-09-22-CHI-SD-W,429622,17,Kimmi Ascanio,Kimmi Ascanio,2008-01-21,SD,female,provider_b
+2024-09-22-CHI-SD-W,430814,12,Kennedy Megan Wesley,Kennedy Wesley,2001-03-08,SD,female,provider_b
+2024-09-22-CHI-SD-W,430815,18,Mya Rilaine Jones,Mya Jones,2001-08-01,SD,female,provider_b
