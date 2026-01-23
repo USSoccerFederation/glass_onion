@@ -5,6 +5,43 @@ from pandera.errors import SchemaError
 
 from glass_onion.team import TeamSyncEngine, TeamSyncableContent
 
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_team_id",
+        "team_name",
+        "competition_id",
+        "season_id"
+    ],
+)
+def test_init_syncable_content_prevent_mixed_values(column: str):
+    base = {
+        "provider_a_team_id": "1",
+        "team_name": "test",
+        "competition_id": "test1",
+        "season_id": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_team_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+        
+        dataset.append(c)
+    
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"non-nullable series '{column}' contains null values"),
+    ):
+        TeamSyncableContent(
+            "provider_a",
+            df,
+        )
 
 def test_init_syncable_content_null_competition_id():
     with pytest.raises(
