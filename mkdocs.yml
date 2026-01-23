@@ -1,4 +1,6 @@
 site_name: Glass Onion
+site_author: United States Soccer Federation
+site_description: Simplifying soccer object identifier synchronization.
 repo_url: https://github.com/USSoccerFederation/glass_onion
 repo_name: 'USSoccerFederation/glass_onion'
 edit_uri: blob/main/docs/
