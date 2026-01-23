@@ -8,7 +8,7 @@ def test_init_competition_context():
     engine = MatchSyncEngine(
         content=[
             MatchSyncableContent(
-                "provider_a", pd.DataFrame(columns=["provider_a_match_id"])
+                "provider_a", pd.DataFrame(columns=["provider_a_match_id", "match_date", "home_team_id", "away_team_id"])
             )
         ],
         use_competition_context=True,
@@ -50,11 +50,11 @@ def test_synchronize_pair(
         data=pd.DataFrame(
             [
                 {
-                    "provider_a_match_id": 1,
+                    "provider_a_match_id": "1",
                     "matchday": 1,
                     "match_date": a_match_date,
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -65,11 +65,11 @@ def test_synchronize_pair(
         data=pd.DataFrame(
             [
                 {
-                    "provider_b_match_id": 1,
+                    "provider_b_match_id": "1",
                     "matchday": 1,
                     "match_date": b_match_date,
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -148,8 +148,8 @@ def test_synchronize_three_levels(
                     "provider_a_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-01",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -163,8 +163,8 @@ def test_synchronize_three_levels(
                     "provider_b_match_id": "1",
                     "matchday": middle_matchday,
                     "match_date": middle_match_date,
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -178,8 +178,8 @@ def test_synchronize_three_levels(
                     "provider_c_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-02",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -222,8 +222,8 @@ def test_synchronize_three_levels_no_B_match_iterations():
                     "provider_a_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-01",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -237,8 +237,8 @@ def test_synchronize_three_levels_no_B_match_iterations():
                     "provider_b_match_id": "1",
                     "matchday": "2",
                     "match_date": "2025-02-01",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -252,8 +252,8 @@ def test_synchronize_three_levels_no_B_match_iterations():
                     "provider_c_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-02",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),

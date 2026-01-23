@@ -16,7 +16,7 @@ class MatchDataSchema(pa.DataFrameModel):
 
     `competition_id` and `season_id` must be provided when using `MatchSyncEngine.use_competition_context`.
     """
-    match_date: Series[object] = Field(nullable=False)
+    match_date: Series[str] = Field(nullable=False)
     """
     The date of the match.
     """
@@ -38,8 +38,8 @@ class MatchDataSchema(pa.DataFrameModel):
     """
 
     @pa.check("match_date")
-    def is_timestamp(self, series: Series[object]) -> bool:
-        return series.dropna().apply(lambda x: isinstance(x, pd.Timestamp)).all()
+    def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
+        return series.dropna().apply(lambda x: pd.Timestamp(x)).all()
 
 
 class MatchSyncableContent(SyncableContent):
