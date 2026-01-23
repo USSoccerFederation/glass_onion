@@ -1,14 +1,260 @@
 import pytest
-from glass_onion.match import MatchSyncEngine, MatchSyncableContent
 import pandas as pd
+import re
+from pandera.errors import SchemaError
 from itertools import permutations
+
+from glass_onion.match import MatchSyncEngine, MatchSyncableContent
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2026-01-21",
+        "01-21-2026",
+        "21-01-2026",
+        "Jan 21, 2026",
+        "January 21, 2026",
+        "2026-01-26T00:00Z",
+        "2026-01-26T00:00:00Z",
+        "2026-01-26T00:00:00.000Z",
+    ],
+)
+def test_init_syncable_content_match_date_is_valid_format(value: str):
+    content = MatchSyncableContent(
+        "provider_a",
+        pd.DataFrame(
+            [
+                {
+                    "provider_a_match_id": "1",
+                    "match_date": value,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
+                }
+            ]
+        ),
+    )
+
+    assert content.validate_data_schema()
+
+
+def test_init_syncable_content_match_date_is_not_valid_format():
+    with pytest.raises(
+        SchemaError,
+        match=re.escape("Unknown datetime string format, unable to parse: test"),
+    ):
+        MatchSyncableContent(
+            "provider_a",
+            pd.DataFrame(
+                [
+                    {
+                        "provider_a_match_id": "1",
+                        "match_date": "test",
+                        "home_team_id": "1",
+                        "away_team_id": "2",
+                    }
+                ]
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_match_id",
+        "match_date",
+        "home_team_id",
+        "away_team_id",
+        "competition_id",
+        "season_id",
+    ],
+)
+def test_init_syncable_content_prevent_mixed_values(column: str):
+    base = {
+        "provider_a_match_id": "1",
+        "match_date": "2026-01-01",
+        "home_team_id": "1",
+        "away_team_id": "2",
+        "competition_id": "1",
+        "season_id": "1",
+        "matchday": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_match_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"non-nullable series '{column}' contains null values"),
+    ):
+        MatchSyncableContent(
+            "provider_a",
+            df,
+        )
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "matchday",
+    ],
+)
+def test_init_syncable_content_allow_mixed_values(column: str):
+    base = {
+        "provider_a_match_id": "1",
+        "match_date": "2026-01-01",
+        "home_team_id": "1",
+        "away_team_id": "2",
+        "competition_id": "1",
+        "season_id": "1",
+        "matchday": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_match_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    c = MatchSyncableContent(
+        "provider_a",
+        df,
+    )
+    assert c.validate_data_schema()
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "match_date",
+    ],
+)
+def test_init_syncable_content_prevent_mixed_types(column: str):
+    base = {
+        "provider_a_match_id": "1",
+        "match_date": "2026-01-01",
+        "home_team_id": "1",
+        "away_team_id": "2",
+        "competition_id": "1",
+        "season_id": "1",
+        "matchday": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_match_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = i
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"expected series '{column}' to have type str"),
+    ):
+        MatchSyncableContent(
+            "provider_a",
+            df,
+        )
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_match_id",
+        "home_team_id",
+        "away_team_id",
+        "competition_id",
+        "season_id",
+        "matchday",
+    ],
+)
+def test_init_syncable_content_allow_mixed_types(column: str):
+    base = {
+        "provider_a_match_id": "1",
+        "match_date": "2026-01-01",
+        "home_team_id": "1",
+        "away_team_id": "2",
+        "competition_id": "1",
+        "season_id": "1",
+        "matchday": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_match_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = i
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    c = MatchSyncableContent(
+        "provider_a",
+        df,
+    )
+    assert c.validate_data_schema()
+
+
+def test_init_syncable_content_null_competition_id():
+    with pytest.raises(
+        SchemaError,
+        match=re.escape("non-nullable series 'competition_id' contains null values"),
+    ):
+        MatchSyncableContent(
+            "provider_a",
+            pd.DataFrame(
+                [
+                    {
+                        "provider_a_match_id": "1",
+                        "match_date": "2026-01-01",
+                        "home_team_id": "1",
+                        "away_team_id": "2",
+                        "competition_id": pd.NA,
+                        "season_id": "1",
+                    }
+                ]
+            ),
+        )
 
 
 def test_init_competition_context():
     engine = MatchSyncEngine(
         content=[
             MatchSyncableContent(
-                "provider_a", pd.DataFrame(columns=["provider_a_match_id"])
+                "provider_a",
+                pd.DataFrame(
+                    columns=[
+                        "provider_a_match_id",
+                        "match_date",
+                        "home_team_id",
+                        "away_team_id",
+                        "competition_id",
+                        "season_id",
+                    ]
+                ),
             )
         ],
         use_competition_context=True,
@@ -18,6 +264,59 @@ def test_init_competition_context():
         "match_date",
         "competition_id",
         "season_id",
+        "home_team_id",
+        "away_team_id",
+    ]
+
+
+def test_init_competition_context_missing_competition_id():
+    content_a = MatchSyncableContent(
+        "provider_a",
+        pd.DataFrame(
+            columns=[
+                "provider_a_match_id",
+                "match_date",
+                "home_team_id",
+                "away_team_id",
+                "season_id",
+            ]
+        ),
+    )
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(
+            "column 'competition_id' not in dataframe. Columns in dataframe: ['provider_a_match_id', 'match_date', 'home_team_id', 'away_team_id', 'season_id']"
+        ),
+    ):
+        MatchSyncEngine(
+            content=[content_a],
+            use_competition_context=True,
+        )
+
+
+def test_init_competition_context_false_null_competition_id():
+    engine = MatchSyncEngine(
+        content=[
+            MatchSyncableContent(
+                "provider_a",
+                pd.DataFrame(
+                    columns=[
+                        "provider_a_match_id",
+                        "match_date",
+                        "home_team_id",
+                        "away_team_id",
+                        "competition_id",
+                        "season_id",
+                    ]
+                ),
+            )
+        ],
+        use_competition_context=False,
+    )
+
+    assert engine.join_columns == [
+        "match_date",
         "home_team_id",
         "away_team_id",
     ]
@@ -50,11 +349,11 @@ def test_synchronize_pair(
         data=pd.DataFrame(
             [
                 {
-                    "provider_a_match_id": 1,
-                    "matchday": 1,
+                    "provider_a_match_id": "1",
+                    "matchday": "1",
                     "match_date": a_match_date,
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -65,11 +364,11 @@ def test_synchronize_pair(
         data=pd.DataFrame(
             [
                 {
-                    "provider_b_match_id": 1,
-                    "matchday": 1,
+                    "provider_b_match_id": "1",
+                    "matchday": "1",
                     "match_date": b_match_date,
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -148,8 +447,8 @@ def test_synchronize_three_levels(
                     "provider_a_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-01",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -163,8 +462,8 @@ def test_synchronize_three_levels(
                     "provider_b_match_id": "1",
                     "matchday": middle_matchday,
                     "match_date": middle_match_date,
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -178,8 +477,8 @@ def test_synchronize_three_levels(
                     "provider_c_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-02",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -222,8 +521,8 @@ def test_synchronize_three_levels_no_B_match_iterations():
                     "provider_a_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-01",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -237,8 +536,8 @@ def test_synchronize_three_levels_no_B_match_iterations():
                     "provider_b_match_id": "1",
                     "matchday": "2",
                     "match_date": "2025-02-01",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),
@@ -252,8 +551,8 @@ def test_synchronize_three_levels_no_B_match_iterations():
                     "provider_c_match_id": "1",
                     "matchday": "1",
                     "match_date": "2025-01-02",
-                    "home_team_id": 1,
-                    "away_team_id": 2,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
                 }
             ]
         ),

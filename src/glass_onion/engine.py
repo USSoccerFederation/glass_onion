@@ -19,18 +19,30 @@ class SyncableContent:
     This class should be subclassed for each new object type: see [PlayerSyncableContent][glass_onion.player.PlayerSyncableContent] for an example.
     """
 
+    def validate_data_schema(self) -> bool:
+        """
+        Checks if this object's `data` meets the schema requirements for this object type.
+
+        This class should be subclassed for each new object type: see [PlayerDataSchema][glass_onion.player.PlayerDataSchema] for an example.
+        """
+        assert self.data is not None, f"Field `data` can not be null"
+        assert isinstance(self.data, pd.DataFrame), (
+            "Field `data` must be a pandas.DataFrame object"
+        )
+
+        assert self.id_field in self.data.columns, (
+            f"Field `{self.id_field}` must be available as a column in `data`"
+        )
+        return True
+
     def __init__(self, object_type: str, provider: str, data: pd.DataFrame):
         self.object_type = object_type
         self.provider = provider
         self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
-        assert data is not None, f"Field `data` can not be null"
-        assert isinstance(data, pd.DataFrame), (
-            "Field `data` must be a pandas.DataFrame object"
-        )
-        assert self.id_field in self.data.columns, (
-            f"Field `{self.id_field}` must be available as a column in `data`"
+        assert self.validate_data_schema(), (
+            "`data` does not meet the schema requirements for this SyncableContent class."
         )
 
     def merge(self, right: "SyncableContent") -> "SyncableContent":

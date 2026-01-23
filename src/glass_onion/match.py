@@ -1,6 +1,55 @@
 import pandas as pd
+import pandera.pandas as pa
+from pandera import Field, Column
+from pandera.typing import Series
+from typing import Optional
+
 from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import dataframe_coalesce, dataframe_clean_merged_fields
+
+
+class MatchDataSchema(pa.DataFrameModel):
+    """
+    A panderas.DataFrameModel for team information.
+
+    Provider-specific match identifier fields are added before validation during [MatchSyncableContent.validate_data_schema()][glass_onion.match.MatchSyncableContent.validate_data_schema].
+
+    `competition_id` and `season_id` must be provided when using `MatchSyncEngine.use_competition_context`.
+    """
+
+    match_date: Series[str] = Field(nullable=False)
+    """
+    The date of the match. Preferably in YYYY-MM-DD format, but required to be in a date format that can be parsed by pandas.Timestamp.
+    """
+    home_team_id: Series[str] = Field(nullable=False, coerce=True)
+    """
+    The team identifier of the home team. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
+    """
+    away_team_id: Series[str] = Field(nullable=False, coerce=True)
+    """
+    The team identifier of the away team. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
+    """
+    competition_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
+    """
+    The competition of the match. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
+    season_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
+    """
+    The season of the match. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
+    matchday: Optional[Series[str]] = Field(nullable=True, coerce=True)
+    """
+    The matchday (AKA: match-week or match round) of the match in its given competition and season.
+    """
+
+    @pa.check("match_date")
+    def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
+        return (
+            series.dropna()
+            .apply(lambda x: pd.Timestamp(x))
+            .apply(lambda x: (x != pd.Timestamp(0)))
+            .all()
+        )
 
 
 class MatchSyncableContent(SyncableContent):
@@ -10,6 +59,29 @@ class MatchSyncableContent(SyncableContent):
 
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("match", provider, data)
+
+    def validate_data_schema(self) -> bool:
+        """
+        Checks if this object's `data` meets the schema requirements for this object type. See [MatchDataSchema][glass_onion.match.MatchDataSchema] for more details.
+
+        Raises:
+            pandera.errors.SchemaError: if `data` does not conform to the schema.
+
+        Returns:
+            True, if `data` is formatted properly.
+        """
+        (
+            MatchDataSchema.to_schema()
+            .add_columns(
+                {
+                    f"{self.id_field}": Column(
+                        str, required=True, nullable=False, coerce=True
+                    )
+                }
+            )
+            .validate(self.data)
+        )
+        return super().validate_data_schema()
 
 
 class MatchSyncEngine(SyncEngine):
@@ -47,7 +119,15 @@ class MatchSyncEngine(SyncEngine):
             else ["match_date", "home_team_id", "away_team_id"]
         )
         self.verbose = verbose
-        self.use_competition_context = use_competition_context
+
+        if use_competition_context:
+            comp_schema = MatchDataSchema.to_schema().update_columns(
+                {
+                    "competition_id": {"required": True, "nullable": False},
+                    "season_id": {"required": True, "nullable": False},
+                }
+            )
+            assert [comp_schema.validate(d.data) for d in self.content]
 
     def synchronize_on_adjusted_dates(
         self,

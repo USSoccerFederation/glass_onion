@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Tuple
 import pandas as pd
+import re
+from pandera.errors import SchemaError
 from glass_onion.engine import SyncableContent
 from glass_onion.player import (
     PlayerSyncEngine,
@@ -11,38 +13,251 @@ from glass_onion.player import (
 import pytest
 
 
-def test_init_missing_columns():
-    left = PlayerSyncableContent(
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2026-01-21",
+        "01-21-2026",
+        "21-01-2026",
+        "Jan 21, 2026",
+        "January 21, 2026",
+        "2026-01-26T00:00Z",
+        "2026-01-26T00:00:00Z",
+        "2026-01-26T00:00:00.000Z",
+    ],
+)
+def test_init_syncable_content_birth_date_is_valid_format(value: str):
+    content = PlayerSyncableContent(
         "provider_a",
-        data=pd.DataFrame([{"provider_a_player_id": 1, "player_name": "A"}]),
+        pd.DataFrame(
+            [
+                {
+                    "provider_a_player_id": "1",
+                    "player_name": "test",
+                    "birth_date": value,
+                    "team_id": "1",
+                }
+            ]
+        ),
     )
 
-    right = PlayerSyncableContent(
-        "provider_b",
-        data=pd.DataFrame([{"provider_b_player_id": 1, "player_name": "A"}]),
-    )
+    assert content.validate_data_schema()
 
-    engine = PlayerSyncEngine([left, right], verbose=True)
-    assert ["player_name"] == engine.join_columns
+
+def test_init_syncable_content_birth_date_is_not_valid_format():
+    with pytest.raises(
+        SchemaError,
+        match=re.escape("Unknown datetime string format, unable to parse: test"),
+    ):
+        PlayerSyncableContent(
+            "provider_a",
+            pd.DataFrame(
+                [
+                    {
+                        "provider_a_player_id": "1",
+                        "player_name": "test",
+                        "birth_date": "test",
+                        "team_id": "1",
+                    }
+                ]
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_player_id",
+        "player_name",
+        "team_id",
+    ],
+)
+def test_init_syncable_content_prevent_mixed_values(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"non-nullable series '{column}' contains null values"),
+    ):
+        PlayerSyncableContent(
+            "provider_a",
+            df,
+        )
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "player_nickname",
+        "birth_date",
+        "jersey_number",
+    ],
+)
+def test_init_syncable_content_allow_mixed_values(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    c = PlayerSyncableContent(
+        "provider_a",
+        df,
+    )
+    assert c.validate_data_schema()
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_player_id",
+        "team_id",
+        "jersey_number",
+    ],
+)
+def test_init_syncable_content_allow_mixed_types(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = i
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    c = PlayerSyncableContent(
+        "provider_a",
+        df,
+    )
+    assert c.validate_data_schema()
+
+
+@pytest.mark.parametrize(
+    "column",
+    ["player_nickname", "player_name", "birth_date"],
+)
+def test_init_syncable_content_prevent_mixed_types(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = i
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"expected series '{column}' to have type str"),
+    ):
+        PlayerSyncableContent(
+            "provider_a",
+            df,
+        )
+
+
+def test_init_missing_columns():
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(
+            "column 'team_id' not in dataframe. Columns in dataframe: ['provider_a_player_id', 'player_name']"
+        ),
+    ):
+        PlayerSyncableContent(
+            "provider_a",
+            data=pd.DataFrame([{"provider_a_player_id": "1", "player_name": "A"}]),
+        )
 
 
 def test_init_unreliable_columns():
     left = PlayerSyncableContent(
         "provider_a",
         data=pd.DataFrame(
-            [{"provider_a_player_id": 1, "player_name": "A", "team_id": pd.NA}]
+            [
+                {
+                    "provider_a_player_id": "1",
+                    "player_name": "A",
+                    "team_id": "A",
+                    "jersey_number": pd.NA,
+                }
+            ]
         ),
     )
 
     right = PlayerSyncableContent(
         "provider_b",
         data=pd.DataFrame(
-            [{"provider_b_player_id": 1, "player_name": "A", "team_id": "A"}]
+            [
+                {
+                    "provider_b_player_id": "1",
+                    "player_name": "A",
+                    "team_id": "A",
+                    "jersey_number": "1",
+                }
+            ]
         ),
     )
 
     engine = PlayerSyncEngine([left, right], verbose=True)
-    assert ["player_name"] == engine.join_columns
+    assert set(["player_name", "team_id"]) == set(engine.join_columns)
 
 
 @pytest.mark.parametrize(
@@ -128,11 +343,11 @@ def test_synchronize_using_layer(
         data=pd.DataFrame(
             [
                 {
-                    "provider_a_player_id": 1,
+                    "provider_a_player_id": "1",
                     "player_name": "ABCD",
                     "player_nickname": "AB",
                     "team_id": "A",
-                    "jersey_number": 1,
+                    "jersey_number": "1",
                     "birth_date": "1970-01-02",
                 }
             ]
@@ -144,11 +359,11 @@ def test_synchronize_using_layer(
         data=pd.DataFrame(
             [
                 {
-                    "provider_b_player_id": 1,
+                    "provider_b_player_id": "1",
                     "player_name": "ABCD",
                     "player_nickname": "AB",
                     "team_id": "A",
-                    "jersey_number": 0,
+                    "jersey_number": "0",
                     "birth_date": "1970-01-02",
                 }
             ]
@@ -177,11 +392,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_a_player_id": 1,
+                        "provider_a_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 1,
+                        "jersey_number": "1",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -189,11 +404,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_b_player_id": 1,
+                        "provider_b_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 0,
+                        "jersey_number": "0",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -205,11 +420,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_a_player_id": 1,
+                        "provider_a_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 1,
+                        "jersey_number": "1",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -217,11 +432,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_b_player_id": 1,
+                        "provider_b_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 0,
+                        "jersey_number": "0",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -233,11 +448,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_a_player_id": 1,
+                        "provider_a_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 1,
+                        "jersey_number": "1",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -245,11 +460,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_b_player_id": 1,
+                        "provider_b_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 0,
+                        "jersey_number": "0",
                         "birth_date": "1970-01-02",
                     }
                 ]

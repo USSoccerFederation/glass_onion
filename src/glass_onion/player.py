@@ -1,11 +1,51 @@
 from enum import Enum
-from functools import reduce
 from itertools import product
 import pandas as pd
-from glass_onion.engine import SyncableContent, SyncEngine
+import pandera.pandas as pa
+from pandera import Field, Column
+from pandera.typing import Series
 from typing import Optional, Tuple
 
+from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import dataframe_coalesce
+
+
+class PlayerDataSchema(pa.DataFrameModel):
+    """
+    A panderas.DataFrameModel for player information.
+
+    Provider-specific player identifier fields are added before validation during [PlayerSyncableContent.validate_data_schema()][glass_onion.player.PlayerSyncableContent.validate_data_schema].
+    """
+
+    player_name: Series[str] = Field(nullable=False)
+    """
+    The name of the player. In general, this should be the full (or legal) name of the player provided by the provider.
+    """
+    player_nickname: Optional[Series[str]] = Field(nullable=True)
+    """
+    The nickname of the player. In general, this should be the common/public name or a shorthand for the player.
+    """
+    team_id: Series[str] = Field(nullable=False, coerce=True)
+    """
+    The player's team's identifier. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
+    """
+    birth_date: Optional[Series[str]] = Field(nullable=True)
+    """
+    The player's date of birth. Preferably in YYYY-MM-DD format, but required to be in a date format that can be parsed by pandas.Timestamp. If null/NA values are provided, this column will be ignored in synchronization.
+    """
+    jersey_number: Optional[Series[str]] = Field(nullable=True, coerce=True)
+    """
+    The player's jersey number. If null/NA values are provided, this column will be ignored in synchronization.
+    """
+
+    @pa.check("birth_date")
+    def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
+        return (
+            series.dropna()
+            .apply(lambda x: pd.Timestamp(x))
+            .apply(lambda x: (x != pd.Timestamp(0)))
+            .all()
+        )
 
 
 class PlayerSyncableContent(SyncableContent):
@@ -15,6 +55,29 @@ class PlayerSyncableContent(SyncableContent):
 
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("player", provider, data)
+
+    def validate_data_schema(self) -> bool:
+        """
+        Checks if this object's `data` meets the schema requirements for this object type. See [PlayerDataSchema][glass_onion.player.PlayerDataSchema] for more details.
+
+        Raises:
+            pandera.errors.SchemaError: if `data` does not conform to the schema.
+
+        Returns:
+            True, if `data` is formatted properly.
+        """
+        (
+            PlayerDataSchema.to_schema()
+            .add_columns(
+                {
+                    f"{self.id_field}": Column(
+                        str, required=True, nullable=False, coerce=True
+                    )
+                }
+            )
+            .validate(self.data)
+        )
+        return super().validate_data_schema()
 
 
 class PlayerSyncSimilarityMethod(Enum):

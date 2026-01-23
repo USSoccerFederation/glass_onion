@@ -1,7 +1,35 @@
 from __future__ import annotations
 import pandas as pd
+import pandera.pandas as pa
+from pandera import Field, Column
+from pandera.typing import Series
+from typing import Optional
+
 from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import dataframe_coalesce
+
+
+class TeamDataSchema(pa.DataFrameModel):
+    """
+    A panderas.DataFrameModel for team information.
+
+    Provider-specific team identifier fields are added before validation during [TeamSyncableContent.validate_data_schema()][glass_onion.team.TeamSyncableContent.validate_data_schema].
+
+    `competition_id` and `season_id` must be provided when using `TeamSyncEngine.use_competition_context`.
+    """
+
+    team_name: Series[str] = Field(nullable=False)
+    """
+    The name of the team.
+    """
+    competition_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
+    """
+    The competition the team is competing in. This is assumed to be universally unique across the [TeamSyncableContent][glass_onion.team.TeamSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
+    season_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
+    """
+    The season of the competition that the team is competing in. This is assumed to be universally unique across the [TeamSyncableContent][glass_onion.team.TeamSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
 
 
 class TeamSyncableContent(SyncableContent):
@@ -11,6 +39,29 @@ class TeamSyncableContent(SyncableContent):
 
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("team", provider, data)
+
+    def validate_data_schema(self) -> bool:
+        """
+        Checks if this object's `data` meets the schema requirements for this object type. See [TeamDataSchema][glass_onion.team.TeamDataSchema] for more details.
+
+        Raises:
+            pandera.errors.SchemaError: if `data` does not conform to the schema.
+
+        Returns:
+            True, if `data` is formatted properly.
+        """
+        (
+            TeamDataSchema.to_schema()
+            .add_columns(
+                {
+                    f"{self.id_field}": Column(
+                        str, required=True, nullable=False, coerce=True
+                    )
+                }
+            )
+            .validate(self.data)
+        )
+        return super().validate_data_schema()
 
 
 class TeamSyncEngine(SyncEngine):
@@ -42,6 +93,15 @@ class TeamSyncEngine(SyncEngine):
             else ["team_name"],
             verbose,
         )
+
+        if use_competition_context:
+            comp_schema = TeamDataSchema.to_schema().update_columns(
+                {
+                    "competition_id": {"required": True, "nullable": False},
+                    "season_id": {"required": True, "nullable": False},
+                }
+            )
+            assert [comp_schema.validate(d.data) for d in self.content]
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent

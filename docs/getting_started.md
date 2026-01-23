@@ -36,7 +36,7 @@ def get_players(dataset, provider):
     return pd.DataFrame([
         {
             f"{provider}_player_id": player.player_id,
-            "jersey_number": player.jersey_no,
+            "jersey_number": str(player.jersey_no),
             "team_id": team.team_id,
             "team_name": team.name,
             "player_name": player.full_name,

@@ -36,15 +36,17 @@ When building an object identifier sync pipeline, there are a bunch of other tas
 
 The source code is hosted on GitHub at: [https://github.com/USSoccerFederation/glass_onion](https://github.com/USSoccerFederation/glass_onion).
 
-The easiest way to install Glass Onion is via **pip**:
+The easiest way to install Glass Onion is via **uv** or **pip**:
 
 ```bash
+uv install glass_onion
 pip install glass_onion
 ```
 
-You can also install from GitHub for the latest updates:
+You can also install the package from GitHub for the latest updates:
 
 ```sh
+uv pip install "git+https://github.com/USSoccerFederation/glass_onion"
 pip install git+https://github.com/USSoccerFederation/glass_onion.git
 ```
 
