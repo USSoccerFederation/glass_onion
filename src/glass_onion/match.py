@@ -37,6 +37,10 @@ class MatchDataSchema(pa.DataFrameModel):
     """
     The season of the match. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
     """
+    matchday: Optional[Series[str]] = Field(nullable=True)
+    """
+    The matchday (AKA: match-week or match round) of the match in its given competition and season.
+    """
 
     @pa.check("match_date")
     def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:

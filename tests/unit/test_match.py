@@ -137,6 +137,50 @@ def test_init_syncable_content_allow_mixed_values(column: str):
     )
     assert c.validate_data_schema()
 
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_match_id",
+        "match_date",
+        "home_team_id",
+        "away_team_id",
+        "competition_id",
+        "season_id",
+        "matchday"
+    ],
+)
+def test_init_syncable_content_prevent_mixed_types(column: str):
+    base = {
+        "provider_a_match_id": "1",
+        "match_date": "2026-01-01",
+        "home_team_id": "1",
+        "away_team_id": "2",
+        "competition_id": "1",
+        "season_id": "1",
+        "matchday": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_match_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = i
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"expected series '{column}' to have type str"),
+    ):
+        MatchSyncableContent(
+            "provider_a",
+            df,
+        )
+
 
 def test_init_syncable_content_null_competition_id():
     with pytest.raises(
