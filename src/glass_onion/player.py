@@ -5,7 +5,7 @@ import pandera.pandas as pa
 from pandera import Field, Column
 from pandera.typing import Series
 from glass_onion.engine import SyncableContent, SyncEngine
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from glass_onion.utils import dataframe_coalesce
 
@@ -28,9 +28,9 @@ class PlayerDataSchema(pa.DataFrameModel):
     """
     The player's team's identifier. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
     """
-    birth_date: Optional[Series[object]] = Field(nullable=True)
+    birth_date: Optional[Series[str]] = Field(nullable=True, coerce=True)
     """
-    The player's date of birth. If null/NA values are provided, this column will be ignored in synchronization.
+    The player's date of birth as a YYYY-MM-DD string. If null/NA values are provided, this column will be ignored in synchronization.
     """
     jersey_number: Optional[Series[str]] = Field(nullable=True)
     """
@@ -38,8 +38,8 @@ class PlayerDataSchema(pa.DataFrameModel):
     """
 
     @pa.check("birth_date")
-    def is_timestamp(self, series: Series[object]) -> bool:
-        return series.dropna().apply(lambda x: isinstance(x, pd.Timestamp)).all()
+    def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
+        return series.dropna().apply(lambda x: pd.Timestamp(x)).all()
 
 
 class PlayerSyncableContent(SyncableContent):

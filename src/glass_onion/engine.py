@@ -42,7 +42,7 @@ class SyncableContent:
         )
 
         assert self.validate_data_schema(), (
-            "`data` does not meet the schema requirements for this SyncableContent type."
+            "`data` does not meet the schema requirements for this SyncableContent class."
         )
 
     def merge(self, right: "SyncableContent") -> "SyncableContent":

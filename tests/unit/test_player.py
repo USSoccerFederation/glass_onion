@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Tuple
 import pandas as pd
+import re
+from pandera.errors import SchemaError
 from glass_onion.engine import SyncableContent
 from glass_onion.player import (
     PlayerSyncEngine,
@@ -12,37 +14,30 @@ import pytest
 
 
 def test_init_missing_columns():
-    left = PlayerSyncableContent(
-        "provider_a",
-        data=pd.DataFrame([{"provider_a_player_id": 1, "player_name": "A"}]),
-    )
-
-    right = PlayerSyncableContent(
-        "provider_b",
-        data=pd.DataFrame([{"provider_b_player_id": 1, "player_name": "A"}]),
-    )
-
-    engine = PlayerSyncEngine([left, right], verbose=True)
-    assert ["player_name"] == engine.join_columns
+    with pytest.raises(SchemaError, match=re.escape("column 'team_id' not in dataframe. Columns in dataframe: ['provider_a_player_id', 'player_name']")):
+        PlayerSyncableContent(
+            "provider_a",
+            data=pd.DataFrame([{"provider_a_player_id": "1", "player_name": "A"}]),
+        )
 
 
 def test_init_unreliable_columns():
     left = PlayerSyncableContent(
         "provider_a",
         data=pd.DataFrame(
-            [{"provider_a_player_id": 1, "player_name": "A", "team_id": pd.NA}]
+            [{"provider_a_player_id": "1", "player_name": "A", "team_id": "A", "jersey_number": pd.NA}]
         ),
     )
 
     right = PlayerSyncableContent(
         "provider_b",
         data=pd.DataFrame(
-            [{"provider_b_player_id": 1, "player_name": "A", "team_id": "A"}]
+            [{"provider_b_player_id": "1", "player_name": "A", "team_id": "A", "jersey_number": "1"}]
         ),
     )
 
     engine = PlayerSyncEngine([left, right], verbose=True)
-    assert ["player_name"] == engine.join_columns
+    assert set(["player_name", "team_id"]) == set(engine.join_columns)
 
 
 @pytest.mark.parametrize(
@@ -128,11 +123,11 @@ def test_synchronize_using_layer(
         data=pd.DataFrame(
             [
                 {
-                    "provider_a_player_id": 1,
+                    "provider_a_player_id": "1",
                     "player_name": "ABCD",
                     "player_nickname": "AB",
                     "team_id": "A",
-                    "jersey_number": 1,
+                    "jersey_number": "1",
                     "birth_date": "1970-01-02",
                 }
             ]
@@ -144,11 +139,11 @@ def test_synchronize_using_layer(
         data=pd.DataFrame(
             [
                 {
-                    "provider_b_player_id": 1,
+                    "provider_b_player_id": "1",
                     "player_name": "ABCD",
                     "player_nickname": "AB",
                     "team_id": "A",
-                    "jersey_number": 0,
+                    "jersey_number": "0",
                     "birth_date": "1970-01-02",
                 }
             ]
@@ -177,11 +172,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_a_player_id": 1,
+                        "provider_a_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 1,
+                        "jersey_number": "1",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -189,11 +184,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_b_player_id": 1,
+                        "provider_b_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 0,
+                        "jersey_number": "0",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -205,11 +200,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_a_player_id": 1,
+                        "provider_a_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 1,
+                        "jersey_number": "1",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -217,11 +212,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_b_player_id": 1,
+                        "provider_b_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 0,
+                        "jersey_number": "0",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -233,11 +228,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_a_player_id": 1,
+                        "provider_a_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 1,
+                        "jersey_number": "1",
                         "birth_date": "1970-01-02",
                     }
                 ]
@@ -245,11 +240,11 @@ def test_synchronize_using_layer(
             pd.DataFrame(
                 [
                     {
-                        "provider_b_player_id": 1,
+                        "provider_b_player_id": "1",
                         "player_name": "ABCD",
                         "player_nickname": "AB",
                         "team_id": "A",
-                        "jersey_number": 0,
+                        "jersey_number": "0",
                         "birth_date": "1970-01-02",
                     }
                 ]
