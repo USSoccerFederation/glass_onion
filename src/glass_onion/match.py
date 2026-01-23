@@ -57,6 +57,15 @@ class MatchSyncableContent(SyncableContent):
         super().__init__("match", provider, data)
 
     def validate_data_schema(self) -> bool:
+        """
+        Checks if this object's `data` meets the schema requirements for this object type. See [MatchDataSchema][glass_onion.match.MatchDataSchema] for more details.
+
+        Raises:
+            pandera.errors.SchemaError: if `data` does not conform to the schema.
+
+        Returns:
+            True, if `data` is formatted properly.
+        """
         (
             MatchDataSchema.to_schema()
             .add_columns(

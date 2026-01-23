@@ -4,9 +4,9 @@ import pandas as pd
 import pandera.pandas as pa
 from pandera import Field, Column
 from pandera.typing import Series
-from glass_onion.engine import SyncableContent, SyncEngine
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
+from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import dataframe_coalesce
 
 
@@ -57,6 +57,15 @@ class PlayerSyncableContent(SyncableContent):
         super().__init__("player", provider, data)
 
     def validate_data_schema(self) -> bool:
+        """
+        Checks if this object's `data` meets the schema requirements for this object type. See [PlayerDataSchema][glass_onion.player.PlayerDataSchema] for more details.
+
+        Raises:
+            pandera.errors.SchemaError: if `data` does not conform to the schema.
+
+        Returns:
+            True, if `data` is formatted properly.
+        """
         (
             PlayerDataSchema.to_schema()
             .add_columns(

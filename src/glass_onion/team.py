@@ -41,6 +41,15 @@ class TeamSyncableContent(SyncableContent):
         super().__init__("team", provider, data)
 
     def validate_data_schema(self) -> bool:
+        """
+        Checks if this object's `data` meets the schema requirements for this object type. See [TeamDataSchema][glass_onion.team.TeamDataSchema] for more details.
+
+        Raises:
+            pandera.errors.SchemaError: if `data` does not conform to the schema.
+
+        Returns:
+            True, if `data` is formatted properly.
+        """
         (
             TeamDataSchema.to_schema()
             .add_columns(
