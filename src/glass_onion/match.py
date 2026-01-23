@@ -21,23 +21,23 @@ class MatchDataSchema(pa.DataFrameModel):
     """
     The date of the match. Preferably in YYYY-MM-DD format, but required to be in a date format that can be parsed by pandas.Timestamp.
     """
-    home_team_id: Series[str] = Field(nullable=False)
+    home_team_id: Series[str] = Field(nullable=False, coerce=True)
     """
     The team identifier of the home team. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
     """
-    away_team_id: Series[str] = Field(nullable=False)
+    away_team_id: Series[str] = Field(nullable=False, coerce=True)
     """
     The team identifier of the away team. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
     """
-    competition_id: Optional[Series[str]] = Field(nullable=False)
+    competition_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
     """
     The competition of the match. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
     """
-    season_id: Optional[Series[str]] = Field(nullable=False)
+    season_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
     """
     The season of the match. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
     """
-    matchday: Optional[Series[str]] = Field(nullable=True)
+    matchday: Optional[Series[str]] = Field(nullable=True, coerce=True)
     """
     The matchday (AKA: match-week or match round) of the match in its given competition and season.
     """

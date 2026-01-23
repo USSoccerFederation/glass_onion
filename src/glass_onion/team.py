@@ -22,11 +22,11 @@ class TeamDataSchema(pa.DataFrameModel):
     """
     The name of the team.
     """
-    competition_id: Optional[Series[str]] = Field(nullable=False)
+    competition_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
     """
     The competition the team is competing in. This is assumed to be universally unique across the [TeamSyncableContent][glass_onion.team.TeamSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
     """
-    season_id: Optional[Series[str]] = Field(nullable=False)
+    season_id: Optional[Series[str]] = Field(nullable=False, coerce=True)
     """
     The season of the competition that the team is competing in. This is assumed to be universally unique across the [TeamSyncableContent][glass_onion.team.TeamSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
     """
