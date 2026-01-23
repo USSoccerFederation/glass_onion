@@ -1,3 +1,7 @@
+"""
+Validates package against real-life example datasets.
+"""
+
 from pathlib import Path
 import pandas as pd
 from glass_onion.match import MatchSyncEngine
