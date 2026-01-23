@@ -7,7 +7,7 @@ def test_init_competition_context():
     engine = TeamSyncEngine(
         content=[
             TeamSyncableContent(
-                "provider_a", pd.DataFrame(columns=["provider_a_team_id"])
+                "provider_a", pd.DataFrame(columns=["provider_a_team_id", "team_name"])
             )
         ],
         use_competition_context=True,
@@ -35,7 +35,7 @@ def test_synchronize_pair(
         data=pd.DataFrame(
             [
                 {
-                    "provider_a_team_id": 1,
+                    "provider_a_team_id": "1",
                     "team_name": a_team_name,
                 }
             ]
@@ -47,7 +47,7 @@ def test_synchronize_pair(
         data=pd.DataFrame(
             [
                 {
-                    "provider_b_team_id": 1,
+                    "provider_b_team_id": "1",
                     "team_name": b_team_name,
                 }
             ]
