@@ -103,6 +103,9 @@ def test_synchronize(
 ):
     dataset = pd.read_csv(FIXTURE_DATA_PATH / object_type / file_path)
 
+    if "matchday" in dataset.columns:
+        dataset["matchday"] = dataset["matchday"].astype(str)
+
     if "jersey_number" in dataset.columns:
         dataset["jersey_number"] = dataset["jersey_number"].astype(str)
 

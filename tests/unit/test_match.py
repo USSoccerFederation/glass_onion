@@ -101,7 +101,6 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
             df,
         )
 
-
 @pytest.mark.parametrize(
     "column",
     [
@@ -314,7 +313,7 @@ def test_synchronize_pair(
             [
                 {
                     "provider_a_match_id": "1",
-                    "matchday": 1,
+                    "matchday": "1",
                     "match_date": a_match_date,
                     "home_team_id": "1",
                     "away_team_id": "2",
@@ -329,7 +328,7 @@ def test_synchronize_pair(
             [
                 {
                     "provider_b_match_id": "1",
-                    "matchday": 1,
+                    "matchday": "1",
                     "match_date": b_match_date,
                     "home_team_id": "1",
                     "away_team_id": "2",
