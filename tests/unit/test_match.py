@@ -1,14 +1,27 @@
 import pytest
-from glass_onion.match import MatchSyncEngine, MatchSyncableContent
 import pandas as pd
+import re
+from pandera.errors import SchemaError
 from itertools import permutations
+
+from glass_onion.match import MatchSyncEngine, MatchSyncableContent
+
+def test_init_syncable_content_null_competition_id():
+    with pytest.raises(SchemaError, match=re.escape("non-nullable series 'competition_id' contains null values")):
+        MatchSyncableContent(
+        "provider_a", pd.DataFrame([
+            {
+                "provider_a_match_id": "1", "match_date": "2026-01-01", "home_team_id": "1", "away_team_id": "2", "competition_id": pd.NA, "season_id": "1"
+            }
+        ])
+    )
 
 
 def test_init_competition_context():
     engine = MatchSyncEngine(
         content=[
             MatchSyncableContent(
-                "provider_a", pd.DataFrame(columns=["provider_a_match_id", "match_date", "home_team_id", "away_team_id"])
+                "provider_a", pd.DataFrame(columns=["provider_a_match_id", "match_date", "home_team_id", "away_team_id", "competition_id", "season_id"])
             )
         ],
         use_competition_context=True,
@@ -22,6 +35,18 @@ def test_init_competition_context():
         "away_team_id",
     ]
 
+def test_init_competition_context_missing_competition_id():
+    content_a = MatchSyncableContent(
+        "provider_a", pd.DataFrame(columns=["provider_a_match_id", "match_date", "home_team_id", "away_team_id", "season_id"])
+    )
+
+    with pytest.raises(SchemaError, match=re.escape("column 'competition_id' not in dataframe. Columns in dataframe: ['provider_a_match_id', 'match_date', 'home_team_id', 'away_team_id', 'season_id']")):
+        MatchSyncEngine(
+            content=[
+                content_a
+            ],
+            use_competition_context=True,
+        )
 
 @pytest.mark.parametrize(
     "a_match_date, b_match_date, expose_matchday, n_synchronize_on_adjusted_dates, n_synchronize_on_matchday, expected_matches",

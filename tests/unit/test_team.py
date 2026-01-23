@@ -1,19 +1,45 @@
 import pytest
-from glass_onion.team import TeamSyncEngine, TeamSyncableContent
 import pandas as pd
+import re
+from pandera.errors import SchemaError
+
+from glass_onion.team import TeamSyncEngine, TeamSyncableContent
+
+def test_init_syncable_content_null_competition_id():
+    with pytest.raises(SchemaError, match=re.escape("non-nullable series 'competition_id' contains null values")):
+        TeamSyncableContent(
+        "provider_a", pd.DataFrame([
+            {
+                "provider_a_team_id": "1", "team_name": "test", "competition_id": pd.NA, "season_id": "1"
+            }
+        ])
+    )
 
 
 def test_init_competition_context():
     engine = TeamSyncEngine(
         content=[
             TeamSyncableContent(
-                "provider_a", pd.DataFrame(columns=["provider_a_team_id", "team_name"])
+                "provider_a", pd.DataFrame(columns=["provider_a_team_id", "team_name", "competition_id", "season_id"])
             )
         ],
         use_competition_context=True,
     )
 
     assert engine.join_columns == ["team_name", "competition_id", "season_id"]
+
+def test_init_competition_context_missing_competition_id():
+    content_a = TeamSyncableContent(
+        "provider_a", pd.DataFrame(columns=["provider_a_team_id", "team_name", "season_id"])
+    )
+
+    with pytest.raises(SchemaError, match=re.escape("column 'competition_id' not in dataframe. Columns in dataframe: ['provider_a_team_id', 'team_name', 'season_id']")):
+        TeamSyncEngine(
+            content=[
+                content_a
+            ],
+            use_competition_context=True,
+        )
 
 
 @pytest.mark.parametrize(

@@ -79,6 +79,18 @@ class TeamSyncEngine(SyncEngine):
             verbose,
         )
 
+        if use_competition_context:
+            comp_schema = (
+                TeamDataSchema.to_schema()
+                    .update_columns(
+                        {
+                            "competition_id": {"required": True, "nullable": False},
+                            "season_id": {"required": True, "nullable": False}
+                        }
+                    )
+            )
+            assert [comp_schema.validate(d.data) for d in self.content]
+
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
     ) -> SyncableContent:

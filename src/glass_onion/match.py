@@ -94,7 +94,18 @@ class MatchSyncEngine(SyncEngine):
             else ["match_date", "home_team_id", "away_team_id"]
         )
         self.verbose = verbose
-        self.use_competition_context = use_competition_context
+
+        if use_competition_context:
+            comp_schema = (
+                MatchDataSchema.to_schema()
+                    .update_columns(
+                        {
+                            "competition_id": {"required": True, "nullable": False},
+                            "season_id": {"required": True, "nullable": False}
+                        }
+                    )
+            )
+            assert [comp_schema.validate(d.data) for d in self.content]
 
     def synchronize_on_adjusted_dates(
         self,
