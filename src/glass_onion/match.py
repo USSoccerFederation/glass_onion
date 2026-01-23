@@ -9,12 +9,33 @@ from glass_onion.utils import dataframe_coalesce, dataframe_clean_merged_fields
 
 
 class MatchDataSchema(pa.DataFrameModel):
-    match_date: Series[object] = Field(nullable=False)
-    home_team_id: Series[str] = Field(nullable=False)
-    away_team_id: Series[str] = Field(nullable=False)
+    """
+    A panderas.DataFrameModel for team information. 
+    
+    Provider-specific match identifier fields are added before validation during [MatchSyncableContent.validate_data_schema()][glass_onion.match.MatchSyncableContent.validate_data_schema].
 
-    competition_id: Optional[Series[str]] = Field(nullable=True)
-    season_id: Optional[Series[str]] = Field(nullable=True)
+    `competition_id` and `season_id` must be provided when using `MatchSyncEngine.use_competition_context`.
+    """
+    match_date: Series[object] = Field(nullable=False)
+    """
+    The date of the match.
+    """
+    home_team_id: Series[str] = Field(nullable=False)
+    """
+    The team identifier of the home team. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
+    """
+    away_team_id: Series[str] = Field(nullable=False)
+    """
+    The team identifier of the away team. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
+    """
+    competition_id: Optional[Series[str]] = Field(nullable=False)
+    """
+    The competition of the match. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
+    season_id: Optional[Series[str]] = Field(nullable=False)
+    """
+    The season of the match. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
 
     @pa.check("match_date")
     def is_timestamp(self, series: Series[object]) -> bool:

@@ -10,9 +10,26 @@ from glass_onion.utils import dataframe_coalesce
 
 
 class TeamDataSchema(pa.DataFrameModel):
+    """
+    A panderas.DataFrameModel for team information. 
+    
+    Provider-specific team identifier fields are added before validation during [TeamSyncableContent.validate_data_schema()][glass_onion.team.TeamSyncableContent.validate_data_schema].
+
+    `competition_id` and `season_id` must be provided when using `TeamSyncEngine.use_competition_context`.
+    """
+
     team_name: Series[str] = Field(nullable=False)
-    competition_id: Optional[Series[str]] = Field(nullable=True)
-    season_id: Optional[Series[str]] = Field(nullable=True)
+    """
+    The name of the team.
+    """
+    competition_id: Optional[Series[str]] = Field(nullable=False)
+    """
+    The competition the team is competing in. This is assumed to be universally unique across the [TeamSyncableContent][glass_onion.team.TeamSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
+    season_id: Optional[Series[str]] = Field(nullable=False)
+    """
+    The season of the competition that the team is competing in. This is assumed to be universally unique across the [TeamSyncableContent][glass_onion.team.TeamSyncableContent] objects provided to [TeamSyncEngine][glass_onion.team.TeamSyncEngine].
+    """
 
 
 class TeamSyncableContent(SyncableContent):

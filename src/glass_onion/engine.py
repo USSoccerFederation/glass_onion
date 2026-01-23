@@ -23,6 +23,7 @@ class SyncableContent:
         """
         Checks if this object's `data` meets the schema requirements for this object type.
 
+        This class should be subclassed for each new object type: see [PlayerDataSchema][glass_onion.player.PlayerDataSchema] for an example.
         """
         return True
 
