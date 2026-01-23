@@ -53,7 +53,7 @@ class MatchSyncableContent(SyncableContent):
     def validate_data_schema(self) -> bool:
         (
             MatchDataSchema.to_schema()
-            .add_columns({f"{self.id_field}": Column(str)})
+            .add_columns({f"{self.id_field}": Column(str, required=True, nullable=False)})
             .validate(self.data)
         )
         return super().validate_data_schema()
