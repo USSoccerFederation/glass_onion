@@ -6,6 +6,7 @@ from itertools import permutations
 
 from glass_onion.match import MatchSyncEngine, MatchSyncableContent
 
+
 @pytest.mark.parametrize(
     "value",
     [
@@ -16,7 +17,7 @@ from glass_onion.match import MatchSyncEngine, MatchSyncableContent
         "January 21, 2026",
         "2026-01-26T00:00Z",
         "2026-01-26T00:00:00Z",
-        "2026-01-26T00:00:00.000Z"
+        "2026-01-26T00:00:00.000Z",
     ],
 )
 def test_init_syncable_content_match_date_is_valid_format(value: str):
@@ -56,6 +57,7 @@ def test_init_syncable_content_match_date_is_not_valid_format():
             ),
         )
 
+
 @pytest.mark.parametrize(
     "column",
     [
@@ -64,7 +66,7 @@ def test_init_syncable_content_match_date_is_not_valid_format():
         "home_team_id",
         "away_team_id",
         "competition_id",
-        "season_id"
+        "season_id",
     ],
 )
 def test_init_syncable_content_prevent_mixed_values(column: str):
@@ -75,7 +77,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
         "away_team_id": "2",
         "competition_id": "1",
         "season_id": "1",
-        "matchday": "1"
+        "matchday": "1",
     }
     dataset = []
 
@@ -85,9 +87,9 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
 
         if i % 2 == 1:
             c[column] = pd.NA
-        
+
         dataset.append(c)
-    
+
     df = pd.DataFrame(dataset)
 
     with pytest.raises(
@@ -98,6 +100,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
             "provider_a",
             df,
         )
+
 
 @pytest.mark.parametrize(
     "column",
@@ -113,7 +116,7 @@ def test_init_syncable_content_allow_mixed_values(column: str):
         "away_team_id": "2",
         "competition_id": "1",
         "season_id": "1",
-        "matchday": "1"
+        "matchday": "1",
     }
     dataset = []
 
@@ -123,9 +126,9 @@ def test_init_syncable_content_allow_mixed_values(column: str):
 
         if i % 2 == 1:
             c[column] = pd.NA
-        
+
         dataset.append(c)
-    
+
     df = pd.DataFrame(dataset)
 
     c = MatchSyncableContent(

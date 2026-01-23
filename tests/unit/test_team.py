@@ -5,14 +5,10 @@ from pandera.errors import SchemaError
 
 from glass_onion.team import TeamSyncEngine, TeamSyncableContent
 
+
 @pytest.mark.parametrize(
     "column",
-    [
-        "provider_a_team_id",
-        "team_name",
-        "competition_id",
-        "season_id"
-    ],
+    ["provider_a_team_id", "team_name", "competition_id", "season_id"],
 )
 def test_init_syncable_content_prevent_mixed_values(column: str):
     base = {
@@ -29,9 +25,9 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
 
         if i % 2 == 1:
             c[column] = pd.NA
-        
+
         dataset.append(c)
-    
+
     df = pd.DataFrame(dataset)
 
     with pytest.raises(
@@ -42,6 +38,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
             "provider_a",
             df,
         )
+
 
 def test_init_syncable_content_null_competition_id():
     with pytest.raises(

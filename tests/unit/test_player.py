@@ -12,6 +12,7 @@ from glass_onion.player import (
 )
 import pytest
 
+
 @pytest.mark.parametrize(
     "value",
     [
@@ -22,7 +23,7 @@ import pytest
         "January 21, 2026",
         "2026-01-26T00:00Z",
         "2026-01-26T00:00:00Z",
-        "2026-01-26T00:00:00.000Z"
+        "2026-01-26T00:00:00.000Z",
     ],
 )
 def test_init_syncable_content_birth_date_is_valid_format(value: str):
@@ -62,6 +63,7 @@ def test_init_syncable_content_birth_date_is_not_valid_format():
             ),
         )
 
+
 @pytest.mark.parametrize(
     "column",
     [
@@ -87,9 +89,9 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
 
         if i % 2 == 1:
             c[column] = pd.NA
-        
+
         dataset.append(c)
-    
+
     df = pd.DataFrame(dataset)
 
     with pytest.raises(
@@ -100,6 +102,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
             "provider_a",
             df,
         )
+
 
 @pytest.mark.parametrize(
     "column",
@@ -126,9 +129,9 @@ def test_init_syncable_content_allow_mixed_values(column: str):
 
         if i % 2 == 1:
             c[column] = pd.NA
-        
+
         dataset.append(c)
-    
+
     df = pd.DataFrame(dataset)
 
     c = PlayerSyncableContent(
