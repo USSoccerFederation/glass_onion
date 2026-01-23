@@ -141,6 +141,83 @@ def test_init_syncable_content_allow_mixed_values(column: str):
     assert c.validate_data_schema()
 
 
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_player_id",
+        "team_id",
+        "jersey_number",
+    ],
+)
+def test_init_syncable_content_allow_mixed_types(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = i
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    c = PlayerSyncableContent(
+        "provider_a",
+        df,
+    )
+    assert c.validate_data_schema()
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "player_nickname",
+        "player_name",
+        "birth_date"
+    ],
+)
+def test_init_syncable_content_prevent_mixed_types(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = i
+
+        dataset.append(c)
+
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"expected series '{column}' to have type str"),
+    ):
+        PlayerSyncableContent(
+            "provider_a",
+            df,
+        )
+
+
 def test_init_missing_columns():
     with pytest.raises(
         SchemaError,
