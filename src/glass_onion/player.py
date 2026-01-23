@@ -1,11 +1,25 @@
 from enum import Enum
-from functools import reduce
 from itertools import product
 import pandas as pd
+import pandera.pandas as pa
+from pandera import Field, Column
+from pandera.typing import Series
 from glass_onion.engine import SyncableContent, SyncEngine
 from typing import Optional, Tuple
 
 from glass_onion.utils import dataframe_coalesce
+
+
+class PlayerDataSchema(pa.DataFrameModel):
+    player_name: Series[str] = Field(nullable=False)
+    player_nickname: Optional[Series[str]] = Field(nullable=True)
+    team_id: Series[str] = Field(nullable=False)
+    birth_date: Optional[Series[object]] = Field(nullable=True)
+    jersey_number: Optional[Series[str]] = Field(nullable=True)
+
+    @pa.check("birth_date")
+    def is_timestamp(self, series: Series[object]) -> bool:
+        return series.dropna().apply(lambda x: isinstance(x, pd.Timestamp)).all()
 
 
 class PlayerSyncableContent(SyncableContent):
@@ -15,6 +29,14 @@ class PlayerSyncableContent(SyncableContent):
 
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("player", provider, data)
+
+    def validate_data_schema(self) -> bool:
+        (
+            PlayerDataSchema.to_schema()
+            .add_columns({f"{self.id_field}": Column(str)})
+            .validate(self.data)
+        )
+        return super().validate_data_schema()
 
 
 class PlayerSyncSimilarityMethod(Enum):

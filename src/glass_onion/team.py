@@ -1,7 +1,18 @@
 from __future__ import annotations
 import pandas as pd
+import pandera.pandas as pa
+from pandera import Field, Column
+from pandera.typing import Series
+from typing import Optional
+
 from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import dataframe_coalesce
+
+
+class TeamDataSchema(pa.DataFrameModel):
+    team_name: Series[str] = Field(nullable=False)
+    competition_id: Optional[Series[str]] = Field(nullable=True)
+    season_id: Optional[Series[str]] = Field(nullable=True)
 
 
 class TeamSyncableContent(SyncableContent):
@@ -11,6 +22,14 @@ class TeamSyncableContent(SyncableContent):
 
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("team", provider, data)
+
+    def validate_data_schema(self) -> bool:
+        (
+            TeamDataSchema.to_schema()
+            .add_columns({f"{self.id_field}": Column(str)})
+            .validate(self.data)
+        )
+        return super().validate_data_schema()
 
 
 class TeamSyncEngine(SyncEngine):

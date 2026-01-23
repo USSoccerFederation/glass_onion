@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
     "numpy>=2.3.3",
     "pandas>=2.3.3",
+    "pandera>=0.28.1",
     "scikit-learn>=1.7.2",
     "thefuzz>=0.22.1",
     "unidecode>=1.4.0",

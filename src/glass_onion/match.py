@@ -1,6 +1,24 @@
 import pandas as pd
+import pandera.pandas as pa
+from pandera import Field, Column
+from pandera.typing import Series
+from typing import Optional
+
 from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import dataframe_coalesce, dataframe_clean_merged_fields
+
+
+class MatchDataSchema(pa.DataFrameModel):
+    match_date: Series[object] = Field(nullable=False)
+    home_team_id: Series[str] = Field(nullable=False)
+    away_team_id: Series[str] = Field(nullable=False)
+
+    competition_id: Optional[Series[str]] = Field(nullable=True)
+    season_id: Optional[Series[str]] = Field(nullable=True)
+
+    @pa.check("match_date")
+    def is_timestamp(self, series: Series[object]) -> bool:
+        return series.dropna().apply(lambda x: isinstance(x, pd.Timestamp)).all()
 
 
 class MatchSyncableContent(SyncableContent):
@@ -10,6 +28,14 @@ class MatchSyncableContent(SyncableContent):
 
     def __init__(self, provider: str, data: pd.DataFrame):
         super().__init__("match", provider, data)
+
+    def validate_data_schema(self) -> bool:
+        (
+            MatchDataSchema.to_schema()
+            .add_columns({f"{self.id_field}": Column(str)})
+            .validate(self.data)
+        )
+        return super().validate_data_schema()
 
 
 class MatchSyncEngine(SyncEngine):
