@@ -103,6 +103,12 @@ def test_synchronize(
 ):
     dataset = pd.read_csv(FIXTURE_DATA_PATH / object_type / file_path)
 
+    if "jersey_number" in dataset.columns:
+        dataset["jersey_number"] = dataset["jersey_number"].astype(str)
+
+    if "season_id" in dataset.columns:
+        dataset["season_id"] = dataset["season_id"].astype(str)
+
     syncables = utils_create_syncables(dataset, object_type)
     if object_type == "player":
         engine_test = PlayerSyncEngine(syncables, verbose=False)
