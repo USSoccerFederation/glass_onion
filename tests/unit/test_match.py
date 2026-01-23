@@ -59,6 +59,7 @@ def test_init_syncable_content_match_date_is_not_valid_format():
 @pytest.mark.parametrize(
     "column",
     [
+        "provider_a_match_id",
         "match_date",
         "home_team_id",
         "away_team_id",

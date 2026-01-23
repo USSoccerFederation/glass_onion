@@ -12,6 +12,131 @@ from glass_onion.player import (
 )
 import pytest
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2026-01-21",
+        "01-21-2026",
+        "21-01-2026",
+        "Jan 21, 2026",
+        "January 21, 2026",
+        "2026-01-26T00:00Z",
+        "2026-01-26T00:00:00Z",
+        "2026-01-26T00:00:00.000Z"
+    ],
+)
+def test_init_syncable_content_birth_date_is_valid_format(value: str):
+    content = PlayerSyncableContent(
+        "provider_a",
+        pd.DataFrame(
+            [
+                {
+                    "provider_a_player_id": "1",
+                    "player_name": "test",
+                    "birth_date": value,
+                    "team_id": "1",
+                }
+            ]
+        ),
+    )
+
+    assert content.validate_data_schema()
+
+
+def test_init_syncable_content_birth_date_is_not_valid_format():
+    with pytest.raises(
+        SchemaError,
+        match=re.escape("Unknown datetime string format, unable to parse: test"),
+    ):
+        PlayerSyncableContent(
+            "provider_a",
+            pd.DataFrame(
+                [
+                    {
+                        "provider_a_player_id": "1",
+                        "player_name": "test",
+                        "birth_date": "test",
+                        "team_id": "1",
+                    }
+                ]
+            ),
+        )
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "provider_a_player_id",
+        "player_name",
+        "team_id",
+    ],
+)
+def test_init_syncable_content_prevent_mixed_values(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+        
+        dataset.append(c)
+    
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"non-nullable series '{column}' contains null values"),
+    ):
+        PlayerSyncableContent(
+            "provider_a",
+            df,
+        )
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "player_nickname",
+        "birth_date",
+        "jersey_number",
+    ],
+)
+def test_init_syncable_content_allow_mixed_values(column: str):
+    base = {
+        "provider_a_player_id": "1",
+        "birth_date": "2026-01-01",
+        "team_id": "1",
+        "player_name": "test",
+        "player_nickname": "test1",
+        "jersey_number": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_player_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+        
+        dataset.append(c)
+    
+    df = pd.DataFrame(dataset)
+
+    c = PlayerSyncableContent(
+        "provider_a",
+        df,
+    )
+    assert c.validate_data_schema()
+
 
 def test_init_missing_columns():
     with pytest.raises(
