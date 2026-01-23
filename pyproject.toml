@@ -1,6 +1,6 @@
 [project]
 name = "glass-onion"
-version = "0.1"
+version = "1.0"
 description = "A package for synchronizing soccer object identifiers."
 readme = "README.md"
 license = { file = "LICENSE" }
