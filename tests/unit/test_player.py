@@ -14,7 +14,12 @@ import pytest
 
 
 def test_init_missing_columns():
-    with pytest.raises(SchemaError, match=re.escape("column 'team_id' not in dataframe. Columns in dataframe: ['provider_a_player_id', 'player_name']")):
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(
+            "column 'team_id' not in dataframe. Columns in dataframe: ['provider_a_player_id', 'player_name']"
+        ),
+    ):
         PlayerSyncableContent(
             "provider_a",
             data=pd.DataFrame([{"provider_a_player_id": "1", "player_name": "A"}]),
@@ -25,14 +30,28 @@ def test_init_unreliable_columns():
     left = PlayerSyncableContent(
         "provider_a",
         data=pd.DataFrame(
-            [{"provider_a_player_id": "1", "player_name": "A", "team_id": "A", "jersey_number": pd.NA}]
+            [
+                {
+                    "provider_a_player_id": "1",
+                    "player_name": "A",
+                    "team_id": "A",
+                    "jersey_number": pd.NA,
+                }
+            ]
         ),
     )
 
     right = PlayerSyncableContent(
         "provider_b",
         data=pd.DataFrame(
-            [{"provider_b_player_id": "1", "player_name": "A", "team_id": "A", "jersey_number": "1"}]
+            [
+                {
+                    "provider_b_player_id": "1",
+                    "player_name": "A",
+                    "team_id": "A",
+                    "jersey_number": "1",
+                }
+            ]
         ),
     )
 

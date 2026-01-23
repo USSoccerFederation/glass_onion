@@ -11,8 +11,8 @@ from glass_onion.utils import dataframe_coalesce
 
 class TeamDataSchema(pa.DataFrameModel):
     """
-    A panderas.DataFrameModel for team information. 
-    
+    A panderas.DataFrameModel for team information.
+
     Provider-specific team identifier fields are added before validation during [TeamSyncableContent.validate_data_schema()][glass_onion.team.TeamSyncableContent.validate_data_schema].
 
     `competition_id` and `season_id` must be provided when using `TeamSyncEngine.use_competition_context`.
@@ -43,7 +43,9 @@ class TeamSyncableContent(SyncableContent):
     def validate_data_schema(self) -> bool:
         (
             TeamDataSchema.to_schema()
-            .add_columns({f"{self.id_field}": Column(str, required=True, nullable=False)})
+            .add_columns(
+                {f"{self.id_field}": Column(str, required=True, nullable=False)}
+            )
             .validate(self.data)
         )
         return super().validate_data_schema()
@@ -80,14 +82,11 @@ class TeamSyncEngine(SyncEngine):
         )
 
         if use_competition_context:
-            comp_schema = (
-                TeamDataSchema.to_schema()
-                    .update_columns(
-                        {
-                            "competition_id": {"required": True, "nullable": False},
-                            "season_id": {"required": True, "nullable": False}
-                        }
-                    )
+            comp_schema = TeamDataSchema.to_schema().update_columns(
+                {
+                    "competition_id": {"required": True, "nullable": False},
+                    "season_id": {"required": True, "nullable": False},
+                }
             )
             assert [comp_schema.validate(d.data) for d in self.content]
 

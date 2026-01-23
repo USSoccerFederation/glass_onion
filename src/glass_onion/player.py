@@ -12,10 +12,11 @@ from glass_onion.utils import dataframe_coalesce
 
 class PlayerDataSchema(pa.DataFrameModel):
     """
-    A panderas.DataFrameModel for player information. 
-    
+    A panderas.DataFrameModel for player information.
+
     Provider-specific player identifier fields are added before validation during [PlayerSyncableContent.validate_data_schema()][glass_onion.player.PlayerSyncableContent.validate_data_schema].
     """
+
     player_name: Series[str] = Field(nullable=False)
     """
     The name of the player. In general, this should be the full (or legal) name of the player provided by the provider.
@@ -39,7 +40,12 @@ class PlayerDataSchema(pa.DataFrameModel):
 
     @pa.check("birth_date")
     def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
-        return series.dropna().apply(lambda x: pd.Timestamp(x)).apply(lambda x: (x != pd.Timestamp(0))).all()
+        return (
+            series.dropna()
+            .apply(lambda x: pd.Timestamp(x))
+            .apply(lambda x: (x != pd.Timestamp(0)))
+            .all()
+        )
 
 
 class PlayerSyncableContent(SyncableContent):
@@ -53,7 +59,9 @@ class PlayerSyncableContent(SyncableContent):
     def validate_data_schema(self) -> bool:
         (
             PlayerDataSchema.to_schema()
-            .add_columns({f"{self.id_field}": Column(str, required=True, nullable=False)})
+            .add_columns(
+                {f"{self.id_field}": Column(str, required=True, nullable=False)}
+            )
             .validate(self.data)
         )
         return super().validate_data_schema()

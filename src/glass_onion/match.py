@@ -10,12 +10,13 @@ from glass_onion.utils import dataframe_coalesce, dataframe_clean_merged_fields
 
 class MatchDataSchema(pa.DataFrameModel):
     """
-    A panderas.DataFrameModel for team information. 
-    
+    A panderas.DataFrameModel for team information.
+
     Provider-specific match identifier fields are added before validation during [MatchSyncableContent.validate_data_schema()][glass_onion.match.MatchSyncableContent.validate_data_schema].
 
     `competition_id` and `season_id` must be provided when using `MatchSyncEngine.use_competition_context`.
     """
+
     match_date: Series[str] = Field(nullable=False)
     """
     The date of the match.
@@ -39,7 +40,12 @@ class MatchDataSchema(pa.DataFrameModel):
 
     @pa.check("match_date")
     def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
-        return series.dropna().apply(lambda x: pd.Timestamp(x)).apply(lambda x: (x != pd.Timestamp(0))).all()
+        return (
+            series.dropna()
+            .apply(lambda x: pd.Timestamp(x))
+            .apply(lambda x: (x != pd.Timestamp(0)))
+            .all()
+        )
 
 
 class MatchSyncableContent(SyncableContent):
@@ -53,7 +59,9 @@ class MatchSyncableContent(SyncableContent):
     def validate_data_schema(self) -> bool:
         (
             MatchDataSchema.to_schema()
-            .add_columns({f"{self.id_field}": Column(str, required=True, nullable=False)})
+            .add_columns(
+                {f"{self.id_field}": Column(str, required=True, nullable=False)}
+            )
             .validate(self.data)
         )
         return super().validate_data_schema()
@@ -96,14 +104,11 @@ class MatchSyncEngine(SyncEngine):
         self.verbose = verbose
 
         if use_competition_context:
-            comp_schema = (
-                MatchDataSchema.to_schema()
-                    .update_columns(
-                        {
-                            "competition_id": {"required": True, "nullable": False},
-                            "season_id": {"required": True, "nullable": False}
-                        }
-                    )
+            comp_schema = MatchDataSchema.to_schema().update_columns(
+                {
+                    "competition_id": {"required": True, "nullable": False},
+                    "season_id": {"required": True, "nullable": False},
+                }
             )
             assert [comp_schema.validate(d.data) for d in self.content]
 
