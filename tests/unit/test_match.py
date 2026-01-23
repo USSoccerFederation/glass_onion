@@ -101,6 +101,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
             df,
         )
 
+
 @pytest.mark.parametrize(
     "column",
     [
@@ -135,6 +136,7 @@ def test_init_syncable_content_allow_mixed_values(column: str):
         df,
     )
     assert c.validate_data_schema()
+
 
 @pytest.mark.parametrize(
     "column",
@@ -183,7 +185,7 @@ def test_init_syncable_content_prevent_mixed_types(column: str):
         "away_team_id",
         "competition_id",
         "season_id",
-        "matchday"
+        "matchday",
     ],
 )
 def test_init_syncable_content_allow_mixed_types(column: str):
@@ -214,6 +216,7 @@ def test_init_syncable_content_allow_mixed_types(column: str):
         df,
     )
     assert c.validate_data_schema()
+
 
 def test_init_syncable_content_null_competition_id():
     with pytest.raises(

@@ -180,11 +180,7 @@ def test_init_syncable_content_allow_mixed_types(column: str):
 
 @pytest.mark.parametrize(
     "column",
-    [
-        "player_nickname",
-        "player_name",
-        "birth_date"
-    ],
+    ["player_nickname", "player_name", "birth_date"],
 )
 def test_init_syncable_content_prevent_mixed_types(column: str):
     base = {

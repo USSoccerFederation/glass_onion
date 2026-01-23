@@ -69,7 +69,11 @@ class PlayerSyncableContent(SyncableContent):
         (
             PlayerDataSchema.to_schema()
             .add_columns(
-                {f"{self.id_field}": Column(str, required=True, nullable=False, coerce=True)}
+                {
+                    f"{self.id_field}": Column(
+                        str, required=True, nullable=False, coerce=True
+                    )
+                }
             )
             .validate(self.data)
         )
