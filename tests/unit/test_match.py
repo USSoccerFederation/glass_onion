@@ -6,6 +6,97 @@ from itertools import permutations
 
 from glass_onion.match import MatchSyncEngine, MatchSyncableContent
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "2026-01-21",
+        "01-21-2026",
+        "21-01-2026",
+        "Jan 21, 2026",
+        "January 21, 2026",
+        "2026-01-26T00:00Z",
+        "2026-01-26T00:00:00Z",
+        "2026-01-26T00:00:00.000Z"
+    ],
+)
+def test_init_syncable_content_match_date_is_valid_format(value: str):
+    content = MatchSyncableContent(
+        "provider_a",
+        pd.DataFrame(
+            [
+                {
+                    "provider_a_match_id": "1",
+                    "match_date": value,
+                    "home_team_id": "1",
+                    "away_team_id": "2",
+                }
+            ]
+        ),
+    )
+
+    assert content.validate_data_schema()
+
+
+def test_init_syncable_content_match_date_is_not_valid_format():
+    with pytest.raises(
+        SchemaError,
+        match=re.escape("Unknown datetime string format, unable to parse: test"),
+    ):
+        MatchSyncableContent(
+            "provider_a",
+            pd.DataFrame(
+                [
+                    {
+                        "provider_a_match_id": "1",
+                        "match_date": "test",
+                        "home_team_id": "1",
+                        "away_team_id": "2",
+                    }
+                ]
+            ),
+        )
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "match_date",
+        "home_team_id",
+        "away_team_id",
+        "competition_id",
+        "season_id"
+    ],
+)
+def test_init_syncable_content_mixed_values(column: str):
+    base = {
+        "provider_a_match_id": "1",
+        "match_date": "2026-01-01",
+        "home_team_id": "1",
+        "away_team_id": "2",
+        "competition_id": "1",
+        "season_id": "1",
+    }
+    dataset = []
+
+    for i in range(0, 10):
+        c = base.copy()
+        c["provider_a_match_id"] = str(i)
+
+        if i % 2 == 1:
+            c[column] = pd.NA
+        
+        dataset.append(c)
+    
+    df = pd.DataFrame(dataset)
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(f"non-nullable series '{column}' contains null values"),
+    ):
+        MatchSyncableContent(
+            "provider_a",
+            df,
+        )
+
 
 def test_init_syncable_content_null_competition_id():
     with pytest.raises(
@@ -82,6 +173,33 @@ def test_init_competition_context_missing_competition_id():
             content=[content_a],
             use_competition_context=True,
         )
+
+
+def test_init_competition_context_false_null_competition_id():
+    engine = MatchSyncEngine(
+        content=[
+            MatchSyncableContent(
+                "provider_a",
+                pd.DataFrame(
+                    columns=[
+                        "provider_a_match_id",
+                        "match_date",
+                        "home_team_id",
+                        "away_team_id",
+                        "competition_id",
+                        "season_id",
+                    ]
+                ),
+            )
+        ],
+        use_competition_context=False,
+    )
+
+    assert engine.join_columns == [
+        "match_date",
+        "home_team_id",
+        "away_team_id",
+    ]
 
 
 @pytest.mark.parametrize(

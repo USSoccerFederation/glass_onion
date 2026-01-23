@@ -19,7 +19,7 @@ class MatchDataSchema(pa.DataFrameModel):
 
     match_date: Series[str] = Field(nullable=False)
     """
-    The date of the match.
+    The date of the match. Preferably in YYYY-MM-DD format, but required to be in a date format that can be parsed by pandas.Timestamp.
     """
     home_team_id: Series[str] = Field(nullable=False)
     """

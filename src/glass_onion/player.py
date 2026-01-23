@@ -29,9 +29,9 @@ class PlayerDataSchema(pa.DataFrameModel):
     """
     The player's team's identifier. This is assumed to be universally unique across the [MatchSyncableContent][glass_onion.match.MatchSyncableContent] objects provided to [MatchSyncEngine][glass_onion.match.MatchSyncEngine].
     """
-    birth_date: Optional[Series[str]] = Field(nullable=True, coerce=True)
+    birth_date: Optional[Series[str]] = Field(nullable=True)
     """
-    The player's date of birth as a YYYY-MM-DD string. If null/NA values are provided, this column will be ignored in synchronization.
+    The player's date of birth. Preferably in YYYY-MM-DD format, but required to be in a date format that can be parsed by pandas.Timestamp. If null/NA values are provided, this column will be ignored in synchronization.
     """
     jersey_number: Optional[Series[str]] = Field(nullable=True)
     """
