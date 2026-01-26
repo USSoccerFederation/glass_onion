@@ -1,7 +1,7 @@
 # Glass Onion
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/glass_onion.svg)](https://pypi.org/project/glass_onion/)
-![](https://img.shields.io/github/license/PySport/glass_onion)
+![](https://img.shields.io/github/license/USSoccerFederation/glass_onion)
 ![](https://img.shields.io/pypi/pyversions/glass_onion)
 
 
