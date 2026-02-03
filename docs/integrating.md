@@ -79,7 +79,6 @@ all_remaining_records = (
     )
 )
 
-# display(all_remaining_player_matches)
 ```
 
 
