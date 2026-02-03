@@ -51,7 +51,6 @@ dev = [
     "kloppy>=3.18.0",
     "markdown-exec[ansi]>=1.12.1",
     "pandas[output-formatting]>=2.3.3",
-    "mkdocs-site-urls>=0.3.1",
 ]
 
 [tool.pytest.ini_options]
