@@ -40,7 +40,7 @@ Simply run this simple command in your terminal of choice:
 $ python -m pip install glass_onion
 ```
 
-You might have to install pip first. The easiest method is to use the [standalone pip installer](https://pip.pypa.io/en/latest/installing/#installing-with-get-pip-py).
+You might have to install pip first. The easiest method is to use the [standalone pip installer](https://pip.pypa.io/en/latest/installation/).
 
 ### Installing the development version
 
