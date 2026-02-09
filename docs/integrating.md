@@ -12,13 +12,14 @@ In our pipeline, each object type depends on a "higher-order" object type to hav
 
 Our goal with this pipeline should be to take an object's provider-specific tables and generate one "source of truth" table for that object with identifiers we can use across our systems. To achieve that vision, this final table must meet a few different criteria:
 
-- [ ] Does not include duplicate rows or duplicate identifiers
-- [ ] Contains the most accurate metadata for a given object
-- [ ] Object identifiers are durable and unique so that they can be used reliably across our systems
+- [ ] Does not include duplicate rows or identifiers
+- [ ] Includes most accurate metadata for the object from the data provider that tends to be the most accurate for each metadata field
+- [ ] Assigns objects unique and durable identifiers that can be used reliably across our systems
 
 ## Step 1: Data Collection
 
 We collect data from the provider-specific tables into a single Spark DataFrame with the schema:
+
 - data_provider: the data provider's name
 - provider_object_id: the ID of the object in the data provider's system
 - Any object-specific columns to use for synchronization
@@ -29,9 +30,13 @@ Here's what this might look like in code for player synchronization:
 ```python linenums="1"
 from functools import reduce
 
-## Notes:
-## - ussf.competition_match and ussf.team are "higher-order" unified tables that assist us in synchronizing player identifiers.
-## - provider_a.player_match contains data on a player performance in a given match. The primary key for this table is match_id + player_id.
+"""
+Notes:
+    - `ussf.competition_match` and `ussf.team` are "higher-order" unified
+      tables used to synchronize player identifiers.
+    - provider_a.player_match contains player performance data for a given
+      match. The primary key is `match_id` + `player_id`.
+"""
 
 prov_a = spark.sql(
 """
@@ -73,7 +78,6 @@ all_remaining_records = (
         "player_gender",
     )
 )
-# display(all_remaining_player_matches)
 
 ```
 
@@ -559,7 +563,7 @@ With our pipeline generating a "knockout list" that meets our target criteria:
 
 - [X] Does not include duplicate rows or identifiers
 - [X] Includes most accurate metadata for the object from the data provider that tends to be the most accurate for each metadata field
-- [X] Assigns objects unique and durable identifiers
+- [X] Assigns objects unique and durable identifiers that can be used reliably across our systems
 
 We can simply execute a `MERGE INTO` statement into the table for this object in our unified schema:
 

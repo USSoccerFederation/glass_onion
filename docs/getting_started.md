@@ -145,26 +145,47 @@ import json
 import requests
 import pandas as pd
 
-impect_player_match = json.loads(requests.get("https://raw.githubusercontent.com/ImpectAPI/open-data/refs/heads/main/data/player_kpis/player_kpis_122839.json").content)
+impect_player_match = json.loads(
+    requests.get(
+        "https://raw.githubusercontent.com/ImpectAPI/open-data/refs/heads/main/data/player_kpis/player_kpis_122839.json"
+    ).content
+)
 impect_player_match_list = []
 for t in ["squadHome", "squadAway"]:
-    impect_player_match_list = [{ **p, "team_id": impect_player_match[t]["id"], "match_id": impect_player_match["matchId"]} for p in impect_player_match[t]["players"]]
+    impect_player_match_list = [
+        {
+            **p,
+            "team_id": impect_player_match[t]["id"],
+            "match_id": impect_player_match["matchId"],
+        }
+        for p in impect_player_match[t]["players"]
+    ]
 
 impect_player_match_df = pd.DataFrame(impect_player_match_list).explode("kpis")
-impect_player_match_df["kpi_id"] = impect_player_match_df["kpis"].apply(lambda x: x["kpiId"])
-impect_player_match_df["kpi_value"] = impect_player_match_df["kpis"].apply(lambda x: x["value"])
-impect_player_match_df.drop("kpis", axis=1, inplace=True)
-impect_player_match = impect_player_match_df[impect_player_match_df["kpi_id"] == 83].groupby(["match_id", "id"], as_index=False).kpi_value.sum()
-impect_player_match.rename(
-    { 
-        "match_id": "impect_match_id",
-        "id": "impect_player_id", 
-        "kpi_value": "impect_packing_xg"
-    }, 
-    axis=1, 
-    inplace=True
+impect_player_match_df["kpi_id"] = impect_player_match_df["kpis"].apply(
+    lambda x: x["kpiId"]
 )
-impect_player_match["impect_player_id"] = impect_player_match["impect_player_id"].astype(str)
+impect_player_match_df["kpi_value"] = impect_player_match_df["kpis"].apply(
+    lambda x: x["value"]
+)
+impect_player_match_df.drop("kpis", axis=1, inplace=True)
+impect_player_match = (
+    impect_player_match_df[impect_player_match_df["kpi_id"] == 83]
+    .groupby(["match_id", "id"], as_index=False)
+    .kpi_value.sum()
+)
+impect_player_match.rename(
+    {
+        "match_id": "impect_match_id",
+        "id": "impect_player_id",
+        "kpi_value": "impect_packing_xg",
+    },
+    axis=1,
+    inplace=True,
+)
+impect_player_match["impect_player_id"] = impect_player_match[
+    "impect_player_id"
+].astype(str)
 impect_player_match
 ```
 ```python exec="true" html="true" session="getting-started"
@@ -175,32 +196,44 @@ print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{ht
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
 import pandas as pd
-statsbomb_player_match_df = pd.read_json("https://raw.githubusercontent.com/statsbomb/open-data/refs/heads/master/data/events/3895052.json")
+
+statsbomb_player_match_df = pd.read_json(
+    "https://raw.githubusercontent.com/statsbomb/open-data/refs/heads/master/data/events/3895052.json"
+)
 statsbomb_player_match_df["match_id"] = "3895052"
-statsbomb_player_match_df = statsbomb_player_match_df[statsbomb_player_match_df["shot"].notna()]
-statsbomb_player_match_df["player_id"] = statsbomb_player_match_df["player"].apply(lambda x: x["id"])
-statsbomb_player_match_df["player_name"] = statsbomb_player_match_df["player"].apply(lambda x: x["name"])
-statsbomb_player_match_df["team_id"] = statsbomb_player_match_df["team"].apply(lambda x: x["id"])
-statsbomb_player_match_df["team_name"] = statsbomb_player_match_df["team"].apply(lambda x: x["name"])
-statsbomb_player_match_df["shot_statsbomb_xg"] = statsbomb_player_match_df["shot"].apply(lambda x: x["statsbomb_xg"])
 statsbomb_player_match_df = statsbomb_player_match_df[
-    [
-        "match_id",
-        "team_id",
-        "player_id",
-        "shot_statsbomb_xg"
-    ]
+    statsbomb_player_match_df["shot"].notna()
 ]
-statsbomb_player_match = statsbomb_player_match_df.groupby(["match_id", "player_id"], as_index=False).shot_statsbomb_xg.sum()
+statsbomb_player_match_df["player_id"] = statsbomb_player_match_df["player"].apply(
+    lambda x: x["id"]
+)
+statsbomb_player_match_df["player_name"] = statsbomb_player_match_df["player"].apply(
+    lambda x: x["name"]
+)
+statsbomb_player_match_df["team_id"] = statsbomb_player_match_df["team"].apply(
+    lambda x: x["id"]
+)
+statsbomb_player_match_df["team_name"] = statsbomb_player_match_df["team"].apply(
+    lambda x: x["name"]
+)
+statsbomb_player_match_df["shot_statsbomb_xg"] = statsbomb_player_match_df[
+    "shot"
+].apply(lambda x: x["statsbomb_xg"])
+statsbomb_player_match_df = statsbomb_player_match_df[
+    ["match_id", "team_id", "player_id", "shot_statsbomb_xg"]
+]
+statsbomb_player_match = statsbomb_player_match_df.groupby(
+    ["match_id", "player_id"], as_index=False
+).shot_statsbomb_xg.sum()
 statsbomb_player_match["player_id"] = statsbomb_player_match["player_id"].astype(str)
 statsbomb_player_match.rename(
     {
         "match_id": "statsbomb_match_id",
         "player_id": "statsbomb_player_id",
-        "shot_statsbomb_xg": "statsbomb_shot_xg"
+        "shot_statsbomb_xg": "statsbomb_shot_xg",
     },
     axis=1,
-    inplace=True
+    inplace=True,
 )
 statsbomb_player_match
 ```
@@ -214,23 +247,27 @@ But once we have both datasets, we can join them easily:
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
 composite_df = pd.merge(
-    left=impect_player_match,
-    right=result.data,
-    on="impect_player_id",
-    how="outer"
+    left=impect_player_match, right=result.data, on="impect_player_id", how="outer"
 )
 
 composite_df = pd.merge(
     left=composite_df,
     right=statsbomb_player_match,
     on="statsbomb_player_id",
-    how="outer"
+    how="outer",
 )
 
-composite_result = (
-    composite_df[["player_name", "team_id", "jersey_number", "impect_player_id", "statsbomb_player_id", "impect_packing_xg", "statsbomb_shot_xg"]]
-        .sort_values(by=["impect_packing_xg", "statsbomb_shot_xg"], ascending=False)
-)
+composite_result = composite_df[
+    [
+        "player_name",
+        "team_id",
+        "jersey_number",
+        "impect_player_id",
+        "statsbomb_player_id",
+        "impect_packing_xg",
+        "statsbomb_shot_xg",
+    ]
+].sort_values(by=["impect_packing_xg", "statsbomb_shot_xg"], ascending=False)
 
 composite_result.head()
 ```
