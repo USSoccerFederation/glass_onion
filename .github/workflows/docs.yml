@@ -33,7 +33,7 @@ jobs:
       - name: Install Python 3.13
         run: uv python install 3.13
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Build docs with mkdocs
         run: uv run mkdocs build
       - name: Upload artifact
