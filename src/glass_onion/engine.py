@@ -420,64 +420,71 @@ class SyncEngine:
         normalized_name_population = series_normalize(name_population[fields[0]])
         normalized_name_sample = series_normalize(name_sample[fields[1]])
 
+        # only the first occurrence of each normalized string can ever be matched,
+        # so collapse both sides to {string: id of first occurrence} (dicts keep insertion order).
+        population_ids: dict[str, Any] = {}
+        for name, id in zip(
+            normalized_name_population.tolist(),
+            name_population[input1.id_field].tolist(),
+        ):
+            population_ids.setdefault(name, id)
+
+        sample_ids: dict[str, Any] = {}
+        for name, id in zip(
+            normalized_name_sample.tolist(), name_sample[input2.id_field].tolist()
+        ):
+            sample_ids.setdefault(name, id)
+
         results = []
         name_map: dict[str, str] = {}
+        matched_sample: set[str] = set()
 
         # first pass to encapsulate exact matches
-        for i in range(0, len(normalized_name_population)):
-            i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
-            if i1_raw in name_map.keys():
+        for i1_raw, i1_id in population_ids.items():
+            if i1_raw in sample_ids:
+                self.verbose_log(f"Logging match: {i1_raw} -> {i1_raw}")
+                name_map[i1_raw] = i1_raw
+                matched_sample.add(i1_raw)
+                results.append(
+                    {
+                        f"{input1.id_field}": i1_id,
+                        f"{input2.id_field}": sample_ids[i1_raw],
+                    }
+                )
+
+        # second pass: match if either name's token set is a subset of the other's.
+        # Any such pair shares at least one token, so an inverted index of
+        # token -> sample positions limits the comparisons to plausible candidates.
+        sample_names = [n for n in sample_ids.keys() if n not in matched_sample]
+        sample_sets = [frozenset(re.split(r"\s+", n.strip())) for n in sample_names]
+        token_index: dict[str, list[int]] = {}
+        for j, i2_set in enumerate(sample_sets):
+            for token in i2_set:
+                token_index.setdefault(token, []).append(j)
+
+        for i1_raw, i1_id in population_ids.items():
+            if i1_raw in name_map:
                 continue
 
-            for j in range(0, len(normalized_name_sample)):
-                i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
-                if i2_raw in name_map.values():
+            i1_set = frozenset(re.split(r"\s+", i1_raw))
+            candidates = sorted(
+                {j for token in i1_set for j in token_index.get(token, ())}
+            )
+            for j in candidates:
+                i2_raw = sample_names[j]
+                if i2_raw in matched_sample:
                     continue
 
-                if i1_raw == i2_raw:
+                i2_set = sample_sets[j]
+                if i2_set <= i1_set or i1_set <= i2_set:
                     # this is a match
                     self.verbose_log(f"Logging match: {i1_raw} -> {i2_raw}")
                     name_map[i1_raw] = i2_raw
+                    matched_sample.add(i2_raw)
                     results.append(
                         {
-                            f"{input1.id_field}": name_population.loc[
-                                name_population.index[i], input1.id_field
-                            ],
-                            f"{input2.id_field}": name_sample.loc[
-                                name_sample.index[j], input2.id_field
-                            ],
-                        }
-                    )
-
-        for i in range(0, len(normalized_name_population)):
-            i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
-            if i1_raw in name_map.keys():
-                continue
-
-            for j in range(0, len(normalized_name_sample)):
-                i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
-                if i2_raw in name_map.values():
-                    continue
-
-                i1_set = set(re.split(r"\s+", i1_raw))
-                self.verbose_log(f"Input1 {i}: {i1_raw} -> {i1_set}")
-                i2_set = set(re.split(r"\s+", i2_raw))
-                self.verbose_log(f"Input2 {j}: {i2_raw} -> {i2_set}")
-
-                if len(i1_set.intersection(i2_set)) == len(i2_set) or len(
-                    i2_set.intersection(i1_set)
-                ) == len(i1_set):
-                    # this is a match
-                    self.verbose_log(f"Logging match: {i1_raw} -> {i2_raw}")
-                    name_map[i1_raw] = i2_raw
-                    results.append(
-                        {
-                            f"{input1.id_field}": name_population.loc[
-                                name_population.index[i], input1.id_field
-                            ],
-                            f"{input2.id_field}": name_sample.loc[
-                                name_sample.index[j], input2.id_field
-                            ],
+                            f"{input1.id_field}": i1_id,
+                            f"{input2.id_field}": sample_ids[i2_raw],
                         }
                     )
                     break
