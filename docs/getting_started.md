@@ -140,7 +140,7 @@ You can then join other dataframes using `result.data` to link the Impect and St
 Let's say you want to compare a player's Statsbomb Shot xG to their Impect Packing xG. We'll need to parse out both KPIs from their JSON files:
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
-# Kloppy doesn't cover this case, so we have to parse both JSON files ourselves.
+# Kloppy doesn't cover this case for Impect, so we have to parse the JSON file ourselves.
 import json
 import requests
 import pandas as pd
@@ -196,44 +196,22 @@ print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{ht
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
 import pandas as pd
+from kloppy import statsbomb
 
-statsbomb_player_match_df = pd.read_json(
-    "https://raw.githubusercontent.com/statsbomb/open-data/refs/heads/master/data/events/3895052.json"
-)
-statsbomb_player_match_df["match_id"] = "3895052"
-statsbomb_player_match_df = statsbomb_player_match_df[
-    statsbomb_player_match_df["shot"].notna()
-]
-statsbomb_player_match_df["player_id"] = statsbomb_player_match_df["player"].apply(
-    lambda x: x["id"]
-)
-statsbomb_player_match_df["player_name"] = statsbomb_player_match_df["player"].apply(
-    lambda x: x["name"]
-)
-statsbomb_player_match_df["team_id"] = statsbomb_player_match_df["team"].apply(
-    lambda x: x["id"]
-)
-statsbomb_player_match_df["team_name"] = statsbomb_player_match_df["team"].apply(
-    lambda x: x["name"]
-)
-statsbomb_player_match_df["shot_statsbomb_xg"] = statsbomb_player_match_df[
-    "shot"
-].apply(lambda x: x["statsbomb_xg"])
-statsbomb_player_match_df = statsbomb_player_match_df[
-    ["match_id", "team_id", "player_id", "shot_statsbomb_xg"]
-]
-statsbomb_player_match = statsbomb_player_match_df.groupby(
-    ["match_id", "player_id"], as_index=False
-).shot_statsbomb_xg.sum()
-statsbomb_player_match["player_id"] = statsbomb_player_match["player_id"].astype(str)
-statsbomb_player_match.rename(
-    {
-        "match_id": "statsbomb_match_id",
-        "player_id": "statsbomb_player_id",
-        "shot_statsbomb_xg": "statsbomb_shot_xg",
-    },
-    axis=1,
-    inplace=True,
+statsbomb_dataset = statsbomb.load_open_data(match_id="3895052")
+statsbomb_player_match = (
+    statsbomb_dataset
+        .filter("shot")
+        .to_df(
+            statsbomb_match_id="3895052",
+            statsbomb_player_id=lambda e: e.player.player_id,
+            statsbomb_shot_xg=lambda e: next(
+                s.value for s in e.statistics if s.name == "xG"
+            ),
+        )
+        .groupby(["statsbomb_match_id", "statsbomb_player_id"])
+        .agg({ "statsbomb_shot_xg": "sum" })
+        .reset_index()
 )
 statsbomb_player_match
 ```
