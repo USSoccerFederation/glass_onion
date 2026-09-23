@@ -47,7 +47,7 @@ class MatchDataSchema(pa.DataFrameModel):
         return (
             series.dropna()
             .apply(lambda x: pd.Timestamp(x))
-            .apply(lambda x: (x != pd.Timestamp(0)))
+            .apply(lambda x: x != pd.Timestamp(0))
             .all()
         )
 

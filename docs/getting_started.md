@@ -20,7 +20,6 @@ The [installation guide](./installation.md) has more options if you need them.
 First, let's use [`kloppy`](https://kloppy.pysport.org/) to retrieve sample data for a given match from both Impect and Statsbomb. For simplicity, we've picked out the August 19, 2023 fixture between Bayer Leverkusen and RB Leipzig from both datasets.
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
-
 from kloppy import impect, statsbomb
 
 impect_dataset = impect.load_open_data(match_id="122839")
@@ -30,30 +29,28 @@ statsbomb_dataset = statsbomb.load_open_data(match_id="3895052")
 We can pull out the player information from both of these event datasets into Pandas dataframes. For each, we'll have to iterate through the teams and pull specific fields for each of the players.
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
-import pandas as pd 
+import pandas as pd
+
 
 def get_players(dataset, provider):
-    return pd.DataFrame([
-        {
-            f"{provider}_player_id": player.player_id,
-            "jersey_number": str(player.jersey_no),
-            "team_id": team.team_id,
-            "team_name": team.name,
-            "player_name": player.full_name,
-            "player_nickname": player.name
-        }
-        for team in dataset.metadata.teams
-        for player in team.players
-    ])
+    return pd.DataFrame(
+        [
+            {
+                f"{provider}_player_id": player.player_id,
+                "jersey_number": str(player.jersey_no),
+                "team_id": team.team_id,
+                "team_name": team.name,
+                "player_name": player.full_name,
+                "player_nickname": player.name,
+            }
+            for team in dataset.metadata.teams
+            for player in team.players
+        ]
+    )
 
-impect_player_df = get_players(
-    impect_dataset, 
-    provider="impect"
-)
-statsbomb_player_df = get_players(
-    statsbomb_dataset, 
-    provider="statsbomb"
-)
+
+impect_player_df = get_players(impect_dataset, provider="impect")
+statsbomb_player_df = get_players(statsbomb_dataset, provider="statsbomb")
 ```
 
 ### Assigning unified team identifiers
@@ -61,30 +58,24 @@ statsbomb_player_df = get_players(
 We need to unify team identifiers across these two dataframes so Glass Onion can properly use `team_id` in its synchronization logic. With just two teams, we can do this manually (as below) by simply setting RB Leipzig's `team_id` to RBL and Bayer Leverkusen's to B04. If we wanted to do this across the entire competition, we could build a [more complex](./integrating.md) workflow with Glass Onion.
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
-
 import numpy as np
+
 impect_player_df["team_id"] = np.select(
     [
-        impect_player_df["team_id"] == '41',
-        impect_player_df["team_id"] == '37',
+        impect_player_df["team_id"] == "41",
+        impect_player_df["team_id"] == "37",
     ],
-    [
-        "B04",
-        "RBL"
-    ],
-    default=impect_player_df["team_id"]
+    ["B04", "RBL"],
+    default=impect_player_df["team_id"],
 )
 
 statsbomb_player_df["team_id"] = np.select(
     [
-        statsbomb_player_df["team_id"] == '904',
-        statsbomb_player_df["team_id"] == '182',
+        statsbomb_player_df["team_id"] == "904",
+        statsbomb_player_df["team_id"] == "182",
     ],
-    [
-        "B04",
-        "RBL"
-    ],
-    default=statsbomb_player_df["team_id"]
+    ["B04", "RBL"],
+    default=statsbomb_player_df["team_id"],
 )
 ```
 
@@ -93,17 +84,12 @@ statsbomb_player_df["team_id"] = np.select(
 Now, we just have to wrap these two dataframes in [PlayerSyncableContent][glass_onion.player.PlayerSyncableContent] instances so they can be used in [PlayerSyncEngine][glass_onion.player.PlayerSyncEngine].
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
-
 from glass_onion import PlayerSyncableContent
 
-impect_content = PlayerSyncableContent(
-    provider="impect",
-    data=impect_player_df
-)
+impect_content = PlayerSyncableContent(provider="impect", data=impect_player_df)
 
 statsbomb_content = PlayerSyncableContent(
-    provider="statsbomb",
-    data=statsbomb_player_df
+    provider="statsbomb", data=statsbomb_player_df
 )
 ```
 
@@ -112,13 +98,9 @@ statsbomb_content = PlayerSyncableContent(
 Once you have two [PlayerSyncableContent][glass_onion.player.PlayerSyncableContent] instances, you can now synchronize them with [PlayerSyncEngine.synchronize][glass_onion.engine.SyncEngine.synchronize]!
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
-
 from glass_onion import PlayerSyncEngine
 
-engine = PlayerSyncEngine(
-    content=[impect_content, statsbomb_content],
-    verbose=True
-)
+engine = PlayerSyncEngine(content=[impect_content, statsbomb_content], verbose=True)
 result = engine.synchronize()
 ```
 
@@ -129,9 +111,16 @@ result.data.head()
 ```
 
 ```python exec="true" html="true" session="getting-started"
-import re 
-html_result = re.sub("class=\"dataframe\"", "", result.data.head().to_html(border="0", index=False, classes=''))
-print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>""")
+import re
+
+html_result = re.sub(
+    'class="dataframe"',
+    "",
+    result.data.head().to_html(border="0", index=False, classes=""),
+)
+print(
+    f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>"""
+)
 ```
 You can then join other dataframes using `result.data` to link the Impect and Statsbomb datasets together. 
 
@@ -189,9 +178,16 @@ impect_player_match["impect_player_id"] = impect_player_match[
 impect_player_match
 ```
 ```python exec="true" html="true" session="getting-started"
-import re 
-html_result = re.sub("class=\"dataframe\"", "", impect_player_match.head().to_html(border="0", index=False, classes=''))
-print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>""")
+import re
+
+html_result = re.sub(
+    'class="dataframe"',
+    "",
+    impect_player_match.head().to_html(border="0", index=False, classes=""),
+)
+print(
+    f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>"""
+)
 ```
 
 ```python linenums="1" exec="true" source="above" session="getting-started"
@@ -200,25 +196,31 @@ from kloppy import statsbomb
 
 statsbomb_dataset = statsbomb.load_open_data(match_id="3895052")
 statsbomb_player_match = (
-    statsbomb_dataset
-        .filter("shot")
-        .to_df(
-            statsbomb_match_id="3895052",
-            statsbomb_player_id=lambda e: e.player.player_id,
-            statsbomb_shot_xg=lambda e: next(
-                s.value for s in e.statistics if s.name == "xG"
-            ),
-        )
-        .groupby(["statsbomb_match_id", "statsbomb_player_id"])
-        .agg({ "statsbomb_shot_xg": "sum" })
-        .reset_index()
+    statsbomb_dataset.filter("shot")
+    .to_df(
+        statsbomb_match_id="3895052",
+        statsbomb_player_id=lambda e: e.player.player_id,
+        statsbomb_shot_xg=lambda e: next(
+            s.value for s in e.statistics if s.name == "xG"
+        ),
+    )
+    .groupby(["statsbomb_match_id", "statsbomb_player_id"])
+    .agg({"statsbomb_shot_xg": "sum"})
+    .reset_index()
 )
 statsbomb_player_match
 ```
 ```python exec="true" html="true" session="getting-started"
-import re 
-html_result = re.sub("class=\"dataframe\"", "", statsbomb_player_match.head().to_html(border="0", index=False, classes=''))
-print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>""")
+import re
+
+html_result = re.sub(
+    'class="dataframe"',
+    "",
+    statsbomb_player_match.head().to_html(border="0", index=False, classes=""),
+)
+print(
+    f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>"""
+)
 ```
 
 But once we have both datasets, we can join them easily:
@@ -251,7 +253,14 @@ composite_result.head()
 ```
 
 ```python exec="true" html="true" session="getting-started"
-import re 
-html_result = re.sub("class=\"dataframe\"", "", composite_result.head().to_html(border="0", index=False, classes=''))
-print(f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>""")
+import re
+
+html_result = re.sub(
+    'class="dataframe"',
+    "",
+    composite_result.head().to_html(border="0", index=False, classes=""),
+)
+print(
+    f"""<div class="md-typeset__scrollwrap"><div class="md-typeset__table">{html_result}</div></div>"""
+)
 ```

@@ -386,7 +386,19 @@ def _naive_match_reference(
 def test_synchronize_with_naive_match_matches_reference(seed: int):
     rng = Random(seed)
     # small vocabulary so names overlap often; includes accents, casing, and punctuation
-    tokens = ["ana", "bo", "cruz", "de", "silva", "li", "jo", "van", "dijk", "ñu", "Mo-Sa"]
+    tokens = [
+        "ana",
+        "bo",
+        "cruz",
+        "de",
+        "silva",
+        "li",
+        "jo",
+        "van",
+        "dijk",
+        "ñu",
+        "Mo-Sa",
+    ]
 
     def random_names() -> list:
         names = [

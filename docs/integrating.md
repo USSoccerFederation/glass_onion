@@ -39,7 +39,7 @@ Notes:
 """
 
 prov_a = spark.sql(
-"""
+    """
     SELECT 
         um.match_id,
         'provider_a' AS data_provider,
@@ -60,25 +60,22 @@ prov_a = spark.sql(
 
 # ... and so on for other providers ...
 
-all_remaining_records = (
-    reduce(
-        lambda a, b: a.union(b), [
-            prov_a, # ... other providers ...
-        ]
-    )
-    .select(
-        "match_id", 
-        "provider_player_id",
-        "data_provider", 
-        "jersey_number",
-        "player_name",
-        "player_nickname", 
-        "birth_date",
-        "team_id", 
-        "player_gender",
-    )
+all_remaining_records = reduce(
+    lambda a, b: a.union(b),
+    [
+        prov_a,  # ... other providers ...
+    ],
+).select(
+    "match_id",
+    "provider_player_id",
+    "data_provider",
+    "jersey_number",
+    "player_name",
+    "player_nickname",
+    "birth_date",
+    "team_id",
+    "player_gender",
 )
-
 ```
 
 
@@ -90,15 +87,18 @@ To use `GroupedData.applyInPandas(func, schema)` properly, we predefine a target
 ```python linenums="1"
 from pyspark.sql import types as T
 
-target_schema = T.StructType([
-    T.StructField("grouping_key", T.StringType()), # to track the group this match came from
-    T.StructField("provider_a_object_id", T.StringType()),
-    T.StructField("provider_b_object_id", T.StringType()),
-    T.StructField("provider_c_object_id", T.StringType()),
-    T.StructField("data_provider", T.StringType()),
-
-    # ... more T.StructField() invocations for SyncEngine.join_columns ...
-])
+target_schema = T.StructType(
+    [
+        T.StructField(
+            "grouping_key", T.StringType()
+        ),  # to track the group this match came from
+        T.StructField("provider_a_object_id", T.StringType()),
+        T.StructField("provider_b_object_id", T.StringType()),
+        T.StructField("provider_c_object_id", T.StringType()),
+        T.StructField("data_provider", T.StringType()),
+        # ... more T.StructField() invocations for SyncEngine.join_columns ...
+    ]
+)
 ```
 
 `func` will receive a pandas.DataFrame that contains a subset of our big object table without the grouping key added, so we need to do three things:
@@ -110,24 +110,21 @@ target_schema = T.StructType([
 Thus, `func` ends up looking something like this:
 
 ```python linenums="1"
-
 import pandas as pd
+
 # NOTE: this class doesn't actually exist. We're just using it for our example.
-from glass_onion.object import ObjectSyncableContent, ObjectSyncEngine 
+from glass_onion.object import ObjectSyncableContent, ObjectSyncEngine
 
 
 def transform_provider_data(dataset: pd.DataFrame, provider: str) -> pd.DataFrame:
     dataset.rename(
-        {
-            "provider_object_id": f"{provider}_object_id"
-        },
-        axis=1,
-        inplace=True
+        {"provider_object_id": f"{provider}_object_id"}, axis=1, inplace=True
     )
     dataset.drop(["data_provider"], axis=1, inplace=True)
     return dataset
 
-# NOTE: if you use multiple grouping keys, `GroupedData.applyInPandas(func, schema)` will pass a Tuple 
+
+# NOTE: if you use multiple grouping keys, `GroupedData.applyInPandas(func, schema)` will pass a Tuple
 # containing the keys to the first param of `func` (if you provide multiple).
 def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 
@@ -136,9 +133,9 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 
     syncables = [
         ObjectSyncableContent(
-            provider=p, 
-            data=transform_provider_data(dataset.loc[dataset.index.isin(d), ], p)
-        ) 
+            provider=p,
+            data=transform_provider_data(dataset.loc[dataset.index.isin(d),], p),
+        )
         for p, d in grouped.groups.items()
     ]
     syncables = [k for k in syncables if len(k.data) > 0]
@@ -152,7 +149,7 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
                 "provider_b_object_id": pd.NA,
                 "provider_c_object_id": pd.NA,
                 # ... key/values for ObjectSyncEngine.join_columns ...
-                "data_provider": pd.NA
+                "data_provider": pd.NA,
             }
         ]
     ).head(0)
@@ -175,19 +172,15 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 With these prerequisites in place, we can actually run `GroupedData.applyInPandas(func, schema)`:
 
 ```python linenums="1"
-all_synced_records = (
-    all_remaining_records
-        .groupBy("grouping_key")
-        .applyInPandas(synchronize, target_schema)
+all_synced_records = all_remaining_records.groupBy("grouping_key").applyInPandas(
+    synchronize, target_schema
 )
 
 (
-    all_synced_records
-        .write
-        .mode("overwrite")
-        .option("mergeSchema", "true")
-        .format("delta")
-        .saveAsTable("preliminary_set") # more on this below
+    all_synced_records.write.mode("overwrite")
+    .option("mergeSchema", "true")
+    .format("delta")
+    .saveAsTable("preliminary_set")  # more on this below
 )
 
 display(all_synced_records)
@@ -199,11 +192,10 @@ Once we have a preliminary set of synchronized identifiers (the "preliminary set
 ```python linenums="1"
 (
     spark.read.table("ussf.object")
-        .write
-        .mode("overwrite")
-        .option("mergeSchema", "true")
-        .format("delta")
-        .saveAsTable("knockout_list")
+    .write.mode("overwrite")
+    .option("mergeSchema", "true")
+    .format("delta")
+    .saveAsTable("knockout_list")
 )
 ```
 
@@ -225,15 +217,16 @@ for k in data_providers:
     remaining_records = get_remaining_records()
     rem_records_count = get_remaining_records_count()
     if rem_records_count == 0:
-      break
+        break
 
     base_records = (
-        remaining_records
-            .filter(f"{k} IS NOT NULL") # hide rows from remaining list with NULL
+        remaining_records.filter(
+            f"{k} IS NOT NULL"
+        )  # hide rows from remaining list with NULL
     )
     if base_records.count() == 0:
         continue
-    
+
     ## 2+3: make sure that there's only one unique ID from each that `k` can be associated with. See utility functions below for more details.
     provider_rows = squish_provider_records(base_records, k)
     provider_rows_count = provider_rows.count()
@@ -248,31 +241,37 @@ for k in data_providers:
 ??? "Utility functions used above"
 
     ```python linenums="1"
-
     import pyspark.sql.functions as F
     from delta import DeltaTable
+
 
     def knock_out_records():
         return (
             DeltaTable.forName(spark, "preliminary_set")
-                .alias("source")
-                .merge(
-                    spark.read.table("knockout_list").alias("target"),
-                    " OR ".join([f"(source.{k} = target.{k} AND source.{k} IS NOT NULL AND target.{k} IS NOT NULL)" for k in data_providers])
-                )
-                .whenMatchedDelete()
-                .execute()
+            .alias("source")
+            .merge(
+                spark.read.table("knockout_list").alias("target"),
+                " OR ".join(
+                    [
+                        f"(source.{k} = target.{k} AND source.{k} IS NOT NULL AND target.{k} IS NOT NULL)"
+                        for k in data_providers
+                    ]
+                ),
+            )
+            .whenMatchedDelete()
+            .execute()
         )
+
 
     def update_knockout_list(provider_rows, key: str):
         # merge on selected key
         midmerge = (
             DeltaTable.forName(spark, "knockout_list")
-                .alias("source")
-                .merge(
-                    provider_rows.alias("target"), 
-                    f"(source.{key} = target.{key} AND source.{key} IS NOT NULL AND target.{key} IS NOT NULL)"
-                )
+            .alias("source")
+            .merge(
+                provider_rows.alias("target"),
+                f"(source.{key} = target.{key} AND source.{key} IS NOT NULL AND target.{key} IS NOT NULL)",
+            )
         )
 
         # update values ONLY if they're missing in the source. If they exist already, DO NOT.
@@ -281,36 +280,31 @@ for k in data_providers:
             if k == key:
                 continue
 
-            midmerge = (
-                midmerge
-                    .whenMatchedUpdate(
-                        condition=f"source.{k} IS NULL",
-                        set={
-                            k: f"target.{k}"
-                        }
-                    )
+            midmerge = midmerge.whenMatchedUpdate(
+                condition=f"source.{k} IS NULL", set={k: f"target.{k}"}
             )
 
         # if no match, insert all. then execute the merge
-        (
-            midmerge
-                .whenNotMatchedInsertAll()
-                .execute()
-        )
+        (midmerge.whenNotMatchedInsertAll().execute())
+
 
     def get_remaining_records():
         return spark.sql("SELECT * FROM preliminary_set")
 
+
     def get_remaining_records_count():
-        tmp = spark.sql("SELECT COUNT(*) AS rem_records_count FROM preliminary_set").collect()
+        tmp = spark.sql(
+            "SELECT COUNT(*) AS rem_records_count FROM preliminary_set"
+        ).collect()
         rem_records_count = tmp[0]["rem_records_count"]
         return rem_records_count
 
+
     def squish_provider_records(base_records, key):
-        ## 3a. In each group, we find the first non-null identifier for every other data provider (say, B through Z). 
+        ## 3a. In each group, we find the first non-null identifier for every other data provider (say, B through Z).
         parent_id_agg = [
-            F.first(F.col(p), ignorenulls=True).alias(p) 
-            for p in data_providers # + [ ... any columns from SyncEngine.join_columns ...]
+            F.first(F.col(p), ignorenulls=True).alias(p)
+            for p in data_providers  # + [ ... any columns from SyncEngine.join_columns ...]
             if p != key
         ]
 
@@ -324,31 +318,27 @@ for k in data_providers:
 
         count_adj = {
             p: F.when(F.col(f"{p}_count") <= F.lit(1), F.col(p)).otherwise(F.lit(None))
-            for p in data_providers if p != key
+            for p in data_providers
+            if p != key
         }
 
         provider_counts = (
-            base_records
-                .groupBy(k)
-                .agg(*count_agg)
-                .select(
-                    [k] + [f"{p}_count" for p in data_providers if p != key]
-                )
-        )
-        
-        ## 2. We group the set of remaining synchronized identifiers by Provider A's identifiers.
-        return (
-            base_records
-                .groupBy(k)
-                .agg(*parent_id_agg)
-                .join(provider_counts, key)
-                .withColumns(count_adj)
-                .select(
-                    data_providers
-                    # + [ ... any columns from SyncEngine.join_columns ...]
-                )
+            base_records.groupBy(k)
+            .agg(*count_agg)
+            .select([k] + [f"{p}_count" for p in data_providers if p != key])
         )
 
+        ## 2. We group the set of remaining synchronized identifiers by Provider A's identifiers.
+        return (
+            base_records.groupBy(k)
+            .agg(*parent_id_agg)
+            .join(provider_counts, key)
+            .withColumns(count_adj)
+            .select(
+                data_providers
+                # + [ ... any columns from SyncEngine.join_columns ...]
+            )
+        )
     ```
 
     One quirk of our implementation: we store the "preliminary set" and "knockout list" in Delta tables. Why? While developing our data pipeline, we saw that using `MERGE INTO` was orders of magnitude faster than pulling a list of identifiers into a Spark `filter()` statement when the tables are massive (100k+ rows).
@@ -360,12 +350,8 @@ Our "knockout logic" effectively ignores the existence of duplicates in the "kno
 In code:
 
 ```python linenums="1"
-
 id_counts = {
-    f"{k}_num": F.row_number().over(
-        Window.partitionBy(k)
-            .orderBy("ordering_column")
-    ) 
+    f"{k}_num": F.row_number().over(Window.partitionBy(k).orderBy("ordering_column"))
     for k in id_mask
 }
 
@@ -373,36 +359,27 @@ knockout_list = spark.read.table("knockout_list").withColumns(id_counts)
 
 id_count_filters = " OR ".join([f"({k}_num > 1 AND {k} IS NOT NULL)" for k in id_mask])
 
-all_duplicates = (
-    knockout_list
-        .filter(id_count_filters)
-        .collect()
-)
+all_duplicates = knockout_list.filter(id_count_filters).collect()
 
-dupe_insertables = {
-    k.name: f"target.{k.name}" for k in all_duplicates.schema.fields
-}
+dupe_insertables = {k.name: f"target.{k.name}" for k in all_duplicates.schema.fields}
 
 if all_duplicates.count() > 0:
     (
         DeltaTable.forName(spark, "ussf.object.flagged")
-            .alias("source")
-            .merge(
-                all_duplicates.alias("target"),
-                " OR ".join(
-                    [
-                        f"(source.{k} = target.{k} AND source.{k} IS NOT NULL AND target.{k} IS NOT NULL)" 
-                        for k in override_mask
-                    ]
-                )
-            )
-            .whenNotMatchedInsert(
-                values=dupe_insertables
-            )
-            .execute()
+        .alias("source")
+        .merge(
+            all_duplicates.alias("target"),
+            " OR ".join(
+                [
+                    f"(source.{k} = target.{k} AND source.{k} IS NOT NULL AND target.{k} IS NOT NULL)"
+                    for k in override_mask
+                ]
+            ),
+        )
+        .whenNotMatchedInsert(values=dupe_insertables)
+        .execute()
     )
     display(all_duplicates)
-
 ```
 
 ## Step 5: Data Formatting
@@ -512,49 +489,54 @@ Here's what our example table would look like if we apply this strategy:
 Here's what this looks like in code:
 
 ```python linenums="1"
-
 knockout_list = (
     knockout_list
-        # assuming we've already created our player prefix column as `player_prefix` and we have a `player_id` column for existing identifiers
-        .withColumn(
-            "player_id_extract_num",
-            F.regexp_extract(F.col("player_id"), r"\d+$", idx=0).cast(T.IntegerType())
-        )
-        .withColumn(
-            "player_id_max",
-            F.max(F.col("player_id_extract_num")).over(
-                Window.partitionBy(["player_gender", "player_prefix"])
-            )
-        )
-        .withColumn(
-            "player_id_max",
-            F.when(F.col("player_id_max").isNull(), F.lit(0)).otherwise(F.col("player_id_max"))
-        )
-        .withColumn(
-            "player_index",
-            F.when(
-                F.col("player_id").isNull(),
-                F.col("player_id_max") + F.row_number().over(
-                    Window.partitionBy(["player_gender", "player_prefix"])
-                        .orderBy(
-                            [
-                                # put the NULLs first so that they get indexes 1, 2, 3, etc.
-                                F.col("player_id").asc_nulls_first(),
-                                F.col("player_name")
-                            ]
-                        )
+    # assuming we've already created our player prefix column as `player_prefix` and we have a `player_id` column for existing identifiers
+    .withColumn(
+        "player_id_extract_num",
+        F.regexp_extract(F.col("player_id"), r"\d+$", idx=0).cast(T.IntegerType()),
+    )
+    .withColumn(
+        "player_id_max",
+        F.max(F.col("player_id_extract_num")).over(
+            Window.partitionBy(["player_gender", "player_prefix"])
+        ),
+    )
+    .withColumn(
+        "player_id_max",
+        F.when(F.col("player_id_max").isNull(), F.lit(0)).otherwise(
+            F.col("player_id_max")
+        ),
+    )
+    .withColumn(
+        "player_index",
+        F.when(
+            F.col("player_id").isNull(),
+            F.col("player_id_max")
+            + F.row_number().over(
+                Window.partitionBy(["player_gender", "player_prefix"]).orderBy(
+                    [
+                        # put the NULLs first so that they get indexes 1, 2, 3, etc.
+                        F.col("player_id").asc_nulls_first(),
+                        F.col("player_name"),
+                    ]
                 )
-            )
-        )
-        .withColumn(
-            "player_id",
-            F.when(
-                F.col("player_id").isNull(), 
-                F.concat_ws("-", F.col("player_gender"), F.col("player_prefix"), F.col("player_index"))
-            ).otherwise(F.col("player_id"))
-        )
+            ),
+        ),
+    )
+    .withColumn(
+        "player_id",
+        F.when(
+            F.col("player_id").isNull(),
+            F.concat_ws(
+                "-",
+                F.col("player_gender"),
+                F.col("player_prefix"),
+                F.col("player_index"),
+            ),
+        ).otherwise(F.col("player_id")),
+    )
 )
-
 ```
 
 ## Final: unified object table
@@ -568,37 +550,38 @@ With our pipeline generating a "knockout list" that meets our target criteria:
 We can simply execute a `MERGE INTO` statement into the table for this object in our unified schema:
 
 ```python linenums="1"
-
 data_providers = ["provider_a", "provider_b", "provider_c"]
-table_fields = data_providers + [
-    # ... other object metadata fields ...
-]
+table_fields = (
+    data_providers
+    + [
+        # ... other object metadata fields ...
+    ]
+)
 insertables = {k: f"target.{k}_object_id" for k in table_fields}
 updatables = {k: v for k, v in insertables.items() if k != "object_id"}
 
 (
     DeltaTable.forName(spark, "ussf.object")
-        .alias("source")
-        .merge(
-            spark.read.table("knockout_list").alias("target"), 
-            "source.object_id = target.object_id"
-        )
-        .whenMatchedUpdate(
-            set={
-                **updatables,
-                "updated_at": "CURRENT_TIMESTAMP()" # useful for tracking changes
-            }
-        )
-        .whenNotMatchedInsert(
-            values={
-                **insertables,
-                "created_at": "CURRENT_TIMESTAMP()",
-                "updated_at": "CURRENT_TIMESTAMP()"
-            }
-        )
-        .execute()
+    .alias("source")
+    .merge(
+        spark.read.table("knockout_list").alias("target"),
+        "source.object_id = target.object_id",
+    )
+    .whenMatchedUpdate(
+        set={
+            **updatables,
+            "updated_at": "CURRENT_TIMESTAMP()",  # useful for tracking changes
+        }
+    )
+    .whenNotMatchedInsert(
+        values={
+            **insertables,
+            "created_at": "CURRENT_TIMESTAMP()",
+            "updated_at": "CURRENT_TIMESTAMP()",
+        }
+    )
+    .execute()
 )
-
 ```
 
 And just like that: we're done with our pipeline! 
