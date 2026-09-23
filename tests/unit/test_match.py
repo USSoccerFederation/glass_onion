@@ -246,14 +246,14 @@ def test_init_competition_context():
             MatchSyncableContent(
                 "provider_a",
                 pd.DataFrame(
-                    columns=[
-                        "provider_a_match_id",
-                        "match_date",
-                        "home_team_id",
-                        "away_team_id",
-                        "competition_id",
-                        "season_id",
-                    ]
+                    {
+                        "provider_a_match_id": pd.Series(dtype=str),
+                        "match_date": pd.Series(dtype=str),
+                        "home_team_id": pd.Series(dtype=str),
+                        "away_team_id": pd.Series(dtype=str),
+                        "competition_id": pd.Series(dtype=str),
+                        "season_id": pd.Series(dtype=str),
+                    }
                 ),
             )
         ],
@@ -273,13 +273,13 @@ def test_init_competition_context_missing_competition_id():
     content_a = MatchSyncableContent(
         "provider_a",
         pd.DataFrame(
-            columns=[
-                "provider_a_match_id",
-                "match_date",
-                "home_team_id",
-                "away_team_id",
-                "season_id",
-            ]
+            {
+                "provider_a_match_id": pd.Series(dtype=str),
+                "match_date": pd.Series(dtype=str),
+                "home_team_id": pd.Series(dtype=str),
+                "away_team_id": pd.Series(dtype=str),
+                "season_id": pd.Series(dtype=str),
+            }
         ),
     )
 
@@ -301,14 +301,13 @@ def test_init_competition_context_false_null_competition_id():
             MatchSyncableContent(
                 "provider_a",
                 pd.DataFrame(
-                    columns=[
-                        "provider_a_match_id",
-                        "match_date",
-                        "home_team_id",
-                        "away_team_id",
-                        "competition_id",
-                        "season_id",
-                    ]
+                    {
+                        "provider_a_match_id": pd.Series(dtype=str),
+                        "match_date": pd.Series(dtype=str),
+                        "home_team_id": pd.Series(dtype=str),
+                        "away_team_id": pd.Series(dtype=str),
+                        "season_id": pd.Series(dtype=str),
+                    }
                 ),
             )
         ],
