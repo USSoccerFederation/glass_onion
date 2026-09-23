@@ -33,10 +33,10 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "mkdocs>=1.6.1",
-    "mkdocs-material>=9.7.0",
-    "mkdocstrings>=1.0.0",
-    "mkdocstrings-python>=2.0.1",
+    "mkdocs==1.6.1",
+    "mkdocs-material==9.7.0",
+    "mkdocstrings==1.0.0",
+    "mkdocstrings-python==2.0.1",
     "mypy>=1.19.0",
     "pre-commit>=4.5.0",
     "pytest>=8.4.2",
@@ -51,7 +51,7 @@ dev = [
     "kloppy>=3.18.0",
     "markdown-exec[ansi]>=1.12.1",
     "pandas[output-formatting]>=2.3.3",
-    "mkdocs-site-urls>=0.3.1",
+    "mkdocs-site-urls==0.3.1",
 ]
 
 [tool.pytest.ini_options]
