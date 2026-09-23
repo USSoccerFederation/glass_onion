@@ -247,15 +247,15 @@ class MatchSyncEngine(SyncEngine):
             self.verbose_log(
                 f"Attempting date-adjusted pair synchronization for inputs {remaining_1.provider} (length {len(remaining_1.data)}) and {remaining_2.provider} (length {len(remaining_2.data)})"
             )
-            for d in range(-3, 3):
+            for d in range(-3, 4):
                 r = self.synchronize_on_adjusted_dates(
-                    remaining_1, remaining_2, pd.Timedelta(d)
+                    remaining_1, remaining_2, pd.Timedelta(days=d)
                 )
                 result.append(r)
 
-            for d in range(-3, 3):
+            for d in range(-3, 4):
                 r = self.synchronize_on_adjusted_dates(
-                    remaining_2, remaining_1, pd.Timedelta(d)
+                    remaining_2, remaining_1, pd.Timedelta(days=d)
                 )
                 result.append(r)
 
