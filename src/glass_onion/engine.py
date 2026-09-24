@@ -1,4 +1,3 @@
-from functools import reduce
 from datetime import datetime
 import re
 from typing import Any, Optional, Tuple, Union
@@ -500,11 +499,15 @@ class SyncEngine:
         """
         Internal wrapper around `synchronize_pair()` that generates all possible combinations of the elements in `content` to run `synchronize_pair` on.
 
+        Pair results are combined by treating every synced identifier pair as a link and grouping linked identifiers into one row, so an object can be
+        synced through a third provider even if two providers never matched it directly (IE: A <-> C and B <-> C yields A <-> B <-> C).
+        Links are applied in `combinations()` order, and a link is skipped if it would put two identifiers from the same provider in one row.
+
         Args:
             content (list[SyncableContent]): a list of SyncableContent objects that correspond to `object_type`. If `None`, defaults to `self.content`.
 
         Returns:
-            A SyncableContent object with the combined results of all executions of `synchronize_pair`.
+            A SyncableContent object with one row per group of linked identifiers. Non-identifier columns are taken from the first object in `content` that has an identifier in the row.
         """
         if content is None:
             content = self.content
@@ -515,7 +518,71 @@ class SyncEngine:
             z = self.synchronize_pair(x, y)
             results.append(z)
 
-        return reduce(lambda x, y: x.merge(y), results[1:], results[0])
+        id_fields = [c.id_field for c in content]
+
+        # union-find over (id_field, id) nodes. Each root tracks the id_fields in its group
+        # so that a link can't merge two identifiers from the same provider.
+        parent: dict[Tuple[str, Any], Tuple[str, Any]] = {}
+        group_fields: dict[Tuple[str, Any], set[str]] = {}
+
+        def find(node: Tuple[str, Any]) -> Tuple[str, Any]:
+            parent.setdefault(node, node)
+            group_fields.setdefault(node, {node[0]})
+            while parent[node] != node:
+                parent[node] = parent[parent[node]]
+                node = parent[node]
+            return node
+
+        for r in results:
+            pair_fields = [f for f in id_fields if f in r.data.columns]
+            for row in r.data[pair_fields].itertuples(index=False):
+                nodes = [(f, v) for f, v in zip(pair_fields, row) if pd.notna(v)]
+                if len(nodes) < 2:
+                    continue
+
+                for node in nodes[1:]:
+                    root_x, root_y = find(nodes[0]), find(node)
+                    if root_x == root_y:
+                        continue
+                    if group_fields[root_x] & group_fields[root_y]:
+                        self.verbose_log(
+                            f"Skipping link {nodes[0]} <-> {node}: would put two identifiers from the same provider in one row"
+                        )
+                        continue
+                    parent[root_y] = root_x
+                    group_fields[root_x] |= group_fields.pop(root_y)
+
+        groups: dict[Tuple[str, Any], dict[str, Any]] = {}
+        for node in parent:
+            groups.setdefault(find(node), {})[node[0]] = node[1]
+
+        unified = pd.DataFrame(list(groups.values()), columns=id_fields)
+
+        # re-attach non-identifier columns, preferring earlier objects in `content`
+        metadata_columns = []
+        for r in results:
+            for col in r.data.columns:
+                if (
+                    col not in id_fields
+                    and col not in metadata_columns
+                    and not col.endswith(f"_{self.object_type}_id")
+                    and any(col in c.data.columns for c in content)
+                ):
+                    metadata_columns.append(col)
+
+        for c in content:
+            lookup = c.data.drop_duplicates(subset=c.id_field).set_index(c.id_field)
+            for col in metadata_columns:
+                if col not in lookup.columns:
+                    continue
+                values = unified[c.id_field].map(lookup[col])
+                unified[col] = (
+                    unified[col].fillna(values) if col in unified.columns else values
+                )
+
+        return SyncableContent(
+            object_type=self.object_type, provider=content[0].provider, data=unified
+        )
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
