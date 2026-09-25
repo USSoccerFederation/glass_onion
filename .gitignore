@@ -14,3 +14,4 @@ site/
 htmlcov/
 coverage.xml
 .mypy_cache
+notebooks

@@ -1,8 +1,10 @@
+from random import Random
 from typing import Tuple
 from glass_onion import SyncableContent, SyncEngine
 import pytest
 import re
 import pandas as pd
+from glass_onion.utils import series_normalize
 
 
 def test_init_disjoint_object_types():
@@ -342,3 +344,104 @@ def test_synchronize_should_match_same_name(method: str):
     target = actual.loc[actual["provider_a_object_id"] == 3, :]
     assert len(target) == 1
     assert target.loc[target.index[0], "provider_b_object_id"] == 1
+
+
+def _naive_match_reference(
+    left: SyncableContent, right: SyncableContent, fields: Tuple[str, str]
+) -> pd.DataFrame:
+    # brute-force pairwise implementation of the naive match, used as an oracle
+    population = left.data.loc[left.data[fields[0]].notna(), :]
+    sample = right.data.loc[right.data[fields[1]].notna(), :]
+    population_names = series_normalize(population[fields[0]]).tolist()
+    sample_names = series_normalize(sample[fields[1]]).tolist()
+    population_ids = population[left.id_field].tolist()
+    sample_ids = sample[right.id_field].tolist()
+
+    results = []
+    name_map: dict[str, str] = {}
+    for i, i1_raw in enumerate(population_names):
+        for j, i2_raw in enumerate(sample_names):
+            if i1_raw not in name_map and i2_raw not in name_map.values():
+                if i1_raw == i2_raw:
+                    name_map[i1_raw] = i2_raw
+                    results.append((population_ids[i], sample_ids[j]))
+
+    for i, i1_raw in enumerate(population_names):
+        if i1_raw in name_map:
+            continue
+        i1_set = set(re.split(r"\s+", i1_raw))
+        for j, i2_raw in enumerate(sample_names):
+            if i2_raw in name_map.values():
+                continue
+            i2_set = set(re.split(r"\s+", i2_raw))
+            if i2_set <= i1_set or i1_set <= i2_set:
+                name_map[i1_raw] = i2_raw
+                results.append((population_ids[i], sample_ids[j]))
+                break
+
+    return pd.DataFrame(results, columns=[left.id_field, right.id_field])
+
+
+@pytest.mark.parametrize("seed", range(500))
+def test_synchronize_with_naive_match_matches_reference(seed: int):
+    rng = Random(seed)
+    # small vocabulary so names overlap often; includes accents, casing, and punctuation
+    tokens = [
+        "ana",
+        "bo",
+        "cruz",
+        "de",
+        "silva",
+        "li",
+        "jo",
+        "van",
+        "dijk",
+        "ñu",
+        "Mo-Sa",
+    ]
+
+    def random_names() -> list:
+        names = [
+            None
+            if rng.random() < 0.05
+            else " ".join(rng.choice(tokens) for _ in range(rng.randint(1, 3)))
+            for _ in range(rng.randint(1, 40))
+        ]
+        # guarantee at least one non-null name so the method's input assertions pass
+        if all(n is None for n in names):
+            names[0] = rng.choice(tokens)
+        return names
+
+    left_names = random_names()
+    right_names = random_names()
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame(
+            {
+                "provider_a_object_id": list(range(len(left_names))),
+                "object_name": left_names,
+            }
+        ),
+    )
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            {
+                "provider_b_object_id": list(range(len(right_names))),
+                "object_name": right_names,
+            }
+        ),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    fields = ("object_name", "object_name")
+    actual = engine.synchronize_with_naive_match(left, right, fields)
+    expected = _naive_match_reference(left, right, fields)
+
+    pd.testing.assert_frame_equal(
+        actual.reset_index(drop=True),
+        expected.reset_index(drop=True),
+        check_dtype=False,
+    )
