@@ -65,15 +65,15 @@ def scenario_bridged() -> list[PlayerSyncableContent]:
             "provider_b",
             overrides={
                 2: {
-                    "player_name": "Gaby Weah",
-                    "player_nickname": "Gaby Weah",
+                    "player_name": "T. Weah",
+                    "player_nickname": "T. Weah",
                     "jersey_number": "22",
                 }
             },
         ),
         create_provider(
             "provider_c",
-            overrides={2: {"player_nickname": "Gaby Weah", "jersey_number": "23"}},
+            overrides={2: {"player_nickname": "T. Weah", "jersey_number": "23"}},
         ),
     ]
 
