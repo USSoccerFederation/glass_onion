@@ -1,3 +1,5 @@
+import re
+import pytest
 import numpy as np
 import pandas as pd
 
@@ -328,6 +330,12 @@ def test_resolve_ignores_missing_ids():
         record("raw", "Sophia Smith", provider_a="105", provider_b=""),
         record("raw", "Trinity Rodman", provider_a="106", provider_b="  "),
         record("raw", "Mallory Swanson", provider_a="107", provider_b=np.nan),
+        record("raw", "Crystal Dunn", provider_a="108", provider_b="<NA>"),
+        record("raw", "Naomi Girma", provider_a="109", provider_b="null"),
+        record("raw", "Tierna Davidson", provider_a="110", provider_b="null"),
+        record("raw", "Lindsey Heaps", provider_a="111", provider_b="NULL"),
+        record("raw", "Jaedyn Shaw", provider_a="112", provider_b="Null"),
+        record("raw", "Catarina Macario", provider_a="113", provider_b="<na>"),
     ]
 
     accepted, rejected = resolve(resolver, proposals)
@@ -335,10 +343,31 @@ def test_resolve_ignores_missing_ids():
     assert accepted == proposals
     assert rejected == []
     assert component_ids(resolver) == objects(
-        *({"provider_a_player_id": str(i)} for i in range(101, 108))
+        *({"provider_a_player_id": str(i)} for i in range(101, 114))
     )
     # the records themselves are carried along untouched
     assert resolver.components()[0][1][0]["ids"]["provider_b_player_id"] is None
+
+
+def test_resolve_keeps_zero_id():
+    # "0" is a valid ID, not a placeholder: it links records like any other ID, and 0 is the same ID
+    resolver = ObjectResolver()
+    proposals = [
+        record("raw", "Alex Morgan", provider_a="0", provider_b="201"),
+        record("raw", "Alex Morgan", provider_a=0, provider_c="301"),
+    ]
+
+    accepted, rejected = resolve(resolver, proposals)
+
+    assert accepted == proposals
+    assert rejected == []
+    assert component_ids(resolver) == objects(
+        {
+            "provider_a_player_id": "0",
+            "provider_b_player_id": "201",
+            "provider_c_player_id": "301",
+        }
+    )
 
 
 def test_resolve_normalizes_numeric_ids():
@@ -396,3 +425,85 @@ def test_resolve_drops_records_without_ids():
     assert component_ids(resolver) == objects(
         {"provider_a_player_id": "101", "provider_b_player_id": "201"}
     )
+
+
+def test_add_record_skips_repeated_ids():
+    # re-syncing the same player keeps the first record only, even if the repeat's IDs are written differently
+    resolver = ObjectResolver()
+    first = record("matchday_1", "Alex Morgan", provider_a="101", provider_b="201")
+    resolver.add_record(first)
+    for md in range(2, 6):
+        resolver.add_record(
+            record(f"matchday_{md}", "A. Morgan", provider_a=101, provider_b=201.0)
+        )
+
+    assert resolver.components() == [
+        (
+            {"provider_a_player_id": "101", "provider_b_player_id": "201"},
+            [first],
+        )
+    ]
+
+
+def test_add_record_keeps_new_link_between_known_ids():
+    # a record linking a new combination of IDs already in one object adds no merges, but isn't a repeat
+    resolver = ObjectResolver()
+    truth = [
+        record("player", "Alex Morgan", provider_a="101", provider_b="201"),
+        record("player", "Alex Morgan", provider_b="201", provider_c="301"),
+    ]
+    for r in truth:
+        resolver.add_record(r)
+
+    link = record("raw", "Alex Morgan", provider_a="101", provider_c="301")
+    resolver.add_record(link)
+    resolver.add_record(link)
+
+    assert resolver.components()[0][1] == truth + [link]
+
+
+def test_resolve_repeats_do_not_grow_clashes():
+    # a player re-synced every matchday is still one record, so a later conflict clashes with just that record
+    resolver = ObjectResolver()
+    truth = record("matchday_1", "Alex Morgan", provider_a="101", provider_b="201")
+    resolve(resolver, [truth])
+    for md in range(2, 51):
+        repeat = record(
+            f"matchday_{md}", "Alex Morgan", provider_a="101", provider_b="201"
+        )
+        accepted, rejected = resolve(resolver, [repeat])
+        # repeats are still accepted: they agree with the resolver
+        assert accepted == [repeat]
+        assert rejected == []
+
+    conflicting = record("raw", "Alex Morgan", provider_a="101", provider_b="999")
+    accepted, rejected = resolve(resolver, [conflicting])
+
+    assert rejected == [(conflicting, [truth])]
+
+
+def test_add_record_merges_into_largest_component():
+    # the record's first ID is new, but the existing three-ID object is larger, so it keeps its root
+    resolver = ObjectResolver()
+    resolver.add_record(
+        record("player", "Alex Morgan", provider_a="101", provider_b="201")
+    )
+    resolver.add_record(
+        record("player", "Alex Morgan", provider_b="201", provider_c="301")
+    )
+    root = resolver.find(("provider_a_player_id", "101"))
+
+    resolver.add_record(
+        record("raw", "Alex Morgan", provider_d="401", provider_a="101")
+    )
+
+    assert resolver.parent[("provider_d_player_id", "401")] == root
+    assert resolver.find(("provider_d_player_id", "401")) == root
+    assert len(resolver.components()) == 1
+
+
+def test_add_record_rejects_record_without_ids():
+    resolver = ObjectResolver()
+
+    with pytest.raises(AssertionError, match=re.escape("Record has no valid IDs:")):
+        resolver.add_record(record("raw", "Megan Rapinoe", provider_a=None))

@@ -17,11 +17,17 @@ One source row: `{"source": str, "ids": {provider ID field: ID}, "meta": {...}}`
 """
 
 
+MISSING_ID_STRINGS = frozenset({"<na>", "null"})
+"""
+Strings that stand in for a missing ID, e.g. from a missing value written out as text. [normalize_id()][glass_onion.resolver.normalize_id] treats these as missing, ignoring case and surrounding whitespace, so `"<NA>"` and `"NULL"` also match. Entries must be lowercase.
+"""
+
+
 def normalize_id(i: Hashable) -> Hashable | None:
     """
     Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects.
 
-    Missing values (`None`, NaN, `pd.NA`, `pd.NaT`) and blank strings are invalid. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
+    Missing values (`None`, NaN, `pd.NA`, `pd.NaT`), blank strings and the placeholder strings in [MISSING_ID_STRINGS][glass_onion.resolver.MISSING_ID_STRINGS] are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
 
     Args:
         i (collections.abc.Hashable): a provider ID, as found in a [Record][glass_onion.resolver.Record]'s `ids`.
@@ -32,7 +38,7 @@ def normalize_id(i: Hashable) -> Hashable | None:
     if pd.api.types.is_scalar(i) and pd.isna(cast(Any, i)):
         return None
     if isinstance(i, str):
-        return i if i.strip() != "" else None
+        return None if i.strip() == "" or i.strip().lower() in MISSING_ID_STRINGS else i
     if isinstance(i, Real):
         return str(int(i)) if float(i).is_integer() else str(i)
     return i
@@ -162,7 +168,11 @@ class ObjectResolver:
         """
         self.records: dict[Vertex, list[Record]] = {}
         """
-        The records that built each component, keyed by the component's root.
+        The records that built each component, keyed by the component's root. A record repeating an earlier record's IDs is not kept.
+        """
+        self.seen: set[frozenset[Vertex]] = set()
+        """
+        The vertex set of every record kept in `records`, used to skip repeats.
         """
 
     def __contains__(self, v: Vertex) -> bool:
@@ -192,28 +202,37 @@ class ObjectResolver:
         """
         Adds a record's vertices to the resolver and merges them into a single component.
 
+        A record whose vertices exactly match an earlier record's is skipped: it would add no IDs or links, and keeping it would grow `records` with every repeated sync. The earlier record is kept. Smaller components are merged into the largest one, so each merge copies only the smaller side's IDs and records.
+
         Callers must check for provider conflicts first: this method will happily merge two IDs from the same provider. [resolve()][glass_onion.resolver.resolve] does this check.
 
         Args:
             record (glass_onion.resolver.Record): the record to add. It must have at least one valid ID.
 
         Raises:
-            IndexError: if `record` has no valid IDs.
+            AssertionError: if `record` has no valid IDs.
         """
         vs = vertices(record)
+        assert len(vs) > 0, f"Record has no valid IDs: {record['ids']}"
+
+        key = frozenset(vs)
+        if key in self.seen:
+            return
         for v in vs:
             if v not in self.parent:
                 self.parent[v] = v
                 self.ids[v] = {v[0]: v[1]}
                 self.records[v] = []
-        root = self.find(vs[0])
-        for v in vs[1:]:
-            other = self.find(v)
+        roots = list(dict.fromkeys(self.find(v) for v in vs))
+        # ties keep the first vertex's root
+        root = max(roots, key=lambda r: len(self.ids[r]) + len(self.records[r]))
+        for other in roots:
             if other != root:
                 self.parent[other] = root
                 self.ids[root].update(self.ids.pop(other))
                 self.records[root].extend(self.records.pop(other))
         self.records[root].append(record)
+        self.seen.add(key)
 
     def components(self) -> list[tuple[dict[str, Hashable], list[Record]]]:
         """
