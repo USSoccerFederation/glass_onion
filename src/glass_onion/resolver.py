@@ -17,12 +17,6 @@ One source row: `{"source": str, "ids": {provider ID field: ID}, "meta": {...}}`
 """
 
 
-MISSING_ID_STRINGS = frozenset({"<na>", "null"})
-"""
-Strings that stand in for a missing ID, e.g. from a missing value written out as text. [normalize_id()][glass_onion.resolver.normalize_id] treats these as missing, ignoring case and surrounding whitespace, so `"<NA>"` and `"NULL"` also match. Entries must be lowercase.
-"""
-
-
 def normalize_id(i: Hashable) -> Hashable | None:
     """
     Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects.
@@ -38,7 +32,7 @@ def normalize_id(i: Hashable) -> Hashable | None:
     if pd.api.types.is_scalar(i) and pd.isna(cast(Any, i)):
         return None
     if isinstance(i, str):
-        return None if i.strip() == "" or i.strip().lower() in MISSING_ID_STRINGS else i
+        return None if i.strip() == "" or i.strip().lower() in ["<na>", "null"] else i
     if isinstance(i, Real):
         return str(int(i)) if float(i).is_integer() else str(i)
     return i
@@ -253,7 +247,7 @@ def resolve(
     A record is rejected if merging it would put two IDs from one provider into the same component. The result doesn't depend on the order of `records`.
 
     Methodology:
-        1. Drop records with no valid IDs (see [normalize_id()][glass_onion.resolver.normalize_id]). These appear in neither list returned.
+        1. Drop records with no valid IDs (see [normalize_id()][glass_onion.resolver.normalize_id]). These do not appear in any downstream returned list.
         2. Reject each record that conflicts with the resolver as it stands.
         3. Of the remaining records, reject those on a path linking two IDs from one provider (see [conflict_paths()][glass_onion.resolver.conflict_paths]). Records that merely touch the same object are kept, and records that only conflict with each other are all rejected.
         4. Add the accepted records to the resolver.
