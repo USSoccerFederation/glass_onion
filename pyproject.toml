@@ -53,11 +53,12 @@ dev = [
     "pandas[output-formatting]>=2.3.3",
     "mkdocs-site-urls==0.3.1",
     "ipykernel>=7.3.0",
+    "pytest-xdist>=3.8.0",
 ]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config --import-mode=importlib --tb=long --code-highlight=yes --ignore=tests/integration"
+addopts = "-x -n=logical -ra -q --strict-markers --strict-config --import-mode=importlib --tb=long --code-highlight=yes --ignore=tests/integration"
 testpaths = ["tests"]
 
 [project.urls]
