@@ -21,7 +21,7 @@ def normalize_id(i: Hashable) -> Hashable | None:
     """
     Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects.
 
-    Missing values (`None`, NaN, `pd.NA`, `pd.NaT`), blank strings and the placeholder strings in [MISSING_ID_STRINGS][glass_onion.resolver.MISSING_ID_STRINGS] are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
+    Missing values (`None`, NaN, `pd.NA`, `pd.NaT`), blank strings, and the strings "<na>" and "null" (in any casing) are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
 
     Args:
         i (collections.abc.Hashable): a provider ID, as found in a [Record][glass_onion.resolver.Record]'s `ids`.
