@@ -1,9 +1,3 @@
-"""
-Scale scenarios for ObjectResolver and resolve(), using synthetic 3-provider records instead of PlayerSyncEngine output.
-
-Timings are compared between a batch and one 8x its size rather than against fixed budgets, so the checks hold on slow machines: linear work grows ~8x, quadratic work ~64x.
-"""
-
 import time
 from typing import Callable
 
