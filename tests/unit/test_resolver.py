@@ -185,14 +185,14 @@ def test_resolve_keeps_proposals_off_the_conflict_path():
     bridge = record("raw", "Alex Morgan", provider_c="301", provider_a="999")
     off_existing = record("raw", "Alex Morgan", provider_b="201", provider_d="401")
     off_new = record("raw", "Alex Morgan", provider_c="301", provider_e="501")
-    # duplicates form a cycle off the path, which mustn't pull them onto it
+    # repeats off_existing's IDs: skipped, and the cycle it forms mustn't pull either onto the path
     duplicate = record("raw", "A. Morgan", provider_b="201", provider_d="401")
 
     accepted, rejected = resolver.resolve(
         [extend, bridge, off_existing, off_new, duplicate]
     )
 
-    assert accepted == [off_existing, off_new, duplicate]
+    assert accepted == [off_existing, off_new]
     assert rejected == [(extend, [truth, bridge]), (bridge, [truth, extend])]
     assert component_ids(resolver) == objects(
         {
@@ -445,6 +445,103 @@ def test_add_record_skips_repeated_ids():
     ]
 
 
+def test_add_record_skips_ids_within_one_record():
+    # a 2-ID record whose IDs are both in an earlier 3-ID record adds nothing, so it's skipped like an exact repeat
+    resolver = ObjectResolver()
+    full = record(
+        "player", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301"
+    )
+    assert resolver.add_record(full)
+
+    assert not resolver.add_record(
+        record("raw", "A. Morgan", provider_a="101", provider_c=301)
+    )
+    assert not resolver.add_record(record("raw", "A. Morgan", provider_b="201"))
+    assert resolver.components()[0][1] == [full]
+
+
+def test_add_record_replaces_smaller_record_with_larger():
+    # the other way round, the larger record replaces the smaller one, so the result is the same either way
+    resolver = ObjectResolver()
+    partial = record("raw", "A. Morgan", provider_a="101", provider_b="201")
+    full = record(
+        "player", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301"
+    )
+
+    assert resolver.add_record(partial)
+    assert resolver.add_record(full)
+    assert resolver.components()[0][1] == [full]
+    # the replaced record no longer counts as kept
+    assert not resolver.add_record(partial)
+    assert resolver.components()[0][1] == [full]
+
+
+def test_add_record_replaces_every_record_inside_it():
+    # two 2-ID records linking one player are both inside the later 3-ID record; an unrelated one is untouched
+    resolver = ObjectResolver()
+    links = [
+        record("raw", "A. Morgan", provider_a="101", provider_b="201"),
+        record("raw", "A. Morgan", provider_b="201", provider_c="301"),
+    ]
+    extend = record("raw", "A. Morgan", provider_c="301", provider_d="401")
+    for r in links + [extend]:
+        resolver.add_record(r)
+
+    full = record(
+        "player", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301"
+    )
+    assert resolver.add_record(full)
+    assert resolver.components()[0][1] == [extend, full]
+
+
+def test_resolve_skips_partial_repeats_in_one_batch():
+    # within one batch, a record inside a larger one is skipped whichever comes first
+    partial = record("raw", "A. Morgan", provider_a="101", provider_b="201")
+    full = record(
+        "player", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301"
+    )
+
+    for ordering in ([partial, full], [full, partial]):
+        resolver = ObjectResolver()
+        accepted, rejected = resolver.resolve(ordering)
+
+        assert accepted == [full]
+        assert rejected == []
+        assert resolver.components()[0][1] == [full]
+
+
+def test_resolve_replaces_smaller_records_across_calls():
+    # a smaller record accepted in an earlier call is replaced by the larger one, so later conflicts clash with it alone
+    partial = record("raw", "A. Morgan", provider_a="101", provider_b="201")
+    full = record(
+        "player", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301"
+    )
+    conflicting = record("raw", "Alex Morgan", provider_a="101", provider_c="999")
+
+    for first, second in ([partial, full], [full, partial]):
+        resolver = ObjectResolver()
+        resolver.resolve([first])
+        resolver.resolve([second])
+
+        assert resolver.components()[0][1] == [full]
+        assert resolver.resolve([conflicting]) == ([], [(conflicting, [full])])
+
+
+def test_resolve_skips_partial_repeats_of_existing_records():
+    resolver = ObjectResolver()
+    full = record(
+        "player", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301"
+    )
+    resolver.resolve([full])
+
+    partial = record("raw", "A. Morgan", provider_b="201", provider_c="301")
+    extend = record("raw", "A. Morgan", provider_c="301", provider_d="401")
+    accepted, rejected = resolver.resolve([partial, extend])
+
+    assert accepted == [extend]
+    assert rejected == []
+
+
 def test_add_record_keeps_new_link_between_known_ids():
     # a record linking a new combination of IDs already in one object adds no merges, but isn't a repeat
     resolver = ObjectResolver()
@@ -472,8 +569,8 @@ def test_resolve_repeats_do_not_grow_clashes():
             f"matchday_{md}", "Alex Morgan", provider_a="101", provider_b="201"
         )
         accepted, rejected = resolver.resolve([repeat])
-        # repeats are still accepted: they agree with the resolver
-        assert accepted == [repeat]
+        # repeats aren't rejected, but they aren't added either
+        assert accepted == []
         assert rejected == []
 
     conflicting = record("raw", "Alex Morgan", provider_a="101", provider_b="999")

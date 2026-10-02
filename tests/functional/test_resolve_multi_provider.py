@@ -227,7 +227,8 @@ def test_resolve_exact_duplicate_player_in_one_provider(duplicated: str, first: 
 @pytest.mark.parametrize("order", ORDERS)
 def test_resolve_later_sync_links_single_provider_player(order: tuple[str, ...]):
     # Tyler Adams is only in provider_a on matchday 1; on matchday 2 provider_b lists him too, and the new link joins the
-    # existing object. Folarin Balogun appears for the first time, in provider_c only.
+    # existing object. Folarin Balogun appears for the first time, in provider_c only. Every other row repeats matchday 1
+    # and is skipped.
     resolver = ObjectResolver()
     matchday_1 = {p: create_provider(p, SHARED) for p in PROVIDERS}
     matchday_1["provider_a"] = create_provider("provider_a", SHARED + [5])
@@ -241,7 +242,10 @@ def test_resolve_later_sync_links_single_provider_player(order: tuple[str, ...])
     }
     accepted, rejected = sync_and_resolve(resolver, matchday_2, order, "matchday_2")
 
-    assert len(accepted) == len(SHARED) + 2
+    assert sorted(map(record_ids, accepted), key=sorted) == sorted(
+        [ids_of(("provider_a", 5), ("provider_b", 5)), ids_of(("provider_c", 7))],
+        key=sorted,
+    )
     assert rejected == []
     assert objects(resolver) == {every_provider(i) for i in SHARED} | {
         ids_of(("provider_a", 5), ("provider_b", 5)),
@@ -277,9 +281,8 @@ def test_resolve_later_sync_rejects_duplicate_id(
     )
     assert [record_ids(r) for r, _ in rejected] == [duplicate_row]
     assert rejected[0][1] == [original]
-    assert sorted(map(record_ids, accepted), key=sorted) == sorted(
-        (every_provider(i) for i in SHARED[1:]), key=sorted
-    )
+    # every other row repeats matchday 1, so nothing is added
+    assert accepted == []
     # the duplicate ID never entered the resolver; the original object is unchanged
     assert (f"{duplicated}_player_id", duplicate_id(duplicated, 0)) not in resolver
     assert objects(resolver) == {every_provider(i) for i in SHARED}
@@ -288,7 +291,7 @@ def test_resolve_later_sync_rejects_duplicate_id(
 @pytest.mark.parametrize("order", ORDERS)
 def test_resolve_later_sync_mixed_batch(order: tuple[str, ...]):
     # matchday 2 combines every case: a duplicate ID for a synced player (rejected), a single-provider player gaining a
-    # second provider (accepted), a player new to one provider (accepted), and unchanged players (accepted)
+    # second provider (accepted), a player new to one provider (accepted), and unchanged players (skipped)
     matchday_1 = {p: create_provider(p, SHARED) for p in PROVIDERS}
     matchday_1["provider_a"] = create_provider("provider_a", SHARED + [5])
     truth = to_records(synchronize([matchday_1[p] for p in order]), "matchday_1")
@@ -325,7 +328,7 @@ def test_resolve_later_sync_mixed_batch(order: tuple[str, ...]):
             ("provider_c", 2),
         )
     }
-    assert accepted == {every_provider(i) for i in [0, 1, 3, 4]} | {
+    assert accepted == {
         ids_of(("provider_a", 5), ("provider_b", 5)),
         ids_of(("provider_c", 6)),
     }

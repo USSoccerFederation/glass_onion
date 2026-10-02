@@ -66,7 +66,7 @@ class ObjectResolver:
     """
     Applies a graph-based approach to resolving object identifiers from multiple runs of [SyncEngine.synchronize()][glass_onion.engine.SyncEngine.synchronize] to properly identify related identifiers and discard conflicts.
 
-    Within the graph, every `(provider, ID)` pair is a vertex, and a sync between two IDs is an edge. `ObjectResolver` builds graph "components" out of these vertices to represent objects. By design, these components may hold AT MOST one ID per provider. 
+    Within the graph, every `(provider, ID)` pair is a vertex, and a sync between two IDs is an edge. `ObjectResolver` builds graph "components" out of these vertices to represent objects. By design, these components may hold AT MOST one ID per provider.
 
     More methodology details are available in [ObjectResolver.resolve()][glass_onion.resolver.ObjectResolver.resolve].
     """
@@ -85,11 +85,19 @@ class ObjectResolver:
         """
         self.records: dict[Vertex, list[Record]] = {}
         """
-        The records that built each component, keyed by the component's root. A record repeating an earlier record's IDs is not kept.
+        The records that built each component, keyed by the component's root. A record whose IDs are all in another kept record is not kept.
         """
-        self.seen: set[frozenset[Vertex]] = set()
+        self.kept: dict[frozenset[Vertex], Record] = {}
         """
-        The vertex set of every record kept in `records`, used to skip repeats.
+        Every record in `records`, keyed by its vertex set.
+        """
+        self.covers: dict[Vertex, set[frozenset[Vertex]]] = {}
+        """
+        For each vertex, the vertex sets of the records in `kept` that hold it, used to find records a new record is inside.
+        """
+        self.anchored: dict[Vertex, set[frozenset[Vertex]]] = {}
+        """
+        The vertex sets in `kept`, each under the one of its vertices held by the fewest kept records when it was added. Used to find records inside a new record without scanning every record that shares a common vertex.
         """
 
     def __contains__(self, v: Vertex) -> bool:
@@ -115,11 +123,11 @@ class ObjectResolver:
             self.parent[v], v = root, self.parent[v]
         return root
 
-    def add_record(self, record: Record):
+    def add_record(self, record: Record) -> bool:
         """
         Adds a record's vertices to the resolver and merges them into a single component.
 
-        A record whose vertices exactly match an earlier record's is skipped: it would add no IDs or links, and keeping it would grow `records` with every repeated sync. The earlier record is kept. Smaller components are merged into the largest one, so each merge copies only the smaller side's IDs and records.
+        Only the largest of a set of nested records is kept, whatever order they arrive in: a record whose vertices are all in one kept record (an exact repeat, or a 2-ID record inside a 3-ID record) is skipped, and kept records whose vertices are all in the new record are removed. A smaller record adds no IDs or links the larger one doesn't, and keeping it would grow `records` with every repeated sync. Of two exact repeats, the earlier is kept. A record linking IDs from several kept records is not a repeat, even if they're all in one component. Smaller components are merged into the largest one, so each merge copies only the smaller side's IDs and records.
 
         Callers must check for provider conflicts first: this method will happily merge two IDs from the same provider. [resolve()][glass_onion.resolver.ObjectResolver.resolve] does this check.
 
@@ -128,13 +136,18 @@ class ObjectResolver:
 
         Raises:
             AssertionError: if `record` has no valid IDs.
+
+        Returns:
+            `True` if the record was added, `False` if it was skipped as a repeat.
         """
         vs = vertices(record)
         assert len(vs) > 0, f"Record has no valid IDs: {record['ids']}"
 
         key = frozenset(vs)
-        if key in self.seen:
-            return
+        # any record covering `key` holds every vertex in it, so checking the vertex in the fewest records is enough
+        fewest = min((self.covers.get(v, set()) for v in key), key=len)
+        if any(key <= k for k in fewest):
+            return False
         for v in vs:
             if v not in self.parent:
                 self.parent[v] = v
@@ -148,8 +161,22 @@ class ObjectResolver:
                 self.parent[other] = root
                 self.ids[root].update(self.ids.pop(other))
                 self.records[root].extend(self.records.pop(other))
+        # a record inside this one is anchored at one of its vertices, and holds only its vertices, so it's in `root` by now
+        inside = {k for v in key for k in self.anchored.get(v, set()) if k < key}
+        if len(inside) > 0:
+            removed = {id(self.kept.pop(k)) for k in inside}
+            for k in inside:
+                for v in k:
+                    self.covers[v].discard(k)
+                    self.anchored.get(v, set()).discard(k)
+            self.records[root] = [r for r in self.records[root] if id(r) not in removed]
         self.records[root].append(record)
-        self.seen.add(key)
+        self.kept[key] = record
+        anchor = min(key, key=lambda v: len(self.covers.get(v, set())))
+        self.anchored.setdefault(anchor, set()).add(key)
+        for v in key:
+            self.covers.setdefault(v, set()).add(key)
+        return True
 
     def components(self) -> list[tuple[dict[str, Hashable], list[Record]]]:
         """
@@ -250,13 +277,13 @@ class ObjectResolver:
             1. Drop records with no valid IDs (see [normalize_id()][glass_onion.resolver.normalize_id]). These do not appear in any downstream returned list.
             2. Reject each record that conflicts with the resolver as it stands.
             3. Of the remaining records, reject those on a path linking two IDs from one provider (see [conflict_paths()][glass_onion.resolver.ObjectResolver.conflict_paths]). Records that merely touch the same object are kept, and records that only conflict with each other are all rejected.
-            4. Add the accepted records to the resolver.
+            4. Add the remaining records to the resolver, largest first. Records whose IDs are all in one record from the resolver or this batch are skipped and appear in neither returned list; resolver records whose IDs are all in an accepted record are removed from the resolver (see [add_record()][glass_onion.resolver.ObjectResolver.add_record]).
 
         Args:
             records (list[glass_onion.resolver.Record]): the records to merge.
 
         Returns:
-            A tuple of `(accepted, rejected)`, where `rejected` holds `(record, records it clashed with)` pairs. The clashing records are every resolver record involved in the conflict, followed by any other records in `records` rejected in the same conflict.
+            A tuple of `(accepted, rejected)`, where `accepted` holds the records added to the resolver and `rejected` holds `(record, records it clashed with)` pairs. The clashing records are every resolver record involved in the conflict, followed by any other records in `records` rejected in the same conflict.
         """
 
         def node_of(v: Vertex) -> Vertex:
@@ -345,6 +372,11 @@ class ObjectResolver:
         rejected_ks = set().union(*[ks for ks, _ in dropped])
         candidates = [c for k, c in enumerate(candidates) if k not in rejected_ks]
 
-        for r, _ in candidates:
-            self.add_record(r)
-        return [r for r, _ in candidates], rejected
+        # largest first, so a record inside a larger one in this batch is skipped whatever the order
+        added: set[int] = set()
+        for k in sorted(
+            range(len(candidates)), key=lambda k: -len(vertices(candidates[k][0]))
+        ):
+            if self.add_record(candidates[k][0]):
+                added.add(k)
+        return [r for k, (r, _) in enumerate(candidates) if k in added], rejected

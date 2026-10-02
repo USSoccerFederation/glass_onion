@@ -48,7 +48,7 @@ def assert_linear(fn: Callable[[int], object], n: int):
 
 def test_resolve_season_of_repeated_syncs():
     # a season of matchdays, each re-syncing every known player and adding a few new ones. Repeats agree with the
-    # resolver, so they're accepted, but each player keeps only the record that first linked them.
+    # resolver, so they aren't rejected, but only new players are accepted and each keeps the record that first linked them.
     players, matchdays, new_per_matchday = 500, 38, 5
     resolver = ObjectResolver()
     for md in range(matchdays):
@@ -56,7 +56,7 @@ def test_resolve_season_of_repeated_syncs():
         accepted, rejected = resolver.resolve(
             [player(f"matchday_{md}", i) for i in range(roster)]
         )
-        assert len(accepted) == roster
+        assert len(accepted) == (players if md == 0 else new_per_matchday)
         assert rejected == []
 
     total = players + (matchdays - 1) * new_per_matchday
