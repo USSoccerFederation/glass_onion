@@ -69,7 +69,7 @@ class ObjectResolver:
     Every `(provider, ID)` pair is a vertex, and a sync between two IDs is an edge. Each connected component is one object, and may hold at most one ID per provider. This class does not enforce that constraint itself: callers must check for provider conflicts before calling [add_record()][glass_onion.resolver.ObjectResolver.add_record] (see [resolve()][glass_onion.resolver.ObjectResolver.resolve]).
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         """
         Creates a new, empty ObjectResolver.
         """
@@ -113,7 +113,7 @@ class ObjectResolver:
             self.parent[v], v = root, self.parent[v]
         return root
 
-    def add_record(self, record: Record) -> None:
+    def add_record(self, record: Record):
         """
         Adds a record's vertices to the resolver and merges them into a single component.
 
