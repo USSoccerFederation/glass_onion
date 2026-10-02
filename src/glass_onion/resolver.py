@@ -16,6 +16,16 @@ One source row: `{"source": str, "ids": {provider ID field: ID}, "meta": {...}}`
 `ids` holds the IDs this row syncs together; `source` and `meta` are carried along untouched. IDs are normalized when read (see [normalize_id()][glass_onion.resolver.normalize_id]), so numeric IDs end up as strings and missing or blank IDs are ignored.
 """
 
+PathVertex = tuple[Literal["n"], Vertex] | tuple[Literal["r"], int]
+"""
+A vertex in [resolve()][glass_onion.resolver.ObjectResolver.resolve]'s graph of candidates: `("n", node)` for a resolver root or new vertex, `("r", k)` for the `k`th candidate.
+"""
+
+BlockCutVertex = tuple[Literal["b"], int] | tuple[Literal["c"], PathVertex]
+"""
+A vertex in [conflict_paths()][glass_onion.resolver.ObjectResolver.conflict_paths]'s block-cut tree: `("b", i)` for the `i`th biconnected block, `("c", v)` for cut vertex `v`.
+"""
+
 
 def normalize_id(i: Hashable) -> Hashable | None:
     """
@@ -50,17 +60,6 @@ def vertices(record: Record) -> list[Vertex]:
     """
     vs = [(p, normalize_id(i)) for p, i in record["ids"].items()]
     return [(p, i) for p, i in vs if i is not None]
-
-
-PathVertex = tuple[Literal["n"], Vertex] | tuple[Literal["r"], int]
-"""
-A vertex in [resolve()][glass_onion.resolver.ObjectResolver.resolve]'s graph of candidates: `("n", node)` for a resolver root or new vertex, `("r", k)` for the `k`th candidate.
-"""
-
-BlockCutVertex = tuple[Literal["b"], int] | tuple[Literal["c"], PathVertex]
-"""
-A vertex in [conflict_paths()][glass_onion.resolver.ObjectResolver.conflict_paths]'s block-cut tree: `("b", i)` for the `i`th biconnected block, `("c", v)` for cut vertex `v`.
-"""
 
 
 class ObjectResolver:
