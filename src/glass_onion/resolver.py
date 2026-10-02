@@ -64,9 +64,11 @@ def vertices(record: Record) -> list[Vertex]:
 
 class ObjectResolver:
     """
-    A union-find over `(provider ID field, ID)` vertices, tracking each component's IDs and the records that built it.
+    Applies a graph-based approach to resolving object identifiers from multiple runs of [SyncEngine.synchronize()][glass_onion.engine.SyncEngine.synchronize] to properly identify related identifiers and discard conflicts.
 
-    Every `(provider, ID)` pair is a vertex, and a sync between two IDs is an edge. Each connected component is one object, and may hold at most one ID per provider. This class does not enforce that constraint itself: callers must check for provider conflicts before calling [add_record()][glass_onion.resolver.ObjectResolver.add_record] (see [resolve()][glass_onion.resolver.ObjectResolver.resolve]).
+    Within the graph, every `(provider, ID)` pair is a vertex, and a sync between two IDs is an edge. `ObjectResolver` builds graph "components" out of these vertices to represent objects. By design, these components may hold AT MOST one ID per provider. 
+
+    More methodology details are available in [ObjectResolver.resolve()][glass_onion.resolver.ObjectResolver.resolve].
     """
 
     def __init__(self):
