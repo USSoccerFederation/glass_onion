@@ -82,7 +82,9 @@ At a high level, [ObjectResolver][glass_onion.resolver.ObjectResolver] relies on
     - If one vertex already has an edge to a vertex that has the same data provider for the other vertex, do not add the proposed edge to the graph and flag it as a duplicate.
     - If adding the component would produce a transitive conflict (IE: connecting a Skillcorner ID to a Statsbomb ID results in two different Scoutastic IDs), flag the proposed component as a duplicate.
     - Otherwise, add the proposed component to the graph.
-- If the components all exist already, do not add them to the graph again.
+- If the records within the component exist in the group already:
+    - If they all exist in a larger component, do not add the new/smaller component to the graph.
+    - If they all exists in a smaller component, remove the smaller component from the graph and add the new/larger component.
 
 
 By design, graph components may hold AT MOST one ID per provider.
