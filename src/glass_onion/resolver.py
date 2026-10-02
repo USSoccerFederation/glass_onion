@@ -62,6 +62,36 @@ def vertices(record: Record) -> list[Vertex]:
     return [(p, i) for p, i in vs if i is not None]
 
 
+def to_frame(
+    records: list[Record], conflicts: list[list[Record]] | None = None
+) -> pd.DataFrame:
+    """
+    Flattens records into a DataFrame shaped like `SyncEngine.synchronize()` output.
+
+    Args:
+        records (list[glass_onion.resolver.Record]): the records to flatten.
+        conflicts (list[list[glass_onion.resolver.Record]] | None): if given, the records each of `records` conflicted with, added as a `conflicts` column.
+
+    Returns:
+        A DataFrame with one row per record: a `source` column, one column per provider ID field in any record (IDs normalized, invalid or missing IDs `None`; see [normalize_id()][glass_onion.resolver.normalize_id]), then the record's `meta` keys, then `conflicts` if given.
+    """
+    fields = list(dict.fromkeys(p for r in records for p in r["ids"]))
+    frame = pd.DataFrame(
+        [
+            {
+                "source": r["source"],
+                **{p: normalize_id(r["ids"].get(p)) for p in fields},
+                **r["meta"],
+            }
+            for r in records
+        ],
+        columns=None if len(records) > 0 else ["source"],
+    )
+    if conflicts is not None:
+        frame["conflicts"] = pd.Series(conflicts, index=frame.index, dtype=object)
+    return frame
+
+
 class ObjectResolver:
     """
     Applies a graph-based approach to resolving object identifiers from multiple runs of [SyncEngine.synchronize()][glass_onion.engine.SyncEngine.synchronize] to properly identify related identifiers and discard conflicts.
@@ -98,6 +128,14 @@ class ObjectResolver:
         self.anchored: dict[Vertex, set[frozenset[Vertex]]] = {}
         """
         The vertex sets in `kept`, each under the one of its vertices held by the fewest kept records when it was added. Used to find records inside a new record without scanning every record that shares a common vertex.
+        """
+        self.added: pd.DataFrame = to_frame([])
+        """
+        The records the latest [resolve()][glass_onion.resolver.ObjectResolver.resolve] call added to the resolver, flattened by [to_frame()][glass_onion.resolver.to_frame].
+        """
+        self.rejected: pd.DataFrame = to_frame([], [])
+        """
+        The records the latest [resolve()][glass_onion.resolver.ObjectResolver.resolve] call rejected, flattened by [to_frame()][glass_onion.resolver.to_frame]. Each row's `conflicts` holds the records it conflicted with: every resolver record involved in the conflict, followed by any other records rejected in the same conflict.
         """
 
     def __contains__(self, v: Vertex) -> bool:
@@ -265,25 +303,20 @@ class ObjectResolver:
                     leaves.append(u)
         return set().union(*[blocks[t[1]] for t in tree if t[0] == "b"])
 
-    def resolve(
-        self, records: list[Record]
-    ) -> tuple[list[Record], list[tuple[Record, list[Record]]]]:
+    def resolve(self, records: list[Record]):
         """
-        Merges multi-ID records into the resolver, each as a single unit.
+        Merges multi-ID records into the resolver, each as a single unit, and sets [added][glass_onion.resolver.ObjectResolver.added] and [rejected][glass_onion.resolver.ObjectResolver.rejected] to this call's results.
 
         A record is rejected if merging it would put two IDs from one provider into the same component. The result doesn't depend on the order of `records`.
 
         Methodology:
-            1. Drop records with no valid IDs (see [normalize_id()][glass_onion.resolver.normalize_id]). These do not appear in any downstream returned list.
+            1. Drop records with no valid IDs (see [normalize_id()][glass_onion.resolver.normalize_id]). These appear in neither `added` nor `rejected`.
             2. Reject each record that conflicts with the resolver as it stands.
             3. Of the remaining records, reject those on a path linking two IDs from one provider (see [conflict_paths()][glass_onion.resolver.ObjectResolver.conflict_paths]). Records that merely touch the same object are kept, and records that only conflict with each other are all rejected.
-            4. Add the remaining records to the resolver, largest first. Records whose IDs are all in one record from the resolver or this batch are skipped and appear in neither returned list; resolver records whose IDs are all in an accepted record are removed from the resolver (see [add_record()][glass_onion.resolver.ObjectResolver.add_record]).
+            4. Add the remaining records to the resolver, largest first. Records whose IDs are all in one record from the resolver or this batch are skipped and appear in neither `added` nor `rejected`; resolver records whose IDs are all in an added record are removed from the resolver (see [add_record()][glass_onion.resolver.ObjectResolver.add_record]).
 
         Args:
             records (list[glass_onion.resolver.Record]): the records to merge.
-
-        Returns:
-            A tuple of `(accepted, rejected)`, where `accepted` holds the records added to the resolver and `rejected` holds `(record, records it clashed with)` pairs. The clashing records are every resolver record involved in the conflict, followed by any other records in `records` rejected in the same conflict.
         """
 
         def node_of(v: Vertex) -> Vertex:
@@ -306,7 +339,7 @@ class ObjectResolver:
                 for n in ns
             }
 
-        def clashes(nodes: set[Vertex]) -> list[Record]:
+        def conflicts(nodes: set[Vertex]) -> list[Record]:
             return [r for n in nodes if n in self for r in self.records[n]]
 
         # conflicts with the resolver as it stands
@@ -316,7 +349,7 @@ class ObjectResolver:
             nodes = {node_of(v) for v in vertices(r)}
             bad = conflicted(nodes)
             if len(bad) > 0:
-                rejected.append((r, clashes(bad)))
+                rejected.append((r, conflicts(bad)))
             else:
                 candidates.append((r, nodes))
 
@@ -362,10 +395,10 @@ class ObjectResolver:
                     )
                 )
 
-        # candidates rejected in one component share one conflict: each clashes with every resolver record on its paths, then
+        # candidates rejected in one component share one conflict: each conflicts with every resolver record on its paths, then
         # with the other candidates rejected alongside it
         for ks, resolver_nodes in dropped:
-            involved = clashes(resolver_nodes)
+            involved = conflicts(resolver_nodes)
             for k in sorted(ks):
                 peers = [candidates[j][0] for j in sorted(ks) if j != k]
                 rejected.append((candidates[k][0], involved + peers))
@@ -373,10 +406,11 @@ class ObjectResolver:
         candidates = [c for k, c in enumerate(candidates) if k not in rejected_ks]
 
         # largest first, so a record inside a larger one in this batch is skipped whatever the order
-        added: set[int] = set()
+        stored: set[int] = set()
         for k in sorted(
             range(len(candidates)), key=lambda k: -len(vertices(candidates[k][0]))
         ):
             if self.add_record(candidates[k][0]):
-                added.add(k)
-        return [r for k, (r, _) in enumerate(candidates) if k in added], rejected
+                stored.add(k)
+        self.added = to_frame([r for k, (r, _) in enumerate(candidates) if k in stored])
+        self.rejected = to_frame([r for r, _ in rejected], [c for _, c in rejected])

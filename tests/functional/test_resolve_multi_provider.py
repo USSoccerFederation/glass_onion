@@ -93,10 +93,8 @@ def sync_and_resolve(
     content: dict[str, PlayerSyncableContent],
     order: tuple[str, ...],
     source: str,
-) -> tuple[list[Record], list[tuple[Record, list[Record]]]]:
-    return resolver.resolve(
-        to_records(synchronize([content[p] for p in order]), source)
-    )
+):
+    resolver.resolve(to_records(synchronize([content[p] for p in order]), source))
 
 
 def ids_of(*pairs: tuple[str, int | str]) -> frozenset:
@@ -133,6 +131,15 @@ def record_ids(record: Record) -> frozenset:
     return frozenset((f, i) for f, i in record["ids"].items() if pd.notna(i))
 
 
+def frame_ids(frame: pd.DataFrame) -> list[frozenset]:
+    # each row's IDs, like record_ids()
+    fields = [c for c in frame.columns if c.endswith("_player_id")]
+    return [
+        frozenset((f, row[f]) for f in fields if pd.notna(row[f]))
+        for _, row in frame.iterrows()
+    ]
+
+
 ORDERS = [
     pytest.param(p, id="-".join(x.removeprefix("provider_") for x in p))
     for p in permutations(PROVIDERS)
@@ -144,10 +151,10 @@ def test_resolve_players_in_every_provider(order: tuple[str, ...]):
     content = {p: create_provider(p, SHARED) for p in PROVIDERS}
 
     resolver = ObjectResolver()
-    accepted, rejected = sync_and_resolve(resolver, content, order, "matchday_1")
+    sync_and_resolve(resolver, content, order, "matchday_1")
 
-    assert len(accepted) == len(SHARED)
-    assert rejected == []
+    assert len(resolver.added) == len(SHARED)
+    assert resolver.rejected.empty
     assert objects(resolver) == {every_provider(i) for i in SHARED}
 
 
@@ -157,10 +164,10 @@ def test_resolve_players_in_one_provider(order: tuple[str, ...]):
     content = {p: create_provider(p, SHARED + [ONLY_IN[p]]) for p in PROVIDERS}
 
     resolver = ObjectResolver()
-    accepted, rejected = sync_and_resolve(resolver, content, order, "matchday_1")
+    sync_and_resolve(resolver, content, order, "matchday_1")
 
-    assert len(accepted) == len(SHARED) + len(ONLY_IN)
-    assert rejected == []
+    assert len(resolver.added) == len(SHARED) + len(ONLY_IN)
+    assert resolver.rejected.empty
     assert objects(resolver) == {every_provider(i) for i in SHARED} | {
         ids_of((p, i)) for p, i in ONLY_IN.items()
     }
@@ -189,10 +196,10 @@ def test_resolve_duplicate_player_in_one_provider(
     )
 
     resolver = ObjectResolver()
-    accepted, rejected = sync_and_resolve(resolver, content, order, "matchday_1")
+    sync_and_resolve(resolver, content, order, "matchday_1")
 
-    assert len(accepted) == len(SHARED) + 1
-    assert rejected == []
+    assert len(resolver.added) == len(SHARED) + 1
+    assert resolver.rejected.empty
     assert objects(resolver) == {every_provider(i) for i in SHARED} | {
         ids_of((duplicated, duplicate_id(duplicated, 0)))
     }
@@ -213,12 +220,10 @@ def test_resolve_exact_duplicate_player_in_one_provider(duplicated: str, first: 
     kept, dropped = rows[0][1], rows[1][1]
 
     resolver = ObjectResolver()
-    accepted, rejected = sync_and_resolve(
-        resolver, content, tuple(PROVIDERS), "matchday_1"
-    )
+    sync_and_resolve(resolver, content, tuple(PROVIDERS), "matchday_1")
 
-    assert len(accepted) == len(SHARED)
-    assert rejected == []
+    assert len(resolver.added) == len(SHARED)
+    assert resolver.rejected.empty
     pulisic = (every_provider(0) - ids_of((duplicated, 0))) | ids_of((duplicated, kept))
     assert objects(resolver) == {every_provider(i) for i in SHARED[1:]} | {pulisic}
     assert (f"{duplicated}_player_id", dropped) not in resolver
@@ -240,13 +245,13 @@ def test_resolve_later_sync_links_single_provider_player(order: tuple[str, ...])
         "provider_b": create_provider("provider_b", SHARED + [5]),
         "provider_c": create_provider("provider_c", SHARED + [7]),
     }
-    accepted, rejected = sync_and_resolve(resolver, matchday_2, order, "matchday_2")
+    sync_and_resolve(resolver, matchday_2, order, "matchday_2")
 
-    assert sorted(map(record_ids, accepted), key=sorted) == sorted(
+    assert sorted(frame_ids(resolver.added), key=sorted) == sorted(
         [ids_of(("provider_a", 5), ("provider_b", 5)), ids_of(("provider_c", 7))],
         key=sorted,
     )
-    assert rejected == []
+    assert resolver.rejected.empty
     assert objects(resolver) == {every_provider(i) for i in SHARED} | {
         ids_of(("provider_a", 5), ("provider_b", 5)),
         ids_of(("provider_c", 7)),
@@ -274,15 +279,15 @@ def test_resolve_later_sync_rejects_duplicate_id(
     matchday_2[duplicated] = create_provider(
         duplicated, SHARED, ids={0: duplicate_id(duplicated, 0)}
     )
-    accepted, rejected = sync_and_resolve(resolver, matchday_2, order, "matchday_2")
+    sync_and_resolve(resolver, matchday_2, order, "matchday_2")
 
     duplicate_row = (every_provider(0) - ids_of((duplicated, 0))) | ids_of(
         (duplicated, duplicate_id(duplicated, 0))
     )
-    assert [record_ids(r) for r, _ in rejected] == [duplicate_row]
-    assert rejected[0][1] == [original]
+    assert frame_ids(resolver.rejected) == [duplicate_row]
+    assert resolver.rejected["conflicts"][0] == [original]
     # every other row repeats matchday 1, so nothing is added
-    assert accepted == []
+    assert resolver.added.empty
     # the duplicate ID never entered the resolver; the original object is unchanged
     assert (f"{duplicated}_player_id", duplicate_id(duplicated, 0)) not in resolver
     assert objects(resolver) == {every_provider(i) for i in SHARED}
@@ -310,11 +315,11 @@ def test_resolve_later_sync_mixed_batch(order: tuple[str, ...]):
     for batch in (records, records[::-1]):
         r = ObjectResolver()
         r.resolve(truth)
-        accepted, rejected = r.resolve(batch)
+        r.resolve(batch)
         results.append(
             (
-                {record_ids(x) for x in accepted},
-                {record_ids(x) for x, _ in rejected},
+                set(frame_ids(r.added)),
+                set(frame_ids(r.rejected)),
                 objects(r),
             )
         )

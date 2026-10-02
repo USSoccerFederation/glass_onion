@@ -1,7 +1,9 @@
 import time
 from typing import Callable
 
-from glass_onion.resolver import ObjectResolver, Record
+from pandas.testing import assert_frame_equal
+
+from glass_onion.resolver import ObjectResolver, Record, to_frame
 
 PROVIDERS = ["provider_a", "provider_b", "provider_c"]
 
@@ -53,27 +55,27 @@ def test_resolve_season_of_repeated_syncs():
     resolver = ObjectResolver()
     for md in range(matchdays):
         roster = players + md * new_per_matchday
-        accepted, rejected = resolver.resolve(
-            [player(f"matchday_{md}", i) for i in range(roster)]
-        )
-        assert len(accepted) == (players if md == 0 else new_per_matchday)
-        assert rejected == []
+        resolver.resolve([player(f"matchday_{md}", i) for i in range(roster)])
+        assert len(resolver.added) == (players if md == 0 else new_per_matchday)
+        assert resolver.rejected.empty
 
     total = players + (matchdays - 1) * new_per_matchday
     components = resolver.components()
     assert len(components) == total
     assert all(len(records) == 1 for _, records in components)
 
-    # a late conflict clashes with the player's one stored record, not one per matchday
+    # a late conflicting record lists the player's one stored record, not one per matchday
     conflicting = record(
         "late",
         0,
         provider_a=str(ID_BASES["provider_a"] + DUPLICATE_OFFSET),
         provider_b=str(ID_BASES["provider_b"]),
     )
-    accepted, rejected = resolver.resolve([conflicting])
-    assert accepted == []
-    assert rejected == [(conflicting, [player("matchday_0", 0)])]
+    resolver.resolve([conflicting])
+    assert resolver.added.empty
+    assert_frame_equal(
+        resolver.rejected, to_frame([conflicting], [[player("matchday_0", 0)]])
+    )
 
 
 def test_add_record_merge_cost_is_linear():
@@ -103,11 +105,9 @@ def test_resolve_throughput_is_linear():
     # one batch of new players, each synced across every provider
     def run(n: int) -> ObjectResolver:
         resolver = ObjectResolver()
-        accepted, rejected = resolver.resolve(
-            [player("matchday_0", i) for i in range(n)]
-        )
-        assert len(accepted) == n
-        assert rejected == []
+        resolver.resolve([player("matchday_0", i) for i in range(n)])
+        assert len(resolver.added) == n
+        assert resolver.rejected.empty
         return resolver
 
     assert len(run(1_000).components()) == 1_000
@@ -132,15 +132,17 @@ def test_resolve_conflicts_at_scale_are_linear():
             )
         return records
 
-    def run(n: int) -> tuple[list[Record], list[tuple[Record, list[Record]]]]:
-        return ObjectResolver().resolve(batch(n))
+    def run(n: int) -> ObjectResolver:
+        resolver = ObjectResolver()
+        resolver.resolve(batch(n))
+        return resolver
 
     n = 1_000
-    accepted, rejected = run(n)
+    resolver = run(n)
     duplicated = n // 100
-    assert len(accepted) == n - duplicated
-    assert len(rejected) == 2 * duplicated
-    # each rejected record clashes only with its own pair, not with other conflicts in the batch
-    assert all(len(clashes) == 1 for _, clashes in rejected)
+    assert len(resolver.added) == n - duplicated
+    assert len(resolver.rejected) == 2 * duplicated
+    # each rejected record conflicts only with its own pair, not with other conflicts in the batch
+    assert all(len(conflicts) == 1 for conflicts in resolver.rejected["conflicts"])
 
     assert_linear(run, 2_500)
