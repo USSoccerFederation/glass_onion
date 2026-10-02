@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 
 from glass_onion.player import PlayerSyncableContent, PlayerSyncEngine
-from glass_onion.resolver import ObjectResolver, Record, resolve
+from glass_onion.resolver import ObjectResolver, Record
 
 # (player_name, player_nickname, jersey_number, team_id, birth_date)
 PLAYERS = [
@@ -94,8 +94,8 @@ def sync_and_resolve(
     order: tuple[str, ...],
     source: str,
 ) -> tuple[list[Record], list[tuple[Record, list[Record]]]]:
-    return resolve(
-        resolver, to_records(synchronize([content[p] for p in order]), source)
+    return resolver.resolve(
+        to_records(synchronize([content[p] for p in order]), source)
     )
 
 
@@ -306,8 +306,8 @@ def test_resolve_later_sync_mixed_batch(order: tuple[str, ...]):
     results = []
     for batch in (records, records[::-1]):
         r = ObjectResolver()
-        resolve(r, truth)
-        accepted, rejected = resolve(r, batch)
+        r.resolve(truth)
+        accepted, rejected = r.resolve(batch)
         results.append(
             (
                 {record_ids(x) for x in accepted},

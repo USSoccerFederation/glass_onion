@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from glass_onion.resolver import ObjectResolver, resolve
+from glass_onion.resolver import ObjectResolver
 
 
 def record(source: str, name: str, object_type: str = "player", **ids) -> dict:
@@ -39,11 +39,11 @@ def test_resolve_happy_path():
         record("raw", "Rose Lavelle", provider_a="103", provider_c="303"),
     ]
 
-    accepted, rejected = resolve(resolver, truth)
+    accepted, rejected = resolver.resolve(truth)
     assert accepted == truth
     assert rejected == []
 
-    accepted, rejected = resolve(resolver, proposals)
+    accepted, rejected = resolver.resolve(proposals)
     assert accepted == proposals
     assert rejected == []
 
@@ -66,12 +66,12 @@ def test_resolve_rejects_conflict_with_existing_object():
     # a proposal that would give an existing player a second provider_b ID
     resolver = ObjectResolver()
     truth = record("player", "Alex Morgan", provider_a="101", provider_b="201")
-    resolve(resolver, [truth])
+    resolver.resolve([truth])
 
     conflicting = record("raw", "Alex Morgan", provider_a="101", provider_b="999")
     clean = record("raw", "Alex Morgan", provider_b="201", provider_c="301")
 
-    accepted, rejected = resolve(resolver, [conflicting, clean])
+    accepted, rejected = resolver.resolve([conflicting, clean])
 
     assert accepted == [clean]
     assert rejected == [(conflicting, [truth])]
@@ -90,11 +90,11 @@ def test_resolve_rejects_proposal_bridging_two_players():
     resolver = ObjectResolver()
     morgan = record("player", "Alex Morgan", provider_a="101", provider_b="201")
     rapinoe = record("player", "Megan Rapinoe", provider_a="102", provider_c="302")
-    resolve(resolver, [morgan, rapinoe])
+    resolver.resolve([morgan, rapinoe])
 
     bridge = record("raw", "Alex Morgan", provider_b="201", provider_c="302")
 
-    accepted, rejected = resolve(resolver, [bridge])
+    accepted, rejected = resolver.resolve([bridge])
 
     assert accepted == []
     assert len(rejected) == 1
@@ -117,7 +117,7 @@ def test_resolve_rejects_all_mutually_conflicting_proposals():
 
     for ordering in (proposals, proposals[::-1]):
         resolver = ObjectResolver()
-        accepted, rejected = resolve(resolver, ordering + [unrelated])
+        accepted, rejected = resolver.resolve(ordering + [unrelated])
 
         assert accepted == [unrelated]
         # nothing in the resolver to clash with: each proposal clashes only with the other
@@ -137,7 +137,7 @@ def test_resolve_rejects_transitive_conflict_between_proposals():
         record("raw", "Rose Lavelle", provider_c="303", provider_a="999"),
     ]
 
-    accepted, rejected = resolve(resolver, chain)
+    accepted, rejected = resolver.resolve(chain)
 
     # every link is on the path between the two provider_a IDs, so all three are dropped
     assert accepted == []
@@ -154,7 +154,7 @@ def test_resolve_rejects_transitive_conflict_through_existing_object():
     # together they give one player two provider_b IDs: provider_b 201 - provider_a 101 - provider_c 301 - provider_b 999
     resolver = ObjectResolver()
     truth = record("player", "Alex Morgan", provider_a="101", provider_b="201")
-    resolve(resolver, [truth])
+    resolver.resolve([truth])
 
     proposals = [
         record("raw", "Alex Morgan", provider_c="301", provider_a="101"),
@@ -163,8 +163,8 @@ def test_resolve_rejects_transitive_conflict_through_existing_object():
 
     for ordering in (proposals, proposals[::-1]):
         resolver = ObjectResolver()
-        resolve(resolver, [truth])
-        accepted, rejected = resolve(resolver, ordering)
+        resolver.resolve([truth])
+        accepted, rejected = resolver.resolve(ordering)
 
         assert accepted == []
         assert [r for r, _ in rejected] == ordering
@@ -179,7 +179,7 @@ def test_resolve_keeps_proposals_off_the_conflict_path():
     # only hang off it link no provider_a IDs, so they're kept
     resolver = ObjectResolver()
     truth = record("player", "Alex Morgan", provider_a="101", provider_b="201")
-    resolve(resolver, [truth])
+    resolver.resolve([truth])
 
     extend = record("raw", "Alex Morgan", provider_b="201", provider_c="301")
     bridge = record("raw", "Alex Morgan", provider_c="301", provider_a="999")
@@ -188,8 +188,8 @@ def test_resolve_keeps_proposals_off_the_conflict_path():
     # duplicates form a cycle off the path, which mustn't pull them onto it
     duplicate = record("raw", "A. Morgan", provider_b="201", provider_d="401")
 
-    accepted, rejected = resolve(
-        resolver, [extend, bridge, off_existing, off_new, duplicate]
+    accepted, rejected = resolver.resolve(
+        [extend, bridge, off_existing, off_new, duplicate]
     )
 
     assert accepted == [off_existing, off_new, duplicate]
@@ -209,14 +209,14 @@ def test_resolve_rejects_conflict_between_existing_objects():
     resolver = ObjectResolver()
     morgan = record("player", "Alex Morgan", provider_a="101", provider_b="201")
     rapinoe = record("player", "Megan Rapinoe", provider_a="102", provider_c="302")
-    resolve(resolver, [morgan, rapinoe])
+    resolver.resolve([morgan, rapinoe])
 
     proposals = [
         record("raw", "Alex Morgan", provider_b="201", provider_d="401"),
         record("raw", "Alex Morgan", provider_d="401", provider_c="302"),
     ]
 
-    accepted, rejected = resolve(resolver, proposals)
+    accepted, rejected = resolver.resolve(proposals)
 
     assert accepted == []
     assert [r for r, _ in rejected] == proposals
@@ -231,7 +231,7 @@ def test_resolve_rejects_every_path_of_a_cyclic_conflict():
     # two independent routes from provider_a 101 to provider_a 999: removing either alone leaves the conflict
     resolver = ObjectResolver()
     truth = record("player", "Alex Morgan", provider_a="101", provider_b="201")
-    resolve(resolver, [truth])
+    resolver.resolve([truth])
 
     proposals = [
         record("raw", "Alex Morgan", provider_b="201", provider_c="301"),
@@ -240,7 +240,7 @@ def test_resolve_rejects_every_path_of_a_cyclic_conflict():
         record("raw", "Alex Morgan", provider_d="401", provider_a="999"),
     ]
 
-    accepted, rejected = resolve(resolver, proposals)
+    accepted, rejected = resolver.resolve(proposals)
 
     assert accepted == []
     assert [r for r, _ in rejected] == proposals
@@ -253,12 +253,12 @@ def test_resolve_reports_resolver_and_proposal_clashes_together():
     # a conflict running through an existing player: provider_a 101 - provider_b 201 - provider_c 301 - provider_a 999
     resolver = ObjectResolver()
     truth = record("player", "Alex Morgan", provider_a="101", provider_b="201")
-    resolve(resolver, [truth])
+    resolver.resolve([truth])
 
     extend = record("raw", "Alex Morgan", provider_b="201", provider_c="301")
     bridge = record("raw", "Alex Morgan", provider_c="301", provider_a="999")
 
-    accepted, rejected = resolve(resolver, [extend, bridge])
+    accepted, rejected = resolver.resolve([extend, bridge])
 
     assert accepted == []
     # every resolver record involved comes first, even for bridge, which never touches truth's IDs directly;
@@ -338,7 +338,7 @@ def test_resolve_ignores_missing_ids():
         record("raw", "Catarina Macario", provider_a="113", provider_b="<na>"),
     ]
 
-    accepted, rejected = resolve(resolver, proposals)
+    accepted, rejected = resolver.resolve(proposals)
 
     assert accepted == proposals
     assert rejected == []
@@ -357,7 +357,7 @@ def test_resolve_keeps_zero_id():
         record("raw", "Alex Morgan", provider_a=0, provider_c="301"),
     ]
 
-    accepted, rejected = resolve(resolver, proposals)
+    accepted, rejected = resolver.resolve(proposals)
 
     assert accepted == proposals
     assert rejected == []
@@ -382,7 +382,7 @@ def test_resolve_normalizes_numeric_ids():
         record("raw", "Alex Morgan", provider_a="101", provider_e="501"),
     ]
 
-    accepted, rejected = resolve(resolver, proposals)
+    accepted, rejected = resolver.resolve(proposals)
 
     assert accepted == proposals
     assert rejected == []
@@ -401,11 +401,11 @@ def test_resolve_numeric_and_string_ids_conflict():
     # once normalized, 101.0 and "102" are two distinct provider_a IDs for the same provider_b ID
     resolver = ObjectResolver()
     truth = record("player", "Alex Morgan", provider_a=101.0, provider_b="201")
-    resolve(resolver, [truth])
+    resolver.resolve([truth])
 
     conflicting = record("raw", "Alex Morgan", provider_a="102", provider_b=201)
 
-    accepted, rejected = resolve(resolver, [conflicting])
+    accepted, rejected = resolver.resolve([conflicting])
 
     assert accepted == []
     assert rejected == [(conflicting, [truth])]
@@ -418,7 +418,7 @@ def test_resolve_drops_records_without_ids():
     empty = record("raw", "Megan Rapinoe")
     all_missing = record("raw", "Rose Lavelle", provider_a=None, provider_b=np.nan)
 
-    accepted, rejected = resolve(resolver, [empty, valid, all_missing])
+    accepted, rejected = resolver.resolve([empty, valid, all_missing])
 
     assert accepted == [valid]
     assert rejected == []
@@ -466,18 +466,18 @@ def test_resolve_repeats_do_not_grow_clashes():
     # a player re-synced every matchday is still one record, so a later conflict clashes with just that record
     resolver = ObjectResolver()
     truth = record("matchday_1", "Alex Morgan", provider_a="101", provider_b="201")
-    resolve(resolver, [truth])
+    resolver.resolve([truth])
     for md in range(2, 51):
         repeat = record(
             f"matchday_{md}", "Alex Morgan", provider_a="101", provider_b="201"
         )
-        accepted, rejected = resolve(resolver, [repeat])
+        accepted, rejected = resolver.resolve([repeat])
         # repeats are still accepted: they agree with the resolver
         assert accepted == [repeat]
         assert rejected == []
 
     conflicting = record("raw", "Alex Morgan", provider_a="101", provider_b="999")
-    accepted, rejected = resolve(resolver, [conflicting])
+    accepted, rejected = resolver.resolve([conflicting])
 
     assert rejected == [(conflicting, [truth])]
 

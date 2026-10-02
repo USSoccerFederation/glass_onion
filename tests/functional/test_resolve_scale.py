@@ -1,7 +1,7 @@
 import time
 from typing import Callable
 
-from glass_onion.resolver import ObjectResolver, Record, resolve
+from glass_onion.resolver import ObjectResolver, Record
 
 PROVIDERS = ["provider_a", "provider_b", "provider_c"]
 
@@ -53,8 +53,8 @@ def test_resolve_season_of_repeated_syncs():
     resolver = ObjectResolver()
     for md in range(matchdays):
         roster = players + md * new_per_matchday
-        accepted, rejected = resolve(
-            resolver, [player(f"matchday_{md}", i) for i in range(roster)]
+        accepted, rejected = resolver.resolve(
+            [player(f"matchday_{md}", i) for i in range(roster)]
         )
         assert len(accepted) == roster
         assert rejected == []
@@ -71,7 +71,7 @@ def test_resolve_season_of_repeated_syncs():
         provider_a=str(ID_BASES["provider_a"] + DUPLICATE_OFFSET),
         provider_b=str(ID_BASES["provider_b"]),
     )
-    accepted, rejected = resolve(resolver, [conflicting])
+    accepted, rejected = resolver.resolve([conflicting])
     assert accepted == []
     assert rejected == [(conflicting, [player("matchday_0", 0)])]
 
@@ -103,8 +103,8 @@ def test_resolve_throughput_is_linear():
     # one batch of new players, each synced across every provider
     def run(n: int) -> ObjectResolver:
         resolver = ObjectResolver()
-        accepted, rejected = resolve(
-            resolver, [player("matchday_0", i) for i in range(n)]
+        accepted, rejected = resolver.resolve(
+            [player("matchday_0", i) for i in range(n)]
         )
         assert len(accepted) == n
         assert rejected == []
@@ -133,7 +133,7 @@ def test_resolve_conflicts_at_scale_are_linear():
         return records
 
     def run(n: int) -> tuple[list[Record], list[tuple[Record, list[Record]]]]:
-        return resolve(ObjectResolver(), batch(n))
+        return ObjectResolver().resolve(batch(n))
 
     n = 1_000
     accepted, rejected = run(n)
