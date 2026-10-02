@@ -66,12 +66,15 @@ def test_init_competition_context():
             TeamSyncableContent(
                 "provider_a",
                 pd.DataFrame(
-                    columns=[
-                        "provider_a_team_id",
-                        "team_name",
-                        "competition_id",
-                        "season_id",
-                    ]
+                    {
+                        k: pd.Series(dtype=str)
+                        for k in [
+                            "provider_a_team_id",
+                            "team_name",
+                            "competition_id",
+                            "season_id",
+                        ]
+                    }
                 ),
             )
         ],
@@ -84,7 +87,16 @@ def test_init_competition_context():
 def test_init_competition_context_missing_competition_id():
     content_a = TeamSyncableContent(
         "provider_a",
-        pd.DataFrame(columns=["provider_a_team_id", "team_name", "season_id"]),
+        pd.DataFrame(
+            {
+                k: pd.Series(dtype=str)
+                for k in [
+                    "provider_a_team_id",
+                    "team_name",
+                    "season_id",
+                ]
+            }
+        ),
     )
 
     with pytest.raises(

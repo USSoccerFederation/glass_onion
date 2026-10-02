@@ -246,14 +246,14 @@ def test_init_competition_context():
             MatchSyncableContent(
                 "provider_a",
                 pd.DataFrame(
-                    columns=[
-                        "provider_a_match_id",
-                        "match_date",
-                        "home_team_id",
-                        "away_team_id",
-                        "competition_id",
-                        "season_id",
-                    ]
+                    {
+                        "provider_a_match_id": pd.Series(dtype=str),
+                        "match_date": pd.Series(dtype=str),
+                        "home_team_id": pd.Series(dtype=str),
+                        "away_team_id": pd.Series(dtype=str),
+                        "competition_id": pd.Series(dtype=str),
+                        "season_id": pd.Series(dtype=str),
+                    }
                 ),
             )
         ],
@@ -273,13 +273,13 @@ def test_init_competition_context_missing_competition_id():
     content_a = MatchSyncableContent(
         "provider_a",
         pd.DataFrame(
-            columns=[
-                "provider_a_match_id",
-                "match_date",
-                "home_team_id",
-                "away_team_id",
-                "season_id",
-            ]
+            {
+                "provider_a_match_id": pd.Series(dtype=str),
+                "match_date": pd.Series(dtype=str),
+                "home_team_id": pd.Series(dtype=str),
+                "away_team_id": pd.Series(dtype=str),
+                "season_id": pd.Series(dtype=str),
+            }
         ),
     )
 
@@ -301,14 +301,13 @@ def test_init_competition_context_false_null_competition_id():
             MatchSyncableContent(
                 "provider_a",
                 pd.DataFrame(
-                    columns=[
-                        "provider_a_match_id",
-                        "match_date",
-                        "home_team_id",
-                        "away_team_id",
-                        "competition_id",
-                        "season_id",
-                    ]
+                    {
+                        "provider_a_match_id": pd.Series(dtype=str),
+                        "match_date": pd.Series(dtype=str),
+                        "home_team_id": pd.Series(dtype=str),
+                        "away_team_id": pd.Series(dtype=str),
+                        "season_id": pd.Series(dtype=str),
+                    }
                 ),
             )
         ],
@@ -325,14 +324,18 @@ def test_init_competition_context_false_null_competition_id():
 @pytest.mark.parametrize(
     "a_match_date, b_match_date, expose_matchday, n_synchronize_on_adjusted_dates, n_synchronize_on_matchday, expected_matches",
     [
-        # # ensure no methods hit with perfect match
+        # ensure no methods hit with perfect match
         ("2025-01-01", "2025-01-01", False, 0, 0, 1),
-        # # ensure only adjusted dates if one day away and no matchday
-        ("2025-01-01", "2025-01-02", False, 12, 0, 1),
-        # # ensure no matches if not the same date + no matchday
-        ("2025-01-01", "2025-01-08", False, 12, 0, 0),
+        # ensure only adjusted dates if one day away and no matchday
+        ("2025-01-01", "2025-01-02", False, 14, 0, 1),
+        # ensure that dates within [-3,3] range match
+        ("2025-01-01", "2025-01-04", False, 14, 0, 1),
+        # ensure that dates within [-3,3] range match
+        ("2025-01-01", "2024-12-29", False, 14, 0, 1),
+        # ensure no matches if not the same date + no matchday
+        ("2025-01-01", "2025-01-05", False, 14, 0, 0),
         # ensure match if not the same date + exposed matchday
-        ("2025-01-01", "2025-01-08", True, 12, 1, 1),
+        ("2025-01-01", "2025-01-05", True, 14, 1, 1),
     ],
 )
 def test_synchronize_pair(

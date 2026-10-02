@@ -5,11 +5,8 @@ Let's set the stage with some example code (from [Getting Started](./getting_sta
 ```python linenums="1"
 from glass_onion import PlayerSyncEngine
 
-engine = PlayerSyncEngine(
-    content=[impect_content, statsbomb_content],
-    verbose=True
-)
-result = engine.synchronize() 
+engine = PlayerSyncEngine(content=[impect_content, statsbomb_content], verbose=True)
+result = engine.synchronize()
 ```
 
 In general, Glass Onion takes a list of [SyncableContent][glass_onion.engine.SyncableContent] and uses the logic in a [SyncEngine][glass_onion.engine.SyncEngine] to sync one pair at a time. The results of all pairs are then merged together and deduplicated. Each object type corresponds to a subclass of [SyncEngine][glass_onion.engine.SyncEngine] that overrides [synchronize_pair()][glass_onion.engine.SyncEngine.synchronize_pair] to define how pairs are synchronized in [synchronize()][glass_onion.engine.SyncEngine.synchronize], which contains wrapper logic for the entire process. 
