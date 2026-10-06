@@ -56,6 +56,7 @@ nav:
       - Match: reference/match.md
       - Team: reference/team.md
       - Player: reference/player.md
+      - Resolver: reference/resolver.md
       - Utilities: reference/utils.md
   - "Integrating Glass Onion": integrating.md
   - Contributing: contributing.md
