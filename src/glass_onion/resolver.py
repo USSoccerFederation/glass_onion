@@ -31,7 +31,7 @@ def normalize_id(i: Hashable) -> Hashable | None:
     """
     Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects.
 
-    Missing values (`None`, NaN, `pd.NA`, `pd.NaT`), blank strings, and the strings "<na>" and "null" (in any casing) are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
+    Missing values (`None`, NaN, `pd.NA`), blank strings, and the strings "<na>", "nan", "none" and "null" (in any casing, as left by casting missing values to strings) are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
 
     Args:
         i (collections.abc.Hashable): a provider ID, as found in a [Record][glass_onion.resolver.Record]'s `ids`.
@@ -42,7 +42,7 @@ def normalize_id(i: Hashable) -> Hashable | None:
     if pd.api.types.is_scalar(i) and pd.isna(cast(Any, i)):
         return None
     if isinstance(i, str):
-        return None if i.strip() == "" or i.strip().lower() in ["<na>", "null"] else i
+        return None if i.strip() == "" or i.strip().lower() in ["<na>", "nan", "none", "null"] else i
     if isinstance(i, Real):
         return str(int(i)) if float(i).is_integer() else str(i)
     return i

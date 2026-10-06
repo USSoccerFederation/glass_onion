@@ -419,6 +419,9 @@ def test_resolve_ignores_missing_ids():
         record("raw", "Lindsey Heaps", provider_a="111", provider_b="NULL"),
         record("raw", "Jaedyn Shaw", provider_a="112", provider_b="Null"),
         record("raw", "Catarina Macario", provider_a="113", provider_b="<na>"),
+        record("raw", "Emily Fox", provider_a="114", provider_b="nan"),
+        record("raw", "Casey Krueger", provider_a="115", provider_b="NaN"),
+        record("raw", "Ashley Sanchez", provider_a="116", provider_b="None"),
     ]
 
     resolver.resolve(proposals)
@@ -426,10 +429,34 @@ def test_resolve_ignores_missing_ids():
     assert_added(resolver, proposals)
     assert_rejected(resolver, [])
     assert component_ids(resolver) == objects(
-        *({"provider_a_player_id": str(i)} for i in range(101, 114))
+        *({"provider_a_player_id": str(i)} for i in range(101, 117))
     )
     # the records themselves are carried along untouched
     assert resolver.components()[0][1][0]["ids"]["provider_b_player_id"] is None
+
+
+@pytest.mark.parametrize("missing", [None, np.nan, pd.NA, "", "nan", "NaN", "None", "<NA>", "null"])
+@pytest.mark.parametrize("batches", ["together", "partial first", "full first"])
+def test_resolve_full_record_supersedes_record_with_missing_id(missing, batches):
+    # a missing ID is no ID at all: it can't conflict with a real one, so the record holding every ID replaces the partial one
+    resolver = ObjectResolver()
+    partial = record("raw", "Alex Morgan", provider_a="101", provider_b="201", provider_c=missing)
+    full = record("raw", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301")
+
+    if batches == "together":
+        resolver.resolve([partial, full])
+    elif batches == "partial first":
+        resolver.resolve([partial])
+        resolver.resolve([full])
+    else:
+        resolver.resolve([full])
+        resolver.resolve([partial])
+
+    assert_rejected(resolver, [])
+    assert component_ids(resolver) == objects(
+        {"provider_a_player_id": "101", "provider_b_player_id": "201", "provider_c_player_id": "301"}
+    )
+    assert [r for _, rs in resolver.components() for r in rs] == [full]
 
 
 def test_resolve_keeps_zero_id():
