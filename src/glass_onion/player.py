@@ -426,18 +426,25 @@ class PlayerSyncEngine(SyncEngine):
             for p in input_field_options
         ]
 
-        # fifth layer: simple jersey number/team match if allow_team_only_layer is TRUE
-        if self.allow_team_only_layer:
-            layer5_fields = ["jersey_number", "team_id"]
-            layer5_title = "Layer 5: jersey number x team"
-            if "jersey_number" not in self.join_columns:
-                # jersey number is not reliable
+        # fifth layer: simple jersey number/team match
+        layer5_fields = ["jersey_number", "team_id"]
+        layer5_title = "Layer 5: jersey number x team"
+        include_layer5 = True
+        if "jersey_number" not in self.join_columns:
+            # jersey number is not reliable
+            if self.allow_team_only_layer:
                 self.verbose_log(
                     "Removing `jersey_number` from Layer 5 processing because it's been marked unreliable"
                 )
                 layer5_fields.remove("jersey_number")
                 layer5_title = "Layer 5: team"
+            else:
+                self.verbose_log(
+                    "Skipping Layer 5 because `jersey_number` has been marked unreliable and team-only matching is disabled"
+                )
+                include_layer5 = False
 
+        if include_layer5:
             sync_strategies += [
                 PlayerSyncLayer(
                     title=layer5_title,
@@ -446,11 +453,6 @@ class PlayerSyncEngine(SyncEngine):
                     threshold=0,
                 )
             ]
-        else:
-            self.verbose_log(
-                "Skipping Layer 5 processing because `allow_team_only_layer` is FALSE"
-            )
-
 
         self.verbose_log(
             f"Collected {len(sync_strategies)} possible sync strategies. Applying one by one until we run out of rows..."
