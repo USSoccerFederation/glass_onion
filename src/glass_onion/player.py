@@ -4,7 +4,7 @@ import pandas as pd
 import pandera.pandas as pa
 from pandera import Field, Column
 from pandera.typing import Series
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 from glass_onion.engine import SyncableContent, SyncEngine
 from glass_onion.utils import dataframe_coalesce
@@ -113,6 +113,7 @@ class PlayerSyncLayer:
         input_fields: Tuple[str, str] = ("player_name", "player_name"),
         other_equal_fields: list[str] = ["birth_date", "team_id"],
         threshold: float = 0.75,
+        date_adjustment_input: Literal[1, 2] = 1,
     ):
         """
         Creates a new synchronization layer object.
@@ -121,6 +122,7 @@ class PlayerSyncLayer:
             match_methodology (glass_onion.player.PlayerSyncSimilarityMethod): see [PlayerSyncSimilarityMethod][glass_onion.player.PlayerSyncSimilarityMethod] for options.
             date_adjustment (pandas.Timedelta): a time period to adjust `birth_date` by for this layer.
             swap_birth_month_day (bool): a flag for if this layer should swap birth day and month AFTER date adjustment.
+            date_adjustment_input (Literal[1, 2]): which input of the pair (`input1` or `input2`) has its `birth_date` adjusted and/or swapped.
             input_fields (Tuple[str, str]): a two-tuple containing the column names to use for player name similarity. Possible options for tuple values: `player_name`, `player_nickname`
             other_equal_fields (list[str]): a list of columns that must be equal between the two PlayerSyncableContent datasets in order for an identifier to be synchronized validly.
             threshold (float): the threshold to use for string similarity when match_methodology is PlayerSyncSimilarityMethod.COSINE` or PlayerSyncSimilarityMethod.FUZZY`.
@@ -128,6 +130,7 @@ class PlayerSyncLayer:
         self.title = title
         self.date_adjustment = date_adjustment
         self.swap_birth_month_day = swap_birth_month_day
+        self.date_adjustment_input = date_adjustment_input
         self.input_fields = input_fields
         self.other_equal_fields = other_equal_fields
         self.similarity_threshold = threshold
@@ -141,7 +144,12 @@ class PlayerSyncEngine(SyncEngine):
     See `synchronize_pair()`[glass_onion.player.PlayerSyncEngine.synchronize_pair] for methodology details.
     """
 
-    def __init__(self, content: list[SyncableContent], verbose: bool = False):
+    def __init__(
+        self,
+        content: list[SyncableContent],
+        verbose: bool = False,
+        allow_team_only_layer: bool = True,
+    ):
         """
         Creates a new PlayerSyncEngine object.
 
@@ -151,9 +159,11 @@ class PlayerSyncEngine(SyncEngine):
         Args:
             content (list[str]): a list of SyncableContent objects.
             verbose (bool): a flag to verbose logging. This will be `extremely` verbose, allowing new SyncEngine developers and those integrating SyncEngine into their workflows to see the interactions between different logical layers during synchronization.
+            allow_team_only_layer (bool): a flag for whether the last layer of [synchronize_pair()][glass_onion.player.PlayerSyncEngine.synchronize_pair] may match on `team_id` alone when `jersey_number` is unreliable. That layer has no minimum name similarity, so only enable this when `team_id` is narrow enough (IE: one team in one match) that any remaining pair of players on the same team is likely the same player.
         """
         join_cols = ["jersey_number", "team_id", "player_name"]
         super().__init__("player", content, join_cols, verbose)
+        self.allow_team_only_layer = allow_team_only_layer
         # check if certain columns are empty / unreliable
         original_join_columns = join_cols.copy()
         for j in original_join_columns:
@@ -209,8 +219,9 @@ class PlayerSyncEngine(SyncEngine):
             and "birth_date" in input2.data.columns
         ):
             date_format = "%Y-%d-%m" if layer.swap_birth_month_day else "%Y-%m-%d"
-            input1.data.birth_date = (
-                pd.to_datetime(input1.data.birth_date) + layer.date_adjustment
+            adjusted = input1 if layer.date_adjustment_input == 1 else input2
+            adjusted.data.birth_date = (
+                pd.to_datetime(adjusted.data.birth_date) + layer.date_adjustment
             ).dt.strftime(date_format)
 
         if layer.match_methodology == PlayerSyncSimilarityMethod.NAIVE:
@@ -305,7 +316,7 @@ class PlayerSyncEngine(SyncEngine):
             2. Account for players with different birth dates across data providers (timezones, human error, etc) by adjusting `birth_date` in one dataset in the pair by -1 to 1 days and/or swapping the month and day, then attempting synchronization using `birth_date`, `team_id`, and a combination of `player_name` and `player_nickname`. This process is then repeated for the other dataset in the pair.
             3. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with a minimum 75% cosine similarity threshold for player name. Additionally, require that `team_id` is equal for matches that meet the similarity threshold.
             4. Attempt to join remaining records using "naive similarity": looking for normalized parts of one record's `player name` (or `player_nickname`) that exist in another's. Additionally, require that `team_id` is equal for matches found via this method.
-            5. Attempt to join remaining records using combinations of `player_name` and `player_nickname` with no minimum cosine similarity threshold. Additionally, require that `team_id` is equal.
+            5. Attempt to join remaining records using `player_name` with no minimum cosine similarity threshold. Additionally, require that `jersey_number` and `team_id` are equal. If `jersey_number` is unreliable (see [PlayerSyncEngine.__init__()][glass_onion.player.PlayerSyncEngine.__init__]), only require that `team_id` is equal, or skip this layer if `allow_team_only_layer` is False.
 
         Args:
             input1 (glass_onion.SyncableContent): a PlayerSyncableContent object from `PlayerSyncEngine.content`
@@ -373,24 +384,20 @@ class PlayerSyncEngine(SyncEngine):
             and "birth_date" in input2.data.columns
             and len(input2.data[input2.data["birth_date"].notna()]) == len(input2.data)
         ):
-            for p in input_field_options:
-                sync_strategies += [
-                    PlayerSyncLayer(
-                        title="Layer 2: cosine similarity x birth date x team",
-                        date_adjustment=pd.Timedelta(days=d),
-                        input_fields=p,
-                    )
-                    for d in range(-1, 1)
-                ]
-                sync_strategies += [
-                    PlayerSyncLayer(
-                        title="Layer 2: cosine similarity x birth date x team",
-                        date_adjustment=pd.Timedelta(days=d),
-                        swap_birth_month_day=True,
-                        input_fields=p,
-                    )
-                    for d in range(-1, 1)
-                ]
+            # adjust input1's birth dates first, then repeat for input2's
+            for adjusted_input in [1, 2]:
+                for p in input_field_options:
+                    sync_strategies += [
+                        PlayerSyncLayer(
+                            title=f"Layer 2: cosine similarity x birth date x team (input {adjusted_input} birth date adjusted)",
+                            date_adjustment=pd.Timedelta(days=d),
+                            swap_birth_month_day=swap,
+                            input_fields=p,
+                            date_adjustment_input=adjusted_input,
+                        )
+                        for swap in [False, True]
+                        for d in range(-1, 2)
+                    ]
         else:
             self.verbose_log(
                 "Skipping birth date matching strategies because `birth_date` field is not reliable"
@@ -419,25 +426,31 @@ class PlayerSyncEngine(SyncEngine):
             for p in input_field_options
         ]
 
-        # fifth layer: simple jersey number/team match
-        layer5_fields = ["jersey_number", "team_id"]
-        layer5_title = "Layer 5: jersey number x team"
-        if "jersey_number" not in self.join_columns:
-            # jersey number is not reliable
-            self.verbose_log(
-                "Removing `jersey_number` from Layer 5 processing because it's been marked unreliable"
-            )
-            layer5_fields.remove("jersey_number")
-            layer5_title = "Layer 5: team"
+        # fifth layer: simple jersey number/team match if allow_team_only_layer is TRUE
+        if self.allow_team_only_layer:
+            layer5_fields = ["jersey_number", "team_id"]
+            layer5_title = "Layer 5: jersey number x team"
+            if "jersey_number" not in self.join_columns:
+                # jersey number is not reliable
+                self.verbose_log(
+                    "Removing `jersey_number` from Layer 5 processing because it's been marked unreliable"
+                )
+                layer5_fields.remove("jersey_number")
+                layer5_title = "Layer 5: team"
 
-        sync_strategies += [
-            PlayerSyncLayer(
-                title=layer5_title,
-                date_adjustment=None,
-                other_equal_fields=layer5_fields,
-                threshold=0,
+            sync_strategies += [
+                PlayerSyncLayer(
+                    title=layer5_title,
+                    date_adjustment=None,
+                    other_equal_fields=layer5_fields,
+                    threshold=0,
+                )
+            ]
+        else:
+            self.verbose_log(
+                "Skipping Layer 5 processing because `allow_team_only_layer` is FALSE"
             )
-        ]
+
 
         self.verbose_log(
             f"Collected {len(sync_strategies)} possible sync strategies. Applying one by one until we run out of rows..."

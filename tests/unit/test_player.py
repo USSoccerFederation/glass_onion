@@ -502,3 +502,206 @@ def test_synchronize_pair(
     assert isinstance(result, PlayerSyncableContent)
     assert len(result.data) == 1
     assert spy.call_count == expected_layers
+
+
+def test_synchronize_pair_birth_date_layers_cover_both_inputs(mocker):
+    left_player = pd.DataFrame(
+        [
+            {
+                "provider_a_player_id": "1",
+                "player_name": "Abby Wambach",
+                "player_nickname": "A. Wambach",
+                "team_id": "A",
+                "jersey_number": "1",
+                "birth_date": "1970-01-02",
+            }
+        ]
+    )
+    left = PlayerSyncableContent(
+        "provider_a",
+        data=left_player,
+    )
+
+    # different teams, so no layer matches and every strategy is tried
+    right_player = left_player.copy()
+    right_player.rename({ "provider_a_player_id": "provider_b_player_id"}, axis=1, inplace=True)
+    right_player["team_id"] = "B"
+    right = PlayerSyncableContent(
+        "provider_b",
+        data=right_player,
+    )
+
+    engine = PlayerSyncEngine([left, right], verbose=True)
+    spy = mocker.spy(engine, "synchronize_using_layer")
+    engine.synchronize_pair(left, right)
+
+    layers = [c.args[2] for c in spy.call_args_list if c.args[2].title.startswith("Layer 2")]
+    expected = {
+        (adjusted_input, swap, days, fields)
+        for adjusted_input in [1, 2]
+        for swap in [False, True]
+        for days in [-1, 0, 1]
+        for fields in [
+            ("player_name", "player_name"),
+            ("player_name", "player_nickname"),
+            ("player_nickname", "player_name"),
+            ("player_nickname", "player_nickname"),
+        ]
+    }
+    actual = [
+        (l.date_adjustment_input, l.swap_birth_month_day, l.date_adjustment.days, l.input_fields)
+        for l in layers
+    ]
+    assert len(actual) == len(expected)
+    assert set(actual) == expected
+    # input1's birth dates are adjusted before input2's
+    assert [a[0] for a in actual] == sorted(a[0] for a in actual)
+
+
+@pytest.mark.parametrize(
+    "date_adjustment_input, expected_matches",
+    [
+        # 2001-05-11 + 1 day, with month/day swapped, is 2001-12-05
+        (2, 1),
+        # no adjustment of 2001-12-05 by +1 day (with or without a swap) gives 2001-05-11
+        (1, 0),
+    ],
+)
+def test_synchronize_using_layer_adjusts_chosen_input(
+    date_adjustment_input: int, expected_matches: int
+):
+    left = PlayerSyncableContent(
+        "provider_a",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_a_player_id": "1",
+                    "player_name": "Mia Hamm",
+                    "player_nickname": "M. Hamm",
+                    "team_id": "A",
+                    "jersey_number": "1",
+                    "birth_date": "2001-12-05",
+                }
+            ]
+        ),
+    )
+    right = PlayerSyncableContent(
+        "provider_b",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_b_player_id": "1",
+                    "player_name": "Mia Hamm",
+                    "player_nickname": "M. Hamm",
+                    "team_id": "A",
+                    "jersey_number": "0",
+                    "birth_date": "2001-05-11",
+                }
+            ]
+        ),
+    )
+
+    engine = PlayerSyncEngine([left, right], verbose=True)
+    layer = PlayerSyncLayer(
+        title="test layer",
+        date_adjustment=pd.Timedelta(days=1),
+        swap_birth_month_day=True,
+        date_adjustment_input=date_adjustment_input,
+    )
+    result = engine.synchronize_using_layer(left, right, layer)
+    assert len(result) == expected_matches
+
+
+def test_synchronize_pair_matches_on_input2_birth_date_adjustment(mocker):
+    # only adjusting input2 (2001-05-11 + 1 day, month/day swapped) gives input1's birth date
+    left = PlayerSyncableContent(
+        "provider_a",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_a_player_id": "1",
+                    "player_name": "Carli Lloyd",
+                    "player_nickname": "C. Lloyd",
+                    "team_id": "A",
+                    "jersey_number": "1",
+                    "birth_date": "2001-12-05",
+                }
+            ]
+        ),
+    )
+    right = PlayerSyncableContent(
+        "provider_b",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_b_player_id": "1",
+                    "player_name": "Carli Lloyd",
+                    "player_nickname": "C. Lloyd",
+                    "team_id": "A",
+                    "jersey_number": "0",
+                    "birth_date": "2001-05-11",
+                }
+            ]
+        ),
+    )
+
+    engine = PlayerSyncEngine([left, right], verbose=True)
+    spy = mocker.spy(engine, "synchronize_using_layer")
+    result = engine.synchronize_pair(left, right)
+
+    assert len(result.data) == 1
+    matched = [c.args[2] for c, r in zip(spy.call_args_list, spy.spy_return_list) if len(r) > 0]
+    assert len(matched) == 1
+    assert matched[0].title.startswith("Layer 2")
+    assert matched[0].date_adjustment_input == 2
+    assert matched[0].swap_birth_month_day
+    assert matched[0].date_adjustment == pd.Timedelta(days=1)
+
+
+@pytest.mark.parametrize(
+    "allow_team_only_layer, expected_matches",
+    [
+        (True, 1),
+        (False, 0),
+    ],
+)
+def test_synchronize_pair_team_only_layer(
+    allow_team_only_layer: bool, expected_matches: int, mocker
+):
+    # no jersey numbers and names with nothing in common: only a team-only Layer 5 can match these
+    left = PlayerSyncableContent(
+        "provider_a",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_a_player_id": "1",
+                    "player_name": "Landon Donovan",
+                    "player_nickname": "Landon Donovan",
+                    "team_id": "A",
+                }
+            ]
+        ),
+    )
+    right = PlayerSyncableContent(
+        "provider_b",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_b_player_id": "1",
+                    "player_name": "Clint Dempsey",
+                    "player_nickname": "Clint Dempsey",
+                    "team_id": "A",
+                }
+            ]
+        ),
+    )
+
+    engine = PlayerSyncEngine(
+        [left, right], verbose=True, allow_team_only_layer=allow_team_only_layer
+    )
+    spy = mocker.spy(engine, "synchronize_using_layer")
+    result = engine.synchronize_pair(left, right)
+
+    assert len(result.data) == expected_matches
+    titles = [c.args[2].title for c in spy.call_args_list]
+    assert ("Layer 5: team" in titles) == allow_team_only_layer
