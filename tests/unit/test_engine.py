@@ -210,6 +210,43 @@ def test_synchronize_with_error_cases(
         "synchronize_with_cosine_similarity",
     ],
 )
+def test_synchronize_with_invalid_data_frames_forcing_zero_results(method: str):
+    data = pd.DataFrame(
+        {
+            "provider_a_object_id": range(1, 3),
+            "provider_b_object_id": range(1, 3),
+            "object_name": [pd.NA] * 2,
+        }
+    )
+
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=data,
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=data,
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+
+    result = getattr(engine, method)(
+        input1=left, input2=right, fields=["object_name", "object_name"]
+    )
+    assert len(result) == 0
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "synchronize_with_naive_match",
+        "synchronize_with_fuzzy_match",
+        "synchronize_with_cosine_similarity",
+    ],
+)
 def test_synchronize_sample_mixed_nulls(method: str):
     left = SyncableContent(
         "object",

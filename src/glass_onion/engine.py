@@ -245,9 +245,15 @@ class SyncEngine:
             input2.data[fields[1]].notna(), [fields[1], input2.id_field]
         ]
 
-        assert len(name_population) > 0 and len(name_sample) > 0, (
-            "Both SyncableContent objects must have > 0 non-null elements in `data`."
-        )
+        # if one or both of the dataframes are now empty, just return an empty result
+        # with both fields
+        if not (len(name_population) > 0 and len(name_sample) > 0):
+            return pd.DataFrame(
+                {
+                    i: pd.Series(dtype=str)
+                    for i in [input1.id_field, input2.id_field]
+                }
+            ) 
 
         normalized_name_population = series_normalize(name_population[fields[0]])
         normalized_name_sample = series_normalize(name_sample[fields[1]])
@@ -331,9 +337,16 @@ class SyncEngine:
             input2.data[fields[1]].notna(), fields[1]
         ].reset_index(drop=True)
 
-        assert len(input1_fields) > 0 and len(input2_fields) > 0, (
-            "Both SyncableContent objects must have > 0 non-null elements in `data`."
-        )
+        # if one or both of the dataframes are now empty, just return an empty result
+        # with both fields
+        if not (len(input1_fields) > 0 and len(input2_fields) > 0):
+            return pd.DataFrame(
+                {
+                    i: pd.Series(dtype=str)
+                    for i in [input1.id_field, input2.id_field]
+                }
+            )
+
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0)
 
@@ -412,9 +425,15 @@ class SyncEngine:
             input2.data[fields[1]].notna(), [fields[1], input2.id_field]
         ]
 
-        assert len(name_population) > 0 and len(name_sample) > 0, (
-            "Both SyncableContent objects must have > 0 non-null elements in `data`."
-        )
+        # if one or both of the dataframes are now empty, just return an empty result
+        # with both fields
+        if not (len(name_population) > 0 and len(name_sample) > 0):
+            return pd.DataFrame(
+                {
+                    i: pd.Series(dtype=str)
+                    for i in [input1.id_field, input2.id_field]
+                }
+            ) 
 
         normalized_name_population = series_normalize(name_population[fields[0]])
         normalized_name_sample = series_normalize(name_sample[fields[1]])
