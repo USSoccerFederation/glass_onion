@@ -261,7 +261,7 @@ def test_init_unreliable_columns():
 
 
 @pytest.mark.parametrize(
-    "layer, method, expected_matches",
+    "layer, method, expected_call_count, expected_matches",
     [
         # base case: ensure string similarity hits
         (
@@ -272,6 +272,7 @@ def test_init_unreliable_columns():
             ),
             "synchronize_with_naive_match",
             1,
+            1,
         ),
         # what if someone passes NULL to string similarity?
         (
@@ -281,6 +282,7 @@ def test_init_unreliable_columns():
             ),
             "synchronize_with_cosine_similarity",
             1,
+            1,
         ),
         # what if we use different string fields? This won't match in a small sample
         (
@@ -288,6 +290,7 @@ def test_init_unreliable_columns():
                 title="test layer", input_fields=("player_name", "player_nickname")
             ),
             "synchronize_with_cosine_similarity",
+            1,
             0,
         ),
         # what if we use different string fields AND drop the threshold? this will now match
@@ -299,6 +302,7 @@ def test_init_unreliable_columns():
             ),
             "synchronize_with_cosine_similarity",
             1,
+            1,
         ),
         # what if we require certain fields to be equal? This shouldn't match because jersey numbers are different
         (
@@ -306,6 +310,7 @@ def test_init_unreliable_columns():
                 title="test layer", other_equal_fields=["team_id", "jersey_number"]
             ),
             "synchronize_with_cosine_similarity",
+            0,
             0,
         ),
         # what if we adjust the birth date one day forward? This shouldn't find any matches because the default other_equal_fields includes birth_date
@@ -315,6 +320,7 @@ def test_init_unreliable_columns():
                 date_adjustment=pd.Timedelta(days=1),
             ),
             "synchronize_with_cosine_similarity",
+            0,
             0,
         ),
         # what if we adjust the birth date one day forward AND ignore birth_date? This should find matches
@@ -326,17 +332,19 @@ def test_init_unreliable_columns():
             ),
             "synchronize_with_cosine_similarity",
             1,
+            1,
         ),
         # what if we adjust the birth date one day forward AND swap the month/day? This shouldn't find any matches because the default other_equal_fields includes birth_date
         (
             PlayerSyncLayer(title="test layer", swap_birth_month_day=True),
             "synchronize_with_cosine_similarity",
             0,
+            0,
         ),
     ],
 )
 def test_synchronize_using_layer(
-    layer: PlayerSyncLayer, method: str, expected_matches: int, mocker
+    layer: PlayerSyncLayer, method: str, expected_call_count: int, expected_matches: int, mocker
 ):
     left = PlayerSyncableContent(
         "provider_a",
@@ -348,7 +356,7 @@ def test_synchronize_using_layer(
                     "player_nickname": "AB",
                     "team_id": "A",
                     "jersey_number": "1",
-                    "birth_date": "1970-01-02",
+                    "birth_date": "1971-01-02",
                 }
             ]
         ),
@@ -364,7 +372,7 @@ def test_synchronize_using_layer(
                     "player_nickname": "AB",
                     "team_id": "A",
                     "jersey_number": "0",
-                    "birth_date": "1970-01-02",
+                    "birth_date": "1971-01-02",
                 }
             ]
         ),
@@ -374,12 +382,13 @@ def test_synchronize_using_layer(
     spy = mocker.spy(engine, method)
 
     result = engine.synchronize_using_layer(left, right, layer)
-    if method == "synchronize_with_naive_match":
-        spy.assert_called_once_with(left, right, layer.input_fields)
-    else:
-        spy.assert_called_once_with(
-            left, right, layer.input_fields, layer.similarity_threshold
-        )
+    assert spy.call_count == expected_call_count
+    if expected_call_count > 0:
+        assert spy.call_args_list[0][1]["fields"] == layer.input_fields
+
+        if method == "synchronize_with_cosine_similarity":
+            assert spy.call_args_list[0][1]["threshold"] == layer.similarity_threshold
+
     assert set(["provider_a_player_id", "provider_b_player_id"]) == set(result.columns)
 
     assert len(result) == expected_matches
@@ -513,7 +522,7 @@ def test_synchronize_pair_birth_date_layers_cover_both_inputs(mocker):
                 "player_nickname": "A. Wambach",
                 "team_id": "A",
                 "jersey_number": "1",
-                "birth_date": "1970-01-02",
+                "birth_date": "1971-01-02",
             }
         ]
     )
@@ -523,11 +532,11 @@ def test_synchronize_pair_birth_date_layers_cover_both_inputs(mocker):
     )
 
     # different teams, so no layer matches and every strategy is tried
-    right_player = left_player.copy()
+    right_player = left_player.copy(deep=True)
+    right_player["team_id"] = "B"
     right_player.rename(
         {"provider_a_player_id": "provider_b_player_id"}, axis=1, inplace=True
     )
-    right_player["team_id"] = "B"
     right = PlayerSyncableContent(
         "provider_b",
         data=right_player,

@@ -224,63 +224,73 @@ class PlayerSyncEngine(SyncEngine):
                 pd.to_datetime(adjusted.data.birth_date) + layer.date_adjustment
             ).dt.strftime(date_format)
 
+        # if applicable, perform field equality checks before processing string similarity
+        input1_comparable = PlayerSyncableContent(
+            provider=input1.provider,
+            data=input1.data.copy()
+        )
+        input2_comparable = PlayerSyncableContent(
+            provider=input2.provider,
+            data=input2.data.copy()
+        )
+
+        if len(layer.other_equal_fields) > 0:
+            # determine which fields are available for equality checks based on both inputs
+            input1_available_fields = (
+                input1.data.columns[
+                    input1.data.columns.isin(layer.other_equal_fields)
+                ].to_list()
+                if len(layer.other_equal_fields) > 0
+                else []
+            )
+            input2_available_fields = (
+                input2.data.columns[
+                    input2.data.columns.isin(layer.other_equal_fields)
+                ].to_list()
+                if len(layer.other_equal_fields) > 0
+                else []
+            )
+    
+            actual_available_fields = set(input1_available_fields).intersection(set(input2_available_fields))
+            actual_available_fields = list(actual_available_fields)
+
+            for k in actual_available_fields:
+                possible_values = list(set(input1_comparable.data[k].unique()).intersection(set(input2_comparable.data[k].unique())))
+                if len(possible_values) == 0:
+                    return pd.DataFrame(
+                        {
+                            k: pd.Series(dtype=str)
+                            for k in [input1.id_field, input2.id_field]
+                        }
+                    )
+
+                input1_comparable.data = input1_comparable.data[
+                    input1_comparable.data[k].isin(possible_values)
+                ]
+
+                input2_comparable.data = input2_comparable.data[
+                    input2_comparable.data[k].isin(possible_values)
+                ]
+                
+
         if layer.match_methodology == PlayerSyncSimilarityMethod.NAIVE:
             match_result = self.synchronize_with_naive_match(
-                input1, input2, fields=layer.input_fields
+                input1_comparable, input2_comparable, fields=layer.input_fields
             )
         elif layer.match_methodology == PlayerSyncSimilarityMethod.FUZZY:
             match_result = self.synchronize_with_fuzzy_match(
-                input1,
-                input2,
+                input1_comparable,
+                input2_comparable,
                 fields=layer.input_fields,
                 threshold=layer.similarity_threshold,
             )
         else:
             match_result = self.synchronize_with_cosine_similarity(
-                input1,
-                input2,
+                input1_comparable,
+                input2_comparable,
                 fields=layer.input_fields,
                 threshold=layer.similarity_threshold,
             )
-
-        # determine which fields are available for equality checks based on both inputs
-        input1_available_fields = (
-            input1.data.columns[
-                input1.data.columns.isin(layer.other_equal_fields)
-            ].to_list()
-            if len(layer.other_equal_fields) > 0
-            else []
-        )
-        input2_available_fields = (
-            input2.data.columns[
-                input2.data.columns.isin(layer.other_equal_fields)
-            ].to_list()
-            if len(layer.other_equal_fields) > 0
-            else []
-        )
-
-        actual_available_fields = set(input1_available_fields).intersection(set(input2_available_fields))
-        actual_available_fields = list(actual_available_fields)
-
-        if len(actual_available_fields) > 0:
-            match_result = pd.merge(
-                match_result,
-                input1.data[[input1.id_field] + actual_available_fields],
-                how="inner",
-                on=input1.id_field,
-            ).rename({k: f"input1_{k}" for k in actual_available_fields}, axis=1)
-
-            match_result = pd.merge(
-                match_result,
-                input2.data[[input2.id_field] + actual_available_fields],
-                how="inner",
-                on=input2.id_field,
-            ).rename({k: f"input2_{k}" for k in actual_available_fields}, axis=1)
-
-            for f in actual_available_fields:
-                match_result = match_result[
-                    match_result[f"input1_{f}"] == match_result[f"input2_{f}"]
-                ]
 
         # edge case: detect whether one player has been matched to multiple other players (somehow)
         input1_summary = (
@@ -314,7 +324,7 @@ class PlayerSyncEngine(SyncEngine):
         ]
 
         self.verbose_log(
-            f"Using strategy-based cosine-similarity pair synchronization, found {len(synced)} new rows"
+            f"Using strategy-based {layer.match_methodology} pair synchronization, found {len(synced)} new rows"
         )
         return synced
 
