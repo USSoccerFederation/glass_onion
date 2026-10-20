@@ -435,13 +435,19 @@ def test_resolve_ignores_missing_ids():
     assert resolver.components()[0][1][0]["ids"]["provider_b_player_id"] is None
 
 
-@pytest.mark.parametrize("missing", [None, np.nan, pd.NA, "", "nan", "NaN", "None", "<NA>", "null"])
+@pytest.mark.parametrize(
+    "missing", [None, np.nan, pd.NA, "", "nan", "NaN", "None", "<NA>", "null"]
+)
 @pytest.mark.parametrize("batches", ["together", "partial first", "full first"])
 def test_resolve_full_record_supersedes_record_with_missing_id(missing, batches):
     # a missing ID is no ID at all: it can't conflict with a real one, so the record holding every ID replaces the partial one
     resolver = ObjectResolver()
-    partial = record("raw", "Alex Morgan", provider_a="101", provider_b="201", provider_c=missing)
-    full = record("raw", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301")
+    partial = record(
+        "raw", "Alex Morgan", provider_a="101", provider_b="201", provider_c=missing
+    )
+    full = record(
+        "raw", "Alex Morgan", provider_a="101", provider_b="201", provider_c="301"
+    )
 
     if batches == "together":
         resolver.resolve([partial, full])
@@ -454,7 +460,11 @@ def test_resolve_full_record_supersedes_record_with_missing_id(missing, batches)
 
     assert_rejected(resolver, [])
     assert component_ids(resolver) == objects(
-        {"provider_a_player_id": "101", "provider_b_player_id": "201", "provider_c_player_id": "301"}
+        {
+            "provider_a_player_id": "101",
+            "provider_b_player_id": "201",
+            "provider_c_player_id": "301",
+        }
     )
     assert [r for _, rs in resolver.components() for r in rs] == [full]
 
