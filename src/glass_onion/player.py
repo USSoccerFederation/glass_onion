@@ -243,13 +243,25 @@ class PlayerSyncEngine(SyncEngine):
                 threshold=layer.similarity_threshold,
             )
 
-        actual_available_fields = (
+        # determine which fields are available for equality checks based on both inputs
+        input1_available_fields = (
             input1.data.columns[
                 input1.data.columns.isin(layer.other_equal_fields)
             ].to_list()
             if len(layer.other_equal_fields) > 0
             else []
         )
+        input2_available_fields = (
+            input2.data.columns[
+                input2.data.columns.isin(layer.other_equal_fields)
+            ].to_list()
+            if len(layer.other_equal_fields) > 0
+            else []
+        )
+
+        actual_available_fields = set(input1_available_fields).intersection(set(input2_available_fields))
+        actual_available_fields = list(actual_available_fields)
+
         if len(actual_available_fields) > 0:
             match_result = pd.merge(
                 match_result,
@@ -294,6 +306,7 @@ class PlayerSyncEngine(SyncEngine):
             how="left",
             on=input2.id_field,
         )
+        match_result
 
         synced = match_result.loc[
             (match_result.input1_num == 1) & (match_result.input2_num == 1),
