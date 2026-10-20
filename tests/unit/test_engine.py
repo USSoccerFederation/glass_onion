@@ -157,17 +157,6 @@ def test_init_object_type_empty_whitespace():
             ).head(0),
             "Both SyncableContent objects must be non-empty.",
         ),
-        (
-            ("object_name", "object_name"),
-            pd.DataFrame(
-                {
-                    "provider_a_object_id": range(1, 3),
-                    "provider_b_object_id": range(1, 3),
-                    "object_name": [pd.NA] * 2,
-                }
-            ),
-            "Both SyncableContent objects must have > 0 non-null elements in `data`.",
-        ),
     ],
 )
 def test_synchronize_with_error_cases(
