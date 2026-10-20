@@ -524,7 +524,9 @@ def test_synchronize_pair_birth_date_layers_cover_both_inputs(mocker):
 
     # different teams, so no layer matches and every strategy is tried
     right_player = left_player.copy()
-    right_player.rename({ "provider_a_player_id": "provider_b_player_id"}, axis=1, inplace=True)
+    right_player.rename(
+        {"provider_a_player_id": "provider_b_player_id"}, axis=1, inplace=True
+    )
     right_player["team_id"] = "B"
     right = PlayerSyncableContent(
         "provider_b",
@@ -535,7 +537,9 @@ def test_synchronize_pair_birth_date_layers_cover_both_inputs(mocker):
     spy = mocker.spy(engine, "synchronize_using_layer")
     engine.synchronize_pair(left, right)
 
-    layers = [c.args[2] for c in spy.call_args_list if c.args[2].title.startswith("Layer 2")]
+    layers = [
+        c.args[2] for c in spy.call_args_list if c.args[2].title.startswith("Layer 2")
+    ]
     expected = {
         (adjusted_input, swap, days, fields)
         for adjusted_input in [1, 2]
@@ -549,7 +553,12 @@ def test_synchronize_pair_birth_date_layers_cover_both_inputs(mocker):
         ]
     }
     actual = [
-        (l.date_adjustment_input, l.swap_birth_month_day, l.date_adjustment.days, l.input_fields)
+        (
+            l.date_adjustment_input,
+            l.swap_birth_month_day,
+            l.date_adjustment.days,
+            l.input_fields,
+        )
         for l in layers
     ]
     assert len(actual) == len(expected)
@@ -650,7 +659,9 @@ def test_synchronize_pair_matches_on_input2_birth_date_adjustment(mocker):
     result = engine.synchronize_pair(left, right)
 
     assert len(result.data) == 1
-    matched = [c.args[2] for c, r in zip(spy.call_args_list, spy.spy_return_list) if len(r) > 0]
+    matched = [
+        c.args[2] for c, r in zip(spy.call_args_list, spy.spy_return_list) if len(r) > 0
+    ]
     assert len(matched) == 1
     assert matched[0].title.startswith("Layer 2")
     assert matched[0].date_adjustment_input == 2
