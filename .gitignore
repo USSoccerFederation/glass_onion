@@ -13,5 +13,7 @@ site/
 .coverage
 htmlcov/
 coverage.xml
+performance-report.md
+performance-baseline.json
 .mypy_cache
 notebooks
