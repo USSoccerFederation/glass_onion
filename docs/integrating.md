@@ -201,11 +201,23 @@ In short, if we can use "proposed results" to form a graph "component" (represen
 We start with our existing set of synced object records from `ussf.object`. 
 
 ```python linenums="1"
+from glass_onion.resolver import ObjectResolver
+
+def spark_to_records(rows, source):
+    # a record is one source row: the IDs it syncs together plus the fields needed to flag it or describe the player
+    records = []
+    for row in rows:
+        row = row.asDict()
+        ids = {k: row[k] for k in id_mask if row.get(k) is not None}
+        if len(ids) > 0:
+            records.append({"source": source, "ids": ids, "meta": {k: row.get(k) for k in meta_columns}})
+    return records
+
 # 0. Grab datasets and format into dataframes
 
 id_mask = ["provider_a_object_id", "provider_b_object_id", "provider_c_object_id"] # and so on and so forth...
 
-object_records = to_records(
+object_records = spark_to_records(
     normalize_ids(spark.read.table("ussf.object"))   # `normalize_ids` omitted; it just turns every id column into a StringType for easier comparison
         .select(id_mask + [
             # ... any additional fields to add ...
@@ -216,7 +228,7 @@ object_records = to_records(
 
 # one record per distinct ID combination, described by the first grouping key it was synced in
 first_seen = Window.partitionBy(*id_mask).orderBy(F.col("grouping_key").asc_nulls_last(), "data_provider")
-raw_records = to_records(
+raw_records = spark_to_records(
     normalize_ids(spark.read.table("preliminary_set"))
         .filter(" OR ".join([f"{k} IS NOT NULL" for k in id_mask]))
         .withColumn("first_seen", F.row_number().over(first_seen))
@@ -233,12 +245,12 @@ We can then generate the graph of identifiers via [ObjectResolver][glass_onion.r
 
 # 1. build the graph from the sources of truth (ussf.object)
 graph = ObjectResolver()
-graph.resolve([r for r in player_records if len(r["ids"]) > 1])
+graph.resolve([r for r in object_records if len(r["ids"]) > 1])
 
 all_added, all_rejected = graph.added, graph.rejected
 # a single ID can't conflict; add_record skips it if a larger record already holds it
 added_singles = []
-for r in player_records:
+for r in object_records:
     if len(r["ids"]) == 1 and graph.add_record(r):
         added_singles.append(r)
 
