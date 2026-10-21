@@ -7,6 +7,7 @@ from glass_onion.utils import (
     apply_cosine_similarity,
     dataframe_coalesce,
     series_normalize,
+    string_pair_cosine_similarity,
 )
 from itertools import combinations
 
@@ -195,9 +196,29 @@ class SyncEngine:
         self.cosine_similarity_cache: dict[
             Tuple[Tuple[str, ...], Tuple[str, ...]], pd.DataFrame
         ] = {}
+        # series_normalize() results keyed by raw string: normalization is per-string, so each string only needs it once
+        self.normalized_strings: dict[str, str] = {}
         self.object_type = object_type
         self.verbose = verbose
         self.join_columns = join_columns
+
+    def normalize(self, values: "pd.Series[str]") -> "pd.Series[str]":
+        """
+        Cached wrapper around [series_normalize][glass_onion.utils.series_normalize]: only strings this engine hasn't normalized yet are normalized (in one batch).
+
+        Args:
+            values (pd.Series[str]): a pandas.Series of non-null strings.
+
+        Returns:
+            A pandas.Series with normalized strings and the same index as `values`.
+        """
+        missing = pd.Series(
+            list(dict.fromkeys(v for v in values if v not in self.normalized_strings)),
+            dtype=object,
+        )
+        if len(missing) > 0:
+            self.normalized_strings.update(zip(missing, series_normalize(missing)))
+        return values.map(self.normalized_strings)
 
     def verbose_log(self, msg: Any):
         """
@@ -269,8 +290,8 @@ class SyncEngine:
                 }
             ) 
 
-        normalized_name_population = series_normalize(name_population[fields[0]])
-        normalized_name_sample = series_normalize(name_sample[fields[1]])
+        normalized_name_population = self.normalize(name_population[fields[0]])
+        normalized_name_sample = self.normalize(name_sample[fields[1]])
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0) * 100
 
@@ -455,8 +476,8 @@ class SyncEngine:
                 }
             ) 
 
-        normalized_name_population = series_normalize(name_population[fields[0]])
-        normalized_name_sample = series_normalize(name_sample[fields[1]])
+        normalized_name_population = self.normalize(name_population[fields[0]])
+        normalized_name_sample = self.normalize(name_sample[fields[1]])
 
         # only the first occurrence of each normalized string can ever be matched,
         # so collapse both sides to {string: id of first occurrence} (dicts keep insertion order).
