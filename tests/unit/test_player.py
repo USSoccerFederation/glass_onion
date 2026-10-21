@@ -20,6 +20,7 @@ import pytest
         "2026-01-26T00:00Z",
         "2026-01-26T00:00:00Z",
         "2026-01-26T00:00:00.000Z",
+        None,
     ],
 )
 def test_init_syncable_content_birth_date_is_valid_format(value: str):
