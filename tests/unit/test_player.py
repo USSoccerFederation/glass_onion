@@ -561,6 +561,8 @@ def test_synchronize_pair_birth_date_layers_cover_both_inputs(mocker):
         for adjusted_input in [1, 2]
         for swap in [False, True]
         for days in [-1, 0, 1]
+        # a 0-day adjustment is only applied to input1, since adjusting input2 by 0 days compares the same dates
+        if not (adjusted_input == 2 and days == 0)
         for fields in [
             ("player_name", "player_name"),
             ("player_name", "player_nickname"),

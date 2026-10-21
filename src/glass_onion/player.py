@@ -401,7 +401,8 @@ class PlayerSyncEngine(SyncEngine):
             and "birth_date" in input2.data.columns
             and len(input2.data[input2.data["birth_date"].notna()]) == len(input2.data)
         ):
-            # adjust input1's birth dates first, then repeat for input2's
+            # adjust input1's birth dates first, then repeat for input2's. A 0-day adjustment (swapped or not) compares
+            # the same dates no matter which input is adjusted, so only input1 gets one
             for adjusted_input in [1, 2]:
                 for p in input_field_options:
                     sync_strategies += [
@@ -413,7 +414,7 @@ class PlayerSyncEngine(SyncEngine):
                             date_adjustment_input=adjusted_input,
                         )
                         for swap in [False, True]
-                        for d in range(-1, 2)
+                        for d in ([-1, 0, 1] if adjusted_input == 1 else [-1, 1])
                     ]
         else:
             self.verbose_log(
