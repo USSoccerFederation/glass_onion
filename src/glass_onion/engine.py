@@ -385,6 +385,31 @@ class SyncEngine:
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0)
 
+        # fast path: with one name on each side, the only possible pair can be scored without fitting a vectorizer
+        if len(input1_fields) == 1 and len(input2_fields) == 1:
+            normalized = self.normalize(pd.concat([input1_fields, input2_fields]))
+            similarity = string_pair_cosine_similarity(
+                normalized.iloc[0], normalized.iloc[1]
+            )
+            if similarity is not None:
+                if similarity < adjusted_threshold:
+                    return pd.DataFrame(
+                        {
+                            i: pd.Series(dtype=str)
+                            for i in [input1.id_field, input2.id_field]
+                        }
+                    )
+                return pd.DataFrame(
+                    {
+                        input1.id_field: input1.data.loc[
+                            input1.data[fields[0]].notna(), input1.id_field
+                        ].reset_index(drop=True),
+                        input2.id_field: input2.data.loc[
+                            input2.data[fields[1]].notna(), input2.id_field
+                        ].reset_index(drop=True),
+                    }
+                )
+
         cache_key = (tuple(input1_fields), tuple(input2_fields))
         if cache_key not in self.cosine_similarity_cache:
             self.cosine_similarity_cache[cache_key] = apply_cosine_similarity(

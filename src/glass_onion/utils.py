@@ -1,6 +1,8 @@
 """Utilities for performing object synchronization."""
 
-from typing import Union
+from collections import Counter
+import math
+from typing import Optional, Union
 import pandas as pd
 from unidecode import unidecode
 from scipy.optimize import linear_sum_assignment
@@ -362,6 +364,33 @@ def series_normalize_team_names(input: "pd.Series[str]") -> "pd.Series[str]":
     result = series_normalize(result)
     result = result.str.lower().str.strip()
     return result
+
+
+def string_pair_cosine_similarity(input1: str, input2: str) -> Optional[float]:
+    """
+    Computes the cosine similarity [apply_cosine_similarity][glass_onion.utils.apply_cosine_similarity] would produce for exactly one string on each side, without fitting a vectorizer.
+
+    Args:
+        input1 (str): a normalized string (see [series_normalize][glass_onion.utils.series_normalize]).
+        input2 (str): a normalized string (see [series_normalize][glass_onion.utils.series_normalize]).
+
+    Returns:
+        The cosine similarity of the two strings, or `None` if either string has no n-grams (callers should fall back to `apply_cosine_similarity` for that case).
+    """
+    counts = [Counter(string_ngrams(input1)), Counter(string_ngrams(input2))]
+    if any(len(c) == 0 for c in counts):
+        return None
+
+    vectors = []
+    for c in counts:
+        weights = {
+            ngram: n * (math.log(3 / (1 + sum(ngram in d for d in counts))) + 1)
+            for ngram, n in c.items()
+        }
+        norm = math.sqrt(sum(w * w for w in weights.values()))
+        vectors.append({ngram: w / norm for ngram, w in weights.items()})
+
+    return sum(w * vectors[1].get(ngram, 0.0) for ngram, w in vectors[0].items())
 
 
 def apply_cosine_similarity(
