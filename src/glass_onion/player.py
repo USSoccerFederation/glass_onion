@@ -363,6 +363,8 @@ class PlayerSyncEngine(SyncEngine):
                 other_equal_fields=["jersey_number", "team_id"],
             ),
         )
+        # record which layer produced each pair: lower ranks are stronger, so the engine can resolve conflicting pairs
+        sync_result["sync_rank"] = 0
 
         id_mask = input1.data.columns[input1.data.columns.str.endswith("_player_id")]
         metadata_columns = [
@@ -496,10 +498,11 @@ class PlayerSyncEngine(SyncEngine):
                 remaining_1, remaining_2, strat
             )
             if len(attempt_syncs) > 0:
+                attempt_syncs["sync_rank"] = i + 1
                 sync_result = pd.merge(
                     sync_result, attempt_syncs, on=input1.id_field, how="left"
                 )
-                dataframe_coalesce(sync_result, [input2.id_field])
+                dataframe_coalesce(sync_result, [input2.id_field, "sync_rank"])
                 synced = sync_result.dropna(subset=[input1.id_field, input2.id_field])
 
         final_result = PlayerSyncableContent(

@@ -181,6 +181,7 @@ class SyncEngine:
         )
 
         self.content = content
+        self.conflicts: list[Tuple[Tuple[str, Any], Tuple[str, Any]]] = []
         self.object_type = object_type
         self.verbose = verbose
         self.join_columns = join_columns
@@ -520,7 +521,9 @@ class SyncEngine:
 
         Pair results are combined by treating every synced identifier pair as a link and grouping linked identifiers into one row, so an object can be
         synced through a third provider even if two providers never matched it directly (IE: A <-> C and B <-> C yields A <-> B <-> C).
-        Links are applied in `combinations()` order, and a link is skipped if it would put two identifiers from the same provider in one row.
+        Links are applied strongest first: by the `sync_rank` column of each pair result if present (lower is stronger), then by identifier, so the
+        result doesn't depend on the order of `content`. A link is skipped if it would put two identifiers from the same provider in one row; skipped
+        links are recorded in `SyncEngine.conflicts`.
 
         Args:
             content (list[SyncableContent]): a list of SyncableContent objects that correspond to `object_type`. If `None`, defaults to `self.content`.
@@ -552,24 +555,41 @@ class SyncEngine:
                 node = parent[node]
             return node
 
+        def node_key(node: Tuple[str, Any]) -> Tuple[str, str]:
+            # identifiers can be of mixed types, so compare them as strings
+            return (node[0], str(node[1]))
+
+        # collect every link as (rank, left node, right node) so they can be applied strongest first, independent of
+        # the order of `content`. Pair results without a `sync_rank` column treat every link as equally strong.
+        links: list[Tuple[float, Tuple[str, Any], Tuple[str, Any]]] = []
         for r in results:
             pair_fields = [f for f in id_fields if f in r.data.columns]
-            for row in r.data[pair_fields].itertuples(index=False):
-                nodes = [(f, v) for f, v in zip(pair_fields, row) if pd.notna(v)]
-                if len(nodes) < 2:
-                    continue
+            ranks = (
+                r.data["sync_rank"].fillna(0)
+                if "sync_rank" in r.data.columns
+                else pd.Series(0, index=r.data.index)
+            )
+            for rank, row in zip(ranks, r.data[pair_fields].itertuples(index=False)):
+                nodes = sorted(
+                    [(f, v) for f, v in zip(pair_fields, row) if pd.notna(v)],
+                    key=node_key,
+                )
+                links += [(rank, nodes[0], node) for node in nodes[1:]]
 
-                for node in nodes[1:]:
-                    root_x, root_y = find(nodes[0]), find(node)
-                    if root_x == root_y:
-                        continue
-                    if group_fields[root_x] & group_fields[root_y]:
-                        self.verbose_log(
-                            f"Skipping link {nodes[0]} <-> {node}: would put two identifiers from the same provider in one row"
-                        )
-                        continue
-                    parent[root_y] = root_x
-                    group_fields[root_x] |= group_fields.pop(root_y)
+        for rank, left, right in sorted(
+            links, key=lambda l: (l[0], node_key(l[1]), node_key(l[2]))
+        ):
+            root_x, root_y = find(left), find(right)
+            if root_x == root_y:
+                continue
+            if group_fields[root_x] & group_fields[root_y]:
+                self.verbose_log(
+                    f"Skipping link {left} <-> {right}: would put two identifiers from the same provider in one row"
+                )
+                self.conflicts.append((left, right))
+                continue
+            parent[root_y] = root_x
+            group_fields[root_x] |= group_fields.pop(root_y)
 
         groups: dict[Tuple[str, Any], dict[str, Any]] = {}
         for node in parent:
@@ -657,6 +677,9 @@ class SyncEngine:
 
         if len(self.content) == 1:
             return self.content[0]
+
+        # conflicts accumulate across every synchronize_all_combinations() pass below
+        self.conflicts = []
 
         # first pass: straight matching - approach: agglomerative
         self.verbose_log(
