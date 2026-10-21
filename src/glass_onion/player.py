@@ -40,12 +40,8 @@ class PlayerDataSchema(pa.DataFrameModel):
 
     @pa.check("birth_date")
     def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
-        return (
-            series.dropna()
-            .apply(lambda x: pd.Timestamp(x))
-            .apply(lambda x: x != pd.Timestamp(0))
-            .all()
-        )
+        dt_series = pd.to_datetime(series, format="%Y-%m-%d", errors="coerce").dropna()
+        return len(dt_series) == len(series)
 
 
 class PlayerSyncableContent(SyncableContent):
