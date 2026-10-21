@@ -201,20 +201,6 @@ In short, if we can use "proposed results" to form a graph "component" (represen
 We start with our existing set of synced object records from `ussf.object`. 
 
 ```python linenums="1"
-
-partial_hold_reasons = ["duplicate"]
-
-def held_ids(vouched):
-    # the (provider ID field, ID) pairs that ussf.player_flagged holds; vouched: the pairs that a source of truth places
-    held = set()
-    flagged = normalize_ids(spark.read.table("ussf_data_analytics_staging.ussf.player_flagged"))
-    for row in flagged.select(id_mask + ["flag_reason"]).collect():
-        vs = [(k, row[k]) for k in id_mask if row[k] is not None]
-        if row["flag_reason"] in partial_hold_reasons:
-            vs = [v for v in vs if v not in vouched]
-        held.update(vs)
-    return held
-
 # 0. Grab datasets and format into dataframes
 
 id_mask = ["provider_a_object_id", "provider_b_object_id", "provider_c_object_id"] # and so on and so forth...
@@ -239,6 +225,11 @@ raw_records = to_records(
         .collect(),
     "raw"
 )
+```
+
+We can then generate the graph of identifiers via [ObjectResolver][glass_onion.resolver.ObjectResolver]:
+
+```python linenums="1"
 
 # 1. build the graph from the sources of truth (ussf.object)
 graph = ObjectResolver()
@@ -252,7 +243,22 @@ for r in player_records:
         added_singles.append(r)
 
 all_added = pd.concat([added_overrides, all_added, to_frame(added_singles)], ignore_index=True)
+```
 
+Then, we can layer on our proposals and add any single-identifier proposals to the graph. We hold out any proposals that have previously appeared in our `ussf.object_flagged` table to avoid adding them to a valid object component in the graph.
+
+```python 
+partial_hold_reasons = ["duplicate"]
+
+def held_ids(vouched):
+    held = set()
+    flagged = normalize_ids(spark.read.table("ussf.object_flagged"))
+    for row in flagged.select(id_mask + ["flag_reason"]).collect():
+        vs = [(k, row[k]) for k in id_mask if row[k] is not None]
+        if row["flag_reason"] in partial_hold_reasons:
+            vs = [v for v in vs if v not in vouched]
+        held.update(vs)
+    return held
 
 # `vouched` IDs come from the ussf.object table. We implicitly trust that these are correct.
 vouched = {v for vs in frame_vertices(all_added) for v in vs}
@@ -340,7 +346,7 @@ for ids, records in graph.components():
     # prioritize the object record as a source of truth. If not available, use raw data. Pull metadata values from this place
     meta = (objects or raw or records)[0]["meta"]
     # two steps:
-    # 1. if this row came from the raw data (is net new), then we get the earliest match it appeared in from the dataset
+    # 1. if this row came from the raw data (is net new), then we get the first grouping key it appeared in from the dataset
     #   - if the row came from the object records (or for some reason neither source), then set to None
     # 2. IF step 1 produced None, return 'a' as a placeholder to sort above all raw data. 
     ussf_match_id = (raw[0]["meta"]["ussf_match_id"] if len(raw) > 0 and len(objects) == 0 else None) or "a"
