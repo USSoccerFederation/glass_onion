@@ -1,7 +1,7 @@
 """
 End-to-end tests for player synchronization and resolution: every player fixture is synchronized with PlayerSyncEngine
-match by match, and a name-only provider (provider_d) is synchronized against the existing players and those match
-proposals. Every proposal is then resolved into one ObjectResolver at the same time.
+match by match, and a name-only provider (provider_d) is synchronized against the existing players. Every proposal is
+then resolved into one ObjectResolver at the same time.
 
 The resolver starts with a set of existing players (mimicking earlier runs): these player records should persist through a test run, with any conflicts should be rejected by the resolver.
 
@@ -103,7 +103,6 @@ PEOPLE = {
     "ally_schlegel": Person((CHI_SD,), "CHI", {"provider_a": "Ally Schlegel", "provider_b": "Allyson Schlegel"}),
     "maria_sanchez": Person((CHI_SD,), "SD", {"provider_a": "María Sánchez", "provider_b": "Maria Guadalupe Sanchez Morales"}),
     "chardonnay_curran": Person((CHI_SD,), "CHI", {"provider_b": "Chardonnay Curran"}),
-    # a name-only profile links to her (see NAME_ONLY_PROFILES)
     "naomi_girma": Person((CHI_SD,), "SD", {"provider_a": "Naomi Girma", "provider_b": "Naomi Haile Girma"}),
     # --- USA players in both USA matches: oma-usa has provider_a and provider_b, usa-mex adds provider_c -------------
     "tim_ream": Person((OMA_USA, USA_MEX), "USA", {"provider_a": "Tim Ream", "provider_b": "Tim Ream", "provider_c": "Timothy Michael Ream"}),
@@ -136,21 +135,26 @@ EXISTING_PLAYERS = [
     existing("juma_al_habsi", ["provider_a"], "Juma Al-Habsi"),
     # a manual override: provider_a's ID belongs with this provider_b ID, not the one sync will propose
     existing("bong_soo_kim", ["provider_a"], "Bong-soo Kim", provider_b=OVERRIDE_ID),
+    # name-only profiles link to these (see NAME_ONLY_PROFILES)
+    existing("sergino_dest", ["provider_a", "provider_b"], "Sergiño Dest"),
+    existing("naomi_girma", ["provider_a", "provider_b"], "Naomi Girma", "female"),
+    existing("makenzy_robbe", ["provider_a", "provider_b"], "Makenzy Robbe", "female"),
 ]
 
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Name-only provider: profiles with no jersey number, team, or birth date, matched by name within each gender against the
-# existing players and the match proposals
+# existing players only
 # ---------------------------------------------------------------------------------------------------------------------
 
 # (profile ID, player_name, player_gender)
 NAME_ONLY_PROFILES = [
-    # resolved players, spelled without an accent / under a maiden name
+    # existing players, spelled without an accent / under a maiden name
     ("401", "Sergino Dest", "male"),
     ("402", "Makenzy Doniak", "female"),
     ("403", "Naomi Girma", "female"),
-    # decoys: former US players who aren't in any fixture. Tim Howard shares only a first name with Tim Ream
+    # decoys: former US players who aren't in any fixture. Tim Howard shares only a first name with Tim Ream, an existing
+    # player
     ("411", "Tim Howard", "male"),
     # share nothing with anyone
     ("412", "Landon Donovan", "male"),
@@ -158,25 +162,25 @@ NAME_ONLY_PROFILES = [
 ]
 
 
-def name_only_sync(known_records: list[Record], profiles: list[tuple[str, str, str]]) -> list[Record]:
-    # one row per known record, under a stand-in provider whose ID is the record's index in `known_records`
-    known = pd.DataFrame(
+def name_only_sync(existing_players: list[Record], profiles: list[tuple[str, str, str]]) -> list[Record]:
+    # one row per existing player, under a stand-in provider whose ID is the player's index in `existing_players`
+    existing = pd.DataFrame(
         [
             {
-                "known_player_id": str(k),
+                "existing_player_id": str(k),
                 "player_name": r["meta"]["player_name"],
                 "team_id": r["meta"]["player_gender"],
             }
-            for k, r in enumerate(known_records)
+            for k, r in enumerate(existing_players)
         ]
     )
     new = pd.DataFrame(profiles, columns=["provider_d_player_id", "player_name", "team_id"])
-    for frame in (known, new):
+    for frame in (existing, new):
         frame["player_nickname"] = frame["player_name"]
 
     # team_id holds the gender, so a team-only match would pair any two remaining players of one gender
     engine = PlayerSyncEngine(
-        [PlayerSyncableContent("known", known), PlayerSyncableContent("provider_d", new)],
+        [PlayerSyncableContent("existing", existing), PlayerSyncableContent("provider_d", new)],
         allow_team_only_layer=False,
     )
     synced = engine.synchronize().data
@@ -184,10 +188,10 @@ def name_only_sync(known_records: list[Record], profiles: list[tuple[str, str, s
     for _, row in synced.iterrows():
         if pd.isna(row["provider_d_player_id"]):
             continue
-        # a linked profile is proposed together with every ID of the record it matched
+        # a linked profile is proposed together with every ID of the existing player it matched
         ids = {"provider_d_player_id": row["provider_d_player_id"]}
-        if pd.notna(row["known_player_id"]):
-            ids.update(known_records[int(row["known_player_id"])]["ids"])
+        if pd.notna(row["existing_player_id"]):
+            ids.update(existing_players[int(row["existing_player_id"])]["ids"])
         records.append(
             {"source": "name_only", "ids": ids, "meta": {"player_name": row["player_name"], "player_gender": row["team_id"]}}
         )
@@ -230,7 +234,7 @@ def run_pipeline(edit: Callable[[str, pd.DataFrame], pd.DataFrame] = with_duplic
     assert len(resolver.added) == len(EXISTING_PLAYERS)
 
     proposals = [r for file in MATCH_FILES for r in match_sync(file, edit(file, FIXTURES[file].copy()))]
-    proposals += name_only_sync(EXISTING_PLAYERS + proposals, NAME_ONLY_PROFILES)
+    proposals += name_only_sync(EXISTING_PLAYERS, NAME_ONLY_PROFILES)
     resolver.resolve(proposals)
     return {"resolver": resolver, "rejected": resolver.rejected}
 
