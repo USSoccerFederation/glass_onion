@@ -13,8 +13,12 @@ from glass_onion.utils import (
     string_remove_accents,
     string_remove_youth_suffixes,
     string_replace_common_womens_suffixes,
+    string_pair_cosine_similarity,
     dataframe_coalesce,
+    series_normalize,
 )
+
+FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
 
 
 @pytest.mark.parametrize(
@@ -369,3 +373,49 @@ def test_apply_cosine_similarity_error_series_all_nulls():
         ),
     ):
         apply_cosine_similarity(input1, input2)
+
+
+def test_string_pair_cosine_similarity_matches_apply_cosine_similarity():
+    # every name/nickname pair from a real match, plus short and accented edge cases
+    dataset = pd.read_csv(
+        FIXTURE_DATA_PATH / "player" / "2025-07-05-usa-mex.csv", dtype=str
+    )
+    names = (
+        pd.concat([dataset["player_name"], dataset["player_nickname"]])
+        .dropna()
+        .drop_duplicates()
+        .tolist()
+    )[:40] + ["Ab", "Abc", "J. Doe", "José", "Jose"]
+
+    for name1 in names:
+        for name2 in names:
+            normalized = series_normalize(pd.Series([name1, name2]))
+            actual = string_pair_cosine_similarity(
+                normalized.iloc[0], normalized.iloc[1]
+            )
+            if actual is None:
+                # callers fall back to apply_cosine_similarity when a string has no n-grams
+                assert (
+                    len(string_ngrams(normalized.iloc[0])) == 0
+                    or len(string_ngrams(normalized.iloc[1])) == 0
+                )
+                continue
+
+            expected = apply_cosine_similarity(pd.Series([name1]), pd.Series([name2]))
+            assert actual == pytest.approx(
+                expected.loc[0, "similarity"], abs=1e-12
+            ), f"{name1} vs {name2}"
+
+
+@pytest.mark.parametrize(
+    "input1, input2",
+    [
+        ("ab", "test team"),
+        ("test team", "ab"),
+        ("ab", "cd"),
+    ],
+)
+def test_string_pair_cosine_similarity_no_ngrams_returns_none(
+    input1: str, input2: str
+):
+    assert string_pair_cosine_similarity(input1, input2) is None

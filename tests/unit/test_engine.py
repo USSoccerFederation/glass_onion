@@ -452,6 +452,106 @@ def test_synchronize_with_cosine_similarity_caches_results(mocker):
     assert spy.call_count == 2
 
 
+@pytest.mark.parametrize(
+    "right_name, threshold, expected_match",
+    [
+        ("Test Team", 0.75, True),
+        ("Test Team FC", 0.75, True),
+        ("Test Team FC", 1.0, False),
+        ("Other Club", 0.75, False),
+        ("Other Club", 0.0, True),
+    ],
+)
+def test_synchronize_with_cosine_similarity_single_pair_fast_path(
+    right_name: str, threshold: float, expected_match: bool, mocker
+):
+    # a null name on each side is ignored, so each side only has one name to compare
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame(
+            {"provider_a_object_id": ["1", "2"], "object_name": [pd.NA, "Test Team"]}
+        ),
+    )
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            {"provider_b_object_id": ["3", "4"], "object_name": [right_name, pd.NA]}
+        ),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "apply_cosine_similarity")
+    actual = engine.synchronize_with_cosine_similarity(
+        left, right, ("object_name", "object_name"), threshold=threshold
+    )
+
+    # the pair is scored without fitting a vectorizer
+    assert spy.call_count == 0
+    assert set(actual.columns) == {"provider_a_object_id", "provider_b_object_id"}
+    if expected_match:
+        assert actual.to_dict("records") == [
+            {"provider_a_object_id": "2", "provider_b_object_id": "3"}
+        ]
+    else:
+        assert len(actual) == 0
+
+
+def test_synchronize_with_cosine_similarity_single_pair_without_ngrams_falls_back(
+    mocker,
+):
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": ["1"], "object_name": ["AB"]}),
+    )
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame({"provider_b_object_id": ["2"], "object_name": ["ABC"]}),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "apply_cosine_similarity")
+    engine.synchronize_with_cosine_similarity(
+        left, right, ("object_name", "object_name")
+    )
+
+    # "ab" has no 3-character n-grams, so the vectorizer handles it
+    assert spy.call_count == 1
+
+
+def test_normalize_matches_series_normalize_and_caches(mocker):
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": [1], "object_name": ["A"]}),
+    )
+    engine = SyncEngine("object", [left], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "series_normalize")
+
+    values = pd.Series(
+        ["José  Pérez", "J. Doe", "José  Pérez", "Test-Team FC"], index=[5, 7, 9, 11]
+    )
+    actual = engine.normalize(values)
+
+    assert actual.tolist() == series_normalize(values).tolist()
+    assert actual.index.tolist() == [5, 7, 9, 11]
+    # duplicate values are only normalized once
+    assert spy.call_count == 1
+    assert len(spy.call_args.args[0]) == 3
+
+    # already-normalized values aren't normalized again
+    engine.normalize(values.iloc[[1, 0]])
+    assert spy.call_count == 1
+
+    # only unseen values are normalized
+    engine.normalize(pd.Series(["J. Doe", "New Name"]))
+    assert spy.call_count == 2
+    assert spy.call_args.args[0].tolist() == ["New Name"]
+
+
 def _naive_match_reference(
     left: SyncableContent, right: SyncableContent, fields: Tuple[str, str]
 ) -> pd.DataFrame:
