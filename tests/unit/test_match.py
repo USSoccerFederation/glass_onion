@@ -55,7 +55,7 @@ def test_init_syncable_content_match_date_is_not_valid_format():
                     }
                 ]
             ),
-        )
+        ).validate_data_schema()
 
 
 @pytest.mark.parametrize(
@@ -99,7 +99,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
         MatchSyncableContent(
             "provider_a",
             df,
-        )
+        ).validate_data_schema()
 
 
 @pytest.mark.parametrize(
@@ -174,7 +174,7 @@ def test_init_syncable_content_prevent_mixed_types(column: str):
         MatchSyncableContent(
             "provider_a",
             df,
-        )
+        ).validate_data_schema()
 
 
 @pytest.mark.parametrize(
@@ -237,7 +237,7 @@ def test_init_syncable_content_null_competition_id():
                     }
                 ]
             ),
-        )
+        ).validate_data_schema()
 
 
 def test_init_competition_context():

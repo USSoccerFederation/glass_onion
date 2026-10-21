@@ -68,7 +68,7 @@ def test_init_syncable_content_birth_date_is_not_valid_format(value: str):
                     }
                 ]
             ),
-        )
+        ).validate_data_schema()
 
 
 @pytest.mark.parametrize(
@@ -108,7 +108,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
         PlayerSyncableContent(
             "provider_a",
             df,
-        )
+        ).validate_data_schema()
 
 
 @pytest.mark.parametrize(
@@ -218,7 +218,7 @@ def test_init_syncable_content_prevent_mixed_types(column: str):
         PlayerSyncableContent(
             "provider_a",
             df,
-        )
+        ).validate_data_schema()
 
 
 def test_init_missing_columns():
@@ -231,7 +231,23 @@ def test_init_missing_columns():
         PlayerSyncableContent(
             "provider_a",
             data=pd.DataFrame([{"provider_a_player_id": "1", "player_name": "A"}]),
-        )
+        ).validate_data_schema()
+
+
+def test_init_engine_validates_content():
+    # schema validation is deferred from SyncableContent creation to SyncEngine creation
+    content = PlayerSyncableContent(
+        "provider_a",
+        data=pd.DataFrame([{"provider_a_player_id": "1", "player_name": "A"}]),
+    )
+
+    with pytest.raises(
+        SchemaError,
+        match=re.escape(
+            "column 'team_id' not in dataframe. Columns in dataframe: ['provider_a_player_id', 'player_name']"
+        ),
+    ):
+        PlayerSyncEngine([content])
 
 
 def test_init_unreliable_columns():

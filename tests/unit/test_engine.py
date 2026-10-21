@@ -126,6 +126,39 @@ def test_init_object_type_empty_whitespace():
         assert False
 
 
+def test_init_content_fails_schema_validation():
+    class NamedSyncableContent(SyncableContent):
+        def validate_data_schema(self) -> bool:
+            return "object_name" in self.data.columns and super().validate_data_schema()
+
+    # creating content only runs the base structural checks, so the invalid object can be created
+    valid = NamedSyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame([{"provider_a_object_id": 1, "object_name": "A"}]),
+    )
+    invalid = NamedSyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame([{"provider_b_object_id": 1}]),
+    )
+
+    with pytest.raises(
+        AssertionError,
+        match=re.escape(
+            "`data` for provider provider_b does not meet the schema requirements for its SyncableContent class."
+        ),
+    ):
+        SyncEngine(
+            object_type="object",
+            content=[valid, invalid],
+            join_columns=["object_name"],
+        )
+
+        # should never get here
+        assert False
+
+
 @pytest.mark.parametrize(
     "fields, data, expected_error",
     [

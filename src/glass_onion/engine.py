@@ -22,6 +22,8 @@ class SyncableContent:
         """
         Checks if this object's `data` meets the schema requirements for this object type.
 
+        This is not run when the object is created: [SyncEngine][glass_onion.engine.SyncEngine] runs it on each object in `content` when the engine is created, so objects built internally during synchronization aren't re-validated.
+
         This class should be subclassed for each new object type: see [PlayerDataSchema][glass_onion.player.PlayerDataSchema] for an example.
         """
         assert self.data is not None, f"Field `data` can not be null"
@@ -40,7 +42,8 @@ class SyncableContent:
         self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
-        assert self.validate_data_schema(), (
+        # only run the base structural checks here: subclass schema validation is expensive, so SyncEngine runs it once per input
+        assert SyncableContent.validate_data_schema(self), (
             "`data` does not meet the schema requirements for this SyncableContent class."
         )
 
@@ -179,6 +182,11 @@ class SyncEngine:
         assert all([c.object_type == object_type for c in content]), (
             "One or more `SyncableContent` objects in `content` do not match `SyncEngine.object_type`."
         )
+
+        for c in content:
+            assert c.validate_data_schema(), (
+                f"`data` for provider {c.provider} does not meet the schema requirements for its SyncableContent class."
+            )
 
         self.content = content
         self.conflicts: list[Tuple[Tuple[str, Any], Tuple[str, Any]]] = []

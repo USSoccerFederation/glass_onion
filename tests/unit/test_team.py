@@ -37,7 +37,7 @@ def test_init_syncable_content_prevent_mixed_values(column: str):
         TeamSyncableContent(
             "provider_a",
             df,
-        )
+        ).validate_data_schema()
 
 
 def test_init_syncable_content_null_competition_id():
@@ -57,7 +57,7 @@ def test_init_syncable_content_null_competition_id():
                     }
                 ]
             ),
-        )
+        ).validate_data_schema()
 
 
 def test_init_competition_context():
