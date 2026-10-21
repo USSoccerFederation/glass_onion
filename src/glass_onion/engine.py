@@ -190,6 +190,11 @@ class SyncEngine:
 
         self.content = content
         self.conflicts: list[Tuple[Tuple[str, Any], Tuple[str, Any]]] = []
+        # apply_cosine_similarity() results keyed by its two inputs' values: its vectorizer is only fit on those values,
+        # so the same inputs always produce the same result. Layers often re-run it on the same names.
+        self.cosine_similarity_cache: dict[
+            Tuple[Tuple[str, ...], Tuple[str, ...]], pd.DataFrame
+        ] = {}
         self.object_type = object_type
         self.verbose = verbose
         self.join_columns = join_columns
@@ -359,8 +364,14 @@ class SyncEngine:
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0)
 
-        match_results = apply_cosine_similarity(input1_fields, input2_fields)
+        cache_key = (tuple(input1_fields), tuple(input2_fields))
+        if cache_key not in self.cosine_similarity_cache:
+            self.cosine_similarity_cache[cache_key] = apply_cosine_similarity(
+                input1_fields, input2_fields
+            )
+        match_results = self.cosine_similarity_cache[cache_key]
 
+        # sort_values() returns a copy, so the cached result isn't modified below
         result = match_results.sort_values(by="similarity", ascending=False)
         result = result[result.similarity >= adjusted_threshold]
         result["similarity_rank"] = result.groupby(["input1", "input2"])[

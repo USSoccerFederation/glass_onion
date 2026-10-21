@@ -1,6 +1,7 @@
 from random import Random
 from typing import Tuple
 from glass_onion import SyncableContent, SyncEngine
+import glass_onion.engine
 import pytest
 import re
 import pandas as pd
@@ -403,6 +404,52 @@ def test_synchronize_should_match_same_name(method: str):
     target = actual.loc[actual["provider_a_object_id"] == 3, :]
     assert len(target) == 1
     assert target.loc[target.index[0], "provider_b_object_id"] == 1
+
+
+def test_synchronize_with_cosine_similarity_caches_results(mocker):
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame(
+            {
+                "provider_a_object_id": [1, 2],
+                "object_name": ["Test Team", "Other Club"],
+            }
+        ),
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            {
+                "provider_b_object_id": [1, 2],
+                "object_name": ["Other Club", "Test Team FC"],
+            }
+        ),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "apply_cosine_similarity")
+    fields = ("object_name", "object_name")
+
+    first = engine.synchronize_with_cosine_similarity(left, right, fields)
+    second = engine.synchronize_with_cosine_similarity(left, right, fields)
+
+    # the same inputs are only scored once, and the cached result isn't modified by the first call
+    assert spy.call_count == 1
+    pd.testing.assert_frame_equal(first, second)
+
+    # the threshold is applied after the cache, so a different threshold still uses the cached result
+    strict = engine.synchronize_with_cosine_similarity(
+        left, right, fields, threshold=1.0
+    )
+    assert spy.call_count == 1
+    assert len(strict) < len(first)
+
+    # different inputs are scored separately
+    engine.synchronize_with_cosine_similarity(right, left, fields)
+    assert spy.call_count == 2
 
 
 def _naive_match_reference(
