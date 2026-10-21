@@ -2,6 +2,7 @@ import time
 from typing import Callable
 
 from pandas.testing import assert_frame_equal
+import pytest
 
 from glass_onion.resolver import ObjectResolver, Record, to_frame
 
@@ -40,9 +41,27 @@ def best_time(fn: Callable[[], object], runs: int = 3) -> float:
     return min(times)
 
 
-def assert_linear(fn: Callable[[int], object], n: int):
+def assert_linear(fn: Callable[[int], object], n: int, request: pytest.FixtureRequest):
     small = best_time(lambda: fn(n))
     large = best_time(lambda: fn(n * SCALE_FACTOR))
+    # read by tests/conftest.py to build the performance report
+    request.node.user_properties.append(
+        (
+            "performance",
+            {
+                "section": f"Resolver scale (best of 3 runs, {SCALE_FACTOR}x input)",
+                "row": {
+                    "Test": request.node.name,
+                    "n": n,
+                    "Time at n (s)": small,
+                    f"Time at {SCALE_FACTOR}n (s)": large,
+                    "Growth": f"{large / small:.1f}x",
+                    "Limit": f"{MAX_GROWTH}x",
+                },
+                "compare": f"Time at {SCALE_FACTOR}n (s)",
+            },
+        )
+    )
     assert large / small < MAX_GROWTH, (
         f"{SCALE_FACTOR}x the input took {large / small:.1f}x as long ({small:.3f}s -> {large:.3f}s)"
     )
@@ -78,7 +97,7 @@ def test_resolve_season_of_repeated_syncs():
     )
 
 
-def test_add_record_merge_cost_is_linear():
+def test_add_record_merge_cost_is_linear(request: pytest.FixtureRequest):
     # every record links a new vertex to one ever-growing component. Merging the larger side into the smaller would
     # copy the whole component each time.
     def build(n: int) -> ObjectResolver:
@@ -98,10 +117,10 @@ def test_add_record_merge_cost_is_linear():
     assert len(resolver.components()) == 1
     assert len(resolver.components()[0][0]) == 1_000 + 2
 
-    assert_linear(build, 2_500)
+    assert_linear(build, 2_500, request)
 
 
-def test_resolve_throughput_is_linear():
+def test_resolve_throughput_is_linear(request: pytest.FixtureRequest):
     # one batch of new players, each synced across every provider
     def run(n: int) -> ObjectResolver:
         resolver = ObjectResolver()
@@ -112,10 +131,10 @@ def test_resolve_throughput_is_linear():
 
     assert len(run(1_000).components()) == 1_000
 
-    assert_linear(run, 2_500)
+    assert_linear(run, 2_500, request)
 
 
-def test_resolve_conflicts_at_scale_are_linear():
+def test_resolve_conflicts_at_scale_are_linear(request: pytest.FixtureRequest):
     # every 100th player also has a duplicate provider_a ID synced to their other IDs in the same batch. The pair
     # conflict with each other, so both are rejected; every other player is accepted.
     def batch(n: int) -> list[Record]:
@@ -145,4 +164,4 @@ def test_resolve_conflicts_at_scale_are_linear():
     # each rejected record conflicts only with its own pair, not with other conflicts in the batch
     assert all(len(conflicts) == 1 for conflicts in resolver.rejected["conflicts"])
 
-    assert_linear(run, 2_500)
+    assert_linear(run, 2_500, request)
