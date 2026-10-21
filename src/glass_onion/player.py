@@ -220,9 +220,15 @@ class PlayerSyncEngine(SyncEngine):
         ):
             date_format = "%Y-%d-%m" if layer.swap_birth_month_day else "%Y-%m-%d"
             adjusted = input1 if layer.date_adjustment_input == 1 else input2
-            adjusted.data.birth_date = (
+            adjusted_dates = (
                 pd.to_datetime(adjusted.data.birth_date) + layer.date_adjustment
-            ).dt.strftime(date_format)
+            )
+            if layer.swap_birth_month_day:
+                # a day past the 12th can't be swapped into the month slot, so those players can't match on this layer
+                swappable = adjusted_dates.dt.day <= 12
+                adjusted.data = adjusted.data[swappable].copy()
+                adjusted_dates = adjusted_dates[swappable]
+            adjusted.data.birth_date = adjusted_dates.dt.strftime(date_format)
 
         # if applicable, perform field equality checks before processing string similarity
         input1_comparable = PlayerSyncableContent(
