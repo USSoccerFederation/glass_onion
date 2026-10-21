@@ -428,10 +428,10 @@ def test_unmatched_name_only_profile_is_added_alone(pipeline, profile):
 # is a former US player's who isn't in any fixture, and the match ID isn't a fixture's, so the rows can't be mistaken
 # for fixture data.
 SAME_NAME_ROWS = [
-    {"match_id": "decoy-same-name", "provider_player_id": 9900801, "jersey_number": "98", "player_name": "Carli Lloyd",
-     "player_nickname": "Carli Lloyd", "birth_date": None, "team_id": "SD", "player_gender": "female", "data_provider": "provider_b"},
-    {"match_id": "decoy-same-name", "provider_player_id": 9900802, "jersey_number": "99", "player_name": "Carli Lloyd",
-     "player_nickname": "Carli Lloyd", "birth_date": None, "team_id": "SD", "player_gender": "female", "data_provider": "provider_b"},
+    {"match_id": "2026-01-01-test-case", "provider_player_id": 9900801, "jersey_number": "10", "player_name": "Carli Lloyd",
+     "player_nickname": "Carli Lloyd", "birth_date": None, "team_id": "HOU", "player_gender": "female", "data_provider": "provider_b"},
+    {"match_id": "2026-01-01-test-case", "provider_player_id": 9900802, "jersey_number": "11", "player_name": "Carli Lloyd",
+     "player_nickname": "Carli Lloyd", "birth_date": None, "team_id": "HOU", "player_gender": "female", "data_provider": "provider_b"},
 ]
 
 
