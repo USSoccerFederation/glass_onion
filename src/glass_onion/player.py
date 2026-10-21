@@ -31,7 +31,7 @@ class PlayerDataSchema(pa.DataFrameModel):
     """
     birth_date: Optional[Series[str]] = Field(nullable=True)
     """
-    The player's date of birth. Preferably in YYYY-MM-DD format, but required to be in a date format that can be parsed by pandas.Timestamp. If null/NA values are provided, this column will be ignored in synchronization.
+    The player's date of birth. Preferably in YYYY-MM-DD format, but required to be in a ISO-8601 date format. If null/NA values are provided, this column will be ignored in synchronization.
     """
     jersey_number: Optional[Series[str]] = Field(nullable=True, coerce=True)
     """
@@ -39,9 +39,12 @@ class PlayerDataSchema(pa.DataFrameModel):
     """
 
     @pa.check("birth_date")
-    def is_valid_yyyy_mm_dd_date(self, series: Series[str]) -> bool:
-        dt_series = pd.to_datetime(series, format="%Y-%m-%d", errors="coerce").dropna()
-        return len(dt_series) == len(series)
+    def is_valid_iso8601_timestamp(self, series: Series[str]) -> bool:
+        # convert all strings to timestamps. Invalid ones get coerced to NaT
+        dt_series = pd.to_datetime(series, format="ISO8601", errors="coerce")
+        # make sure the number of NAs before conversion == the number of NAs after
+        return len(dt_series[dt_series.isna()]) == len(series[series.isna()])
+        
 
 
 class PlayerSyncableContent(SyncableContent):

@@ -17,10 +17,6 @@ import pytest
     "value",
     [
         "2026-01-21",
-        "01-21-2026",
-        "21-01-2026",
-        "Jan 21, 2026",
-        "January 21, 2026",
         "2026-01-26T00:00Z",
         "2026-01-26T00:00:00Z",
         "2026-01-26T00:00:00.000Z",
@@ -44,10 +40,20 @@ def test_init_syncable_content_birth_date_is_valid_format(value: str):
     assert content.validate_data_schema()
 
 
-def test_init_syncable_content_birth_date_is_not_valid_format():
+@pytest.mark.parametrize(
+    "value",
+    [
+        "01-21-2026",
+        "21-01-2026",
+        "Jan 21, 2026",
+        "January 21, 2026",
+        "test"
+    ],
+)
+def test_init_syncable_content_birth_date_is_not_valid_format(value: str):
     with pytest.raises(
         SchemaError,
-        match=re.escape("Unknown datetime string format, unable to parse: test"),
+        match=re.escape("Column 'birth_date' failed series or dataframe validator 0: <Check is_valid_iso8601_timestamp>"),
     ):
         PlayerSyncableContent(
             "provider_a",
@@ -56,7 +62,7 @@ def test_init_syncable_content_birth_date_is_not_valid_format():
                     {
                         "provider_a_player_id": "1",
                         "player_name": "test",
-                        "birth_date": "test",
+                        "birth_date": value,
                         "team_id": "1",
                     }
                 ]
