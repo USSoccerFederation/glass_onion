@@ -474,22 +474,6 @@ def apply_cosine_similarity(
     return pd.DataFrame(match_results)
 
 
-def is_integer(i: str) -> bool:
-    """
-    Check if a given string can be coerced into an integer.
-
-    Args:
-        i (str): some string
-
-    Returns:
-        bool: if this string is a valid integer or not.
-    """
-    try:
-        return float(i).is_integer()
-    except:
-        return False
-
-
 def string_stringify_object_id(i: Hashable) -> Hashable | None:
     """
     Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects and identifier deduplication.
@@ -509,13 +493,14 @@ def string_stringify_object_id(i: Hashable) -> Hashable | None:
         stripped = i.strip()
         if stripped == "" or stripped.lower() in ["<na>", "nan", "none", "null"]:
             return None
-        if is_integer(stripped):
-            return str(int(float(stripped)))
-        else:
-            return stripped
+        # remove trailing zeros from decimal string identifiers
+        if k := re.fullmatch(r"(\d+)\.0+", stripped):
+            return k.group(1)
+
+        return stripped
 
     if isinstance(i, Real):
-        return str(int(i)) if is_integer(i) else str(i)
+        return str(int(i)) if float(i).is_integer() else str(i)
     return i
 
 
