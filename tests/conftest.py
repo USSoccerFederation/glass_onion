@@ -161,7 +161,9 @@ def render_performance_report(
             }
             if len(compared) > 0:
                 # only rows with a baseline value count toward the change
-                matched = [(v, b) for _, v, b in compared if v is not None and b is not None]
+                matched = [
+                    (v, b) for _, v, b in compared if v is not None and b is not None
+                ]
                 total[f"{baseline_label} (s)"] = f"**{sum(b for _, b in matched):.3f}**"
                 total["Change"] = (
                     f"**{format_change(sum(v for v, _ in matched), sum(b for _, b in matched))}**"

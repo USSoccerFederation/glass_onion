@@ -43,18 +43,14 @@ def test_init_syncable_content_birth_date_is_valid_format(value: str):
 
 @pytest.mark.parametrize(
     "value",
-    [
-        "01-21-2026",
-        "21-01-2026",
-        "Jan 21, 2026",
-        "January 21, 2026",
-        "test"
-    ],
+    ["01-21-2026", "21-01-2026", "Jan 21, 2026", "January 21, 2026", "test"],
 )
 def test_init_syncable_content_birth_date_is_not_valid_format(value: str):
     with pytest.raises(
         SchemaError,
-        match=re.escape("Column 'birth_date' failed series or dataframe validator 0: <Check is_valid_iso8601_timestamp>"),
+        match=re.escape(
+            "Column 'birth_date' failed series or dataframe validator 0: <Check is_valid_iso8601_timestamp>"
+        ),
     ):
         PlayerSyncableContent(
             "provider_a",
@@ -367,7 +363,11 @@ def test_init_unreliable_columns():
     ],
 )
 def test_synchronize_using_layer(
-    layer: PlayerSyncLayer, method: str, expected_call_count: int, expected_matches: int, mocker
+    layer: PlayerSyncLayer,
+    method: str,
+    expected_call_count: int,
+    expected_matches: int,
+    mocker,
 ):
     left = PlayerSyncableContent(
         "provider_a",

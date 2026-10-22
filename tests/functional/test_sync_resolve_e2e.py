@@ -56,7 +56,9 @@ def fixture_id(person: Person, provider: str) -> str:
     if person.jersey is not None:
         rows = rows[rows["jersey_number"] == person.jersey]
     ids = set(rows["provider_player_id"].astype(str))
-    assert len(ids) == 1, f"{person.names[provider]} ({provider}) has {len(ids)} IDs in {person.files}"
+    assert len(ids) == 1, (
+        f"{person.names[provider]} ({provider}) has {len(ids)} IDs in {person.files}"
+    )
     return ids.pop()
 
 
@@ -68,61 +70,252 @@ OMA_USA, CHI_SD, USA_MEX, KOR_JPN = MATCH_FILES
 
 PEOPLE = {
     # --- Korean names, romanized three ways (kor-jpn) ------------------------------------------------------------------
-    "sang_yun_kang": Person((KOR_JPN,), "KOR", {"provider_a": "Sang-yun Kang", "provider_b": "Sang-Yoon Kang", "provider_c": "Sang-Yun Kang"}),
-    "myeong_kwan_seo": Person((KOR_JPN,), "KOR", {"provider_a": "Myeong-kwan Seo", "provider_b": "Myeong-Kwan Seo", "provider_c": "Myung-Guan Seo"}),
+    "sang_yun_kang": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Sang-yun Kang",
+            "provider_b": "Sang-Yoon Kang",
+            "provider_c": "Sang-Yun Kang",
+        },
+    ),
+    "myeong_kwan_seo": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Myeong-kwan Seo",
+            "provider_b": "Myeong-Kwan Seo",
+            "provider_c": "Myung-Guan Seo",
+        },
+    ),
     # provider_c's name has a leading space in the fixture
-    "jin_seob_park": Person((KOR_JPN,), "KOR", {"provider_a": "Jin-seob Park", "provider_b": "Jin-Sub Park", "provider_c": " Jin-Seop Park"}),
-    "ju_sung_kim": Person((KOR_JPN,), "KOR", {"provider_a": "Ju-sung Kim", "provider_b": "Joo-Sung Kim", "provider_c": "Ju-Sung Kim"}),
-    "jin_gyu_kim": Person((KOR_JPN,), "KOR", {"provider_a": "Jin-gyu Kim", "provider_b": "Jin-Kyu Kim", "provider_c": "Jin-gyu Kim"}),
+    "jin_seob_park": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Jin-seob Park",
+            "provider_b": "Jin-Sub Park",
+            "provider_c": " Jin-Seop Park",
+        },
+    ),
+    "ju_sung_kim": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Ju-sung Kim",
+            "provider_b": "Joo-Sung Kim",
+            "provider_c": "Ju-Sung Kim",
+        },
+    ),
+    "jin_gyu_kim": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Jin-gyu Kim",
+            "provider_b": "Jin-Kyu Kim",
+            "provider_c": "Jin-gyu Kim",
+        },
+    ),
     # two different teammates with the same name
-    "tae_hyeon_kim_22": Person((KOR_JPN,), "KOR", {"provider_a": "Tae-hyeon Kim", "provider_b": "Tae-Hyun Kim", "provider_c": "Tae-Hyeon Kim"}, "22"),
-    "tae_hyeon_kim_26": Person((KOR_JPN,), "KOR", {"provider_a": "Tae-hyeon Kim", "provider_b": "Tae-Hyeon Kim", "provider_c": "Tae-Hyeon Kim"}, "26"),
+    "tae_hyeon_kim_22": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Tae-hyeon Kim",
+            "provider_b": "Tae-Hyun Kim",
+            "provider_c": "Tae-Hyeon Kim",
+        },
+        "22",
+    ),
+    "tae_hyeon_kim_26": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Tae-hyeon Kim",
+            "provider_b": "Tae-Hyeon Kim",
+            "provider_c": "Tae-Hyeon Kim",
+        },
+        "26",
+    ),
     # --- Arabic names, anglicized differently, often with extra given names (oma-usa) ----------------------------------
-    "essam_al_subhi": Person((OMA_USA,), "OMA", {"provider_a": "Essam Al-Subhi", "provider_b": "Issam Al Sabhi"}),
-    "tamim_al_balushi": Person((OMA_USA,), "OMA", {"provider_a": "Tamim Al-Balushi", "provider_b": "Tameem Haitham Shambeh Al Balushi"}),
-    "faiyz_al_rusheidi": Person((OMA_USA,), "OMA", {"provider_a": "Faiyz Al-Rusheidi", "provider_b": "Faiyz Issa Khadoom Al Rashidi"}),
-    "fahmi_durbein": Person((OMA_USA,), "OMA", {"provider_a": "Fahmi Durbein", "provider_b": "Fahmi Said Rajab Nasib Bait Durbin"}),
+    "essam_al_subhi": Person(
+        (OMA_USA,),
+        "OMA",
+        {"provider_a": "Essam Al-Subhi", "provider_b": "Issam Al Sabhi"},
+    ),
+    "tamim_al_balushi": Person(
+        (OMA_USA,),
+        "OMA",
+        {
+            "provider_a": "Tamim Al-Balushi",
+            "provider_b": "Tameem Haitham Shambeh Al Balushi",
+        },
+    ),
+    "faiyz_al_rusheidi": Person(
+        (OMA_USA,),
+        "OMA",
+        {
+            "provider_a": "Faiyz Al-Rusheidi",
+            "provider_b": "Faiyz Issa Khadoom Al Rashidi",
+        },
+    ),
+    "fahmi_durbein": Person(
+        (OMA_USA,),
+        "OMA",
+        {
+            "provider_a": "Fahmi Durbein",
+            "provider_b": "Fahmi Said Rajab Nasib Bait Durbin",
+        },
+    ),
     # in the resolver before the run with only provider_a's ID (see EXISTING_PLAYERS)
-    "juma_al_habsi": Person((OMA_USA,), "OMA", {"provider_a": "Juma Al-Habsi", "provider_b": "Juma Marhoon Juma Al Habsi"}),
+    "juma_al_habsi": Person(
+        (OMA_USA,),
+        "OMA",
+        {"provider_a": "Juma Al-Habsi", "provider_b": "Juma Marhoon Juma Al Habsi"},
+    ),
     # only one provider lists them
     "mohammed_al_amri": Person((OMA_USA,), "OMA", {"provider_b": "Mohammed Al Amri"}),
     "omar_al_malki": Person((OMA_USA,), "OMA", {"provider_a": "Omar Al-Malki"}),
     # --- full legal names vs common names (usa-mex) --------------------------------------------------------------------
-    "guillermo_ochoa": Person((USA_MEX,), "MEX", {"provider_a": "Guillermo Ochoa", "provider_b": "Francisco Guillermo Ochoa Magaña", "provider_c": "Francisco Guillermo Ochoa Magaña"}),
-    "luis_malagon": Person((USA_MEX,), "MEX", {"provider_a": "Luis Malagón", "provider_b": "Luis Ángel Malagón Velázquez", "provider_c": "Luis Ángel Malagón Velázquez"}),
-    "matt_turner": Person((USA_MEX,), "USA", {"provider_a": "Matt Turner", "provider_b": "Matthew Charles Turner", "provider_c": "Matt Turner"}),
+    "guillermo_ochoa": Person(
+        (USA_MEX,),
+        "MEX",
+        {
+            "provider_a": "Guillermo Ochoa",
+            "provider_b": "Francisco Guillermo Ochoa Magaña",
+            "provider_c": "Francisco Guillermo Ochoa Magaña",
+        },
+    ),
+    "luis_malagon": Person(
+        (USA_MEX,),
+        "MEX",
+        {
+            "provider_a": "Luis Malagón",
+            "provider_b": "Luis Ángel Malagón Velázquez",
+            "provider_c": "Luis Ángel Malagón Velázquez",
+        },
+    ),
+    "matt_turner": Person(
+        (USA_MEX,),
+        "USA",
+        {
+            "provider_a": "Matt Turner",
+            "provider_b": "Matthew Charles Turner",
+            "provider_c": "Matt Turner",
+        },
+    ),
     # --- accents and spelling variants ---------------------------------------------------------------------------------
-    "erik_lira": Person((USA_MEX,), "MEX", {"provider_a": "Érik Lira", "provider_b": "Erik Antonio Lira Méndez", "provider_c": "Erick Antonio Lira Méndez"}),
-    "santiago_gimenez": Person((USA_MEX,), "MEX", {"provider_a": "Santiago Gimenez", "provider_b": "Santiago Tomás Giménez", "provider_c": "Santiago Tomás Giménez"}),
-    "sergino_dest": Person((OMA_USA,), "USA", {"provider_a": "Sergiño Dest", "provider_b": "Sergino Dest"}),
+    "erik_lira": Person(
+        (USA_MEX,),
+        "MEX",
+        {
+            "provider_a": "Érik Lira",
+            "provider_b": "Erik Antonio Lira Méndez",
+            "provider_c": "Erick Antonio Lira Méndez",
+        },
+    ),
+    "santiago_gimenez": Person(
+        (USA_MEX,),
+        "MEX",
+        {
+            "provider_a": "Santiago Gimenez",
+            "provider_b": "Santiago Tomás Giménez",
+            "provider_c": "Santiago Tomás Giménez",
+        },
+    ),
+    "sergino_dest": Person(
+        (OMA_USA,), "USA", {"provider_a": "Sergiño Dest", "provider_b": "Sergino Dest"}
+    ),
     # --- NWSL, where provider_a has no jersey numbers (chi-sd-w) -------------------------------------------------------
     # married name vs maiden name
-    "makenzy_robbe": Person((CHI_SD,), "SD", {"provider_a": "Makenzy Robbe", "provider_b": "Makenzy Doniak"}),
+    "makenzy_robbe": Person(
+        (CHI_SD,), "SD", {"provider_a": "Makenzy Robbe", "provider_b": "Makenzy Doniak"}
+    ),
     # short names vs full names
-    "mel_barcenas": Person((CHI_SD,), "SD", {"provider_a": "Mel Barcenas", "provider_b": "Melanie Barcenas"}),
-    "ally_schlegel": Person((CHI_SD,), "CHI", {"provider_a": "Ally Schlegel", "provider_b": "Allyson Schlegel"}),
-    "maria_sanchez": Person((CHI_SD,), "SD", {"provider_a": "María Sánchez", "provider_b": "Maria Guadalupe Sanchez Morales"}),
+    "mel_barcenas": Person(
+        (CHI_SD,),
+        "SD",
+        {"provider_a": "Mel Barcenas", "provider_b": "Melanie Barcenas"},
+    ),
+    "ally_schlegel": Person(
+        (CHI_SD,),
+        "CHI",
+        {"provider_a": "Ally Schlegel", "provider_b": "Allyson Schlegel"},
+    ),
+    "maria_sanchez": Person(
+        (CHI_SD,),
+        "SD",
+        {
+            "provider_a": "María Sánchez",
+            "provider_b": "Maria Guadalupe Sanchez Morales",
+        },
+    ),
     "chardonnay_curran": Person((CHI_SD,), "CHI", {"provider_b": "Chardonnay Curran"}),
-    "naomi_girma": Person((CHI_SD,), "SD", {"provider_a": "Naomi Girma", "provider_b": "Naomi Haile Girma"}),
+    "naomi_girma": Person(
+        (CHI_SD,),
+        "SD",
+        {"provider_a": "Naomi Girma", "provider_b": "Naomi Haile Girma"},
+    ),
     # --- USA players in both USA matches: oma-usa has provider_a and provider_b, usa-mex adds provider_c -------------
-    "tim_ream": Person((OMA_USA, USA_MEX), "USA", {"provider_a": "Tim Ream", "provider_b": "Tim Ream", "provider_c": "Timothy Michael Ream"}),
-    "miles_robinson": Person((OMA_USA, USA_MEX), "USA", {"provider_a": "Miles Robinson", "provider_b": "Miles Gordon Robinson", "provider_c": "Miles Robinson"}),
-    "brenden_aaronson": Person((OMA_USA, USA_MEX), "USA", {"provider_a": "Brenden Aaronson", "provider_b": "Brenden Aaronson", "provider_c": "Brenden  Aaronson"}),
+    "tim_ream": Person(
+        (OMA_USA, USA_MEX),
+        "USA",
+        {
+            "provider_a": "Tim Ream",
+            "provider_b": "Tim Ream",
+            "provider_c": "Timothy Michael Ream",
+        },
+    ),
+    "miles_robinson": Person(
+        (OMA_USA, USA_MEX),
+        "USA",
+        {
+            "provider_a": "Miles Robinson",
+            "provider_b": "Miles Gordon Robinson",
+            "provider_c": "Miles Robinson",
+        },
+    ),
+    "brenden_aaronson": Person(
+        (OMA_USA, USA_MEX),
+        "USA",
+        {
+            "provider_a": "Brenden Aaronson",
+            "provider_b": "Brenden Aaronson",
+            "provider_c": "Brenden  Aaronson",
+        },
+    ),
     # in usa-mex, provider_b lists him under a second, duplicate profile (see DUPLICATE_PROFILE_ID)
-    "chris_richards": Person((OMA_USA,), "USA", {"provider_a": "Chris Richards", "provider_b": "Chris Richards"}),
+    "chris_richards": Person(
+        (OMA_USA,),
+        "USA",
+        {"provider_a": "Chris Richards", "provider_b": "Chris Richards"},
+    ),
     # an override in the resolver links his provider_a ID to a different provider_b ID (see EXISTING_PLAYERS)
-    "bong_soo_kim": Person((KOR_JPN,), "KOR", {"provider_a": "Bong-soo Kim", "provider_b": "Bong-Soo Kim", "provider_c": "Bong-Soo Kim"}),
+    "bong_soo_kim": Person(
+        (KOR_JPN,),
+        "KOR",
+        {
+            "provider_a": "Bong-soo Kim",
+            "provider_b": "Bong-Soo Kim",
+            "provider_c": "Bong-Soo Kim",
+        },
+    ),
 }
 
 DUPLICATE_PROFILE_ID = 9941266
 OVERRIDE_ID = "9900001"
 
 
-def existing(person_key: str, providers: list[str], name: str, gender: str = "male", **ids: str) -> Record:
+def existing(
+    person_key: str, providers: list[str], name: str, gender: str = "male", **ids: str
+) -> Record:
     person = PEOPLE[person_key]
     return {
         "source": "existing",
-        "ids": {**{f"{p}_player_id": fixture_id(person, p) for p in providers}, **{f"{p}_player_id": i for p, i in ids.items()}},
+        "ids": {
+            **{f"{p}_player_id": fixture_id(person, p) for p in providers},
+            **{f"{p}_player_id": i for p, i in ids.items()},
+        },
         "meta": {"player_name": name, "player_gender": gender},
     }
 
@@ -162,7 +355,9 @@ NAME_ONLY_PROFILES = [
 ]
 
 
-def name_only_sync(existing_players: list[Record], profiles: list[tuple[str, str, str]]) -> list[Record]:
+def name_only_sync(
+    existing_players: list[Record], profiles: list[tuple[str, str, str]]
+) -> list[Record]:
     # one row per existing player, under a stand-in provider whose ID is the player's index in `existing_players`
     existing = pd.DataFrame(
         [
@@ -174,13 +369,18 @@ def name_only_sync(existing_players: list[Record], profiles: list[tuple[str, str
             for k, r in enumerate(existing_players)
         ]
     )
-    new = pd.DataFrame(profiles, columns=["provider_d_player_id", "player_name", "team_id"])
+    new = pd.DataFrame(
+        profiles, columns=["provider_d_player_id", "player_name", "team_id"]
+    )
     for frame in (existing, new):
         frame["player_nickname"] = frame["player_name"]
 
     # team_id holds the gender, so a team-only match would pair any two remaining players of one gender
     engine = PlayerSyncEngine(
-        [PlayerSyncableContent("existing", existing), PlayerSyncableContent("provider_d", new)],
+        [
+            PlayerSyncableContent("existing", existing),
+            PlayerSyncableContent("provider_d", new),
+        ],
         allow_team_only_layer=False,
     )
     synced = engine.synchronize().data
@@ -193,7 +393,14 @@ def name_only_sync(existing_players: list[Record], profiles: list[tuple[str, str
         if pd.notna(row["existing_player_id"]):
             ids.update(existing_players[int(row["existing_player_id"])]["ids"])
         records.append(
-            {"source": "name_only", "ids": ids, "meta": {"player_name": row["player_name"], "player_gender": row["team_id"]}}
+            {
+                "source": "name_only",
+                "ids": ids,
+                "meta": {
+                    "player_name": row["player_name"],
+                    "player_gender": row["team_id"],
+                },
+            }
         )
     return records
 
@@ -206,7 +413,9 @@ def name_only_sync(existing_players: list[Record], profiles: list[tuple[str, str
 def with_duplicate_profile(file: str, data: pd.DataFrame) -> pd.DataFrame:
     # in usa-mex, provider_b lists Chris Richards under a second profile
     if file == USA_MEX:
-        richards = (data["data_provider"] == "provider_b") & (data["player_name"] == "Chris Richards")
+        richards = (data["data_provider"] == "provider_b") & (
+            data["player_name"] == "Chris Richards"
+        )
         assert richards.sum() == 1
         data.loc[richards, "provider_player_id"] = DUPLICATE_PROFILE_ID
     return data
@@ -228,12 +437,18 @@ def match_sync(file: str, data: pd.DataFrame) -> list[Record]:
     ]
 
 
-def run_pipeline(edit: Callable[[str, pd.DataFrame], pd.DataFrame] = with_duplicate_profile) -> dict[str, Any]:
+def run_pipeline(
+    edit: Callable[[str, pd.DataFrame], pd.DataFrame] = with_duplicate_profile,
+) -> dict[str, Any]:
     resolver = ObjectResolver()
     resolver.resolve(EXISTING_PLAYERS)
     assert len(resolver.added) == len(EXISTING_PLAYERS)
 
-    proposals = [r for file in MATCH_FILES for r in match_sync(file, edit(file, FIXTURES[file].copy()))]
+    proposals = [
+        r
+        for file in MATCH_FILES
+        for r in match_sync(file, edit(file, FIXTURES[file].copy()))
+    ]
     proposals += name_only_sync(EXISTING_PLAYERS, NAME_ONLY_PROFILES)
     resolver.resolve(proposals)
     return {"resolver": resolver, "rejected": resolver.rejected}
@@ -257,7 +472,9 @@ def assert_one_player(pipeline: dict[str, Any], ids: set[Vertex]):
     missing = {v for v in ids if v not in resolver}
     assert not missing, f"IDs missing from the resolver: {sorted(missing)}"
     objects = {frozenset(object_of(resolver, v)) for v in ids}
-    assert len(objects) == 1, f"IDs split across objects: {[sorted(o) for o in objects]}"
+    assert len(objects) == 1, (
+        f"IDs split across objects: {[sorted(o) for o in objects]}"
+    )
     assert objects.pop() == ids
 
 
@@ -275,7 +492,10 @@ def rejected_ids(pipeline: dict[str, Any]) -> list[tuple[set[Vertex], list[Recor
 # ---------------------------------------------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("person_key", ["sang_yun_kang", "myeong_kwan_seo", "jin_seob_park", "ju_sung_kim", "jin_gyu_kim"])
+@pytest.mark.parametrize(
+    "person_key",
+    ["sang_yun_kang", "myeong_kwan_seo", "jin_seob_park", "ju_sung_kim", "jin_gyu_kim"],
+)
 def test_korean_romanizations_across_three_providers(pipeline, person_key):
     assert_one_player(pipeline, expected_ids(PEOPLE[person_key]))
 
@@ -285,7 +505,10 @@ def test_same_named_teammates_are_not_merged(pipeline):
     assert_one_player(pipeline, expected_ids(PEOPLE["tae_hyeon_kim_26"]))
 
 
-@pytest.mark.parametrize("person_key", ["essam_al_subhi", "tamim_al_balushi", "faiyz_al_rusheidi", "fahmi_durbein"])
+@pytest.mark.parametrize(
+    "person_key",
+    ["essam_al_subhi", "tamim_al_balushi", "faiyz_al_rusheidi", "fahmi_durbein"],
+)
 def test_arabic_anglicizations_across_two_providers(pipeline, person_key):
     assert_one_player(pipeline, expected_ids(PEOPLE[person_key]))
 
@@ -294,7 +517,9 @@ def test_anglicization_adds_provider_id_to_existing_player(pipeline):
     assert_one_player(pipeline, expected_ids(PEOPLE["juma_al_habsi"]))
 
 
-@pytest.mark.parametrize("person_key", ["guillermo_ochoa", "luis_malagon", "matt_turner"])
+@pytest.mark.parametrize(
+    "person_key", ["guillermo_ochoa", "luis_malagon", "matt_turner"]
+)
 def test_full_legal_names_vs_common_names(pipeline, person_key):
     assert_one_player(pipeline, expected_ids(PEOPLE[person_key]))
 
@@ -309,17 +534,23 @@ def test_married_name_vs_maiden_name_without_jersey_numbers(pipeline):
     assert_one_player(pipeline, expected_ids(PEOPLE["makenzy_robbe"]))
 
 
-@pytest.mark.parametrize("person_key", ["mel_barcenas", "ally_schlegel", "maria_sanchez"])
+@pytest.mark.parametrize(
+    "person_key", ["mel_barcenas", "ally_schlegel", "maria_sanchez"]
+)
 def test_short_names_vs_full_names_without_jersey_numbers(pipeline, person_key):
     assert_one_player(pipeline, expected_ids(PEOPLE[person_key]))
 
 
-@pytest.mark.parametrize("person_key", ["tim_ream", "miles_robinson", "brenden_aaronson"])
+@pytest.mark.parametrize(
+    "person_key", ["tim_ream", "miles_robinson", "brenden_aaronson"]
+)
 def test_ids_from_two_matches_merge_into_one_player(pipeline, person_key):
     assert_one_player(pipeline, expected_ids(PEOPLE[person_key]))
 
 
-@pytest.mark.parametrize("person_key", ["mohammed_al_amri", "omar_al_malki", "chardonnay_curran"])
+@pytest.mark.parametrize(
+    "person_key", ["mohammed_al_amri", "omar_al_malki", "chardonnay_curran"]
+)
 def test_single_provider_player_in_multi_provider_match(pipeline, person_key):
     assert_one_player(pipeline, expected_ids(PEOPLE[person_key]))
 
@@ -334,7 +565,9 @@ def test_existing_players_keep_their_ids(pipeline):
     for record in EXISTING_PLAYERS:
         vs = set(vertices(record))
         for v in vs:
-            assert vs <= (object_of(resolver, v) or set()), f"{record['meta']['player_name']}: {v} lost its existing links"
+            assert vs <= (object_of(resolver, v) or set()), (
+                f"{record['meta']['player_name']}: {v} lost its existing links"
+            )
 
 
 def test_conflicting_proposals_are_rejected_not_applied(pipeline):
@@ -347,21 +580,33 @@ def test_conflicting_proposals_are_rejected_not_applied(pipeline):
     for v in original | {duplicate}:
         assert v not in resolver, f"{v} was applied"
 
-    provider_a = ("provider_a_player_id", fixture_id(PEOPLE["chris_richards"], "provider_a"))
-    rejections = [(ids, conflicts) for ids, conflicts in rejected_ids(pipeline) if provider_a in ids]
+    provider_a = (
+        "provider_a_player_id",
+        fixture_id(PEOPLE["chris_richards"], "provider_a"),
+    )
+    rejections = [
+        (ids, conflicts)
+        for ids, conflicts in rejected_ids(pipeline)
+        if provider_a in ids
+    ]
     assert len(rejections) == 2
     rejected = [ids for ids, _ in rejections]
     assert original in rejected
     assert any(duplicate in ids for ids in rejected)
     # each lists the other as its conflict
     for ids, conflicts in rejections:
-        assert [set(vertices(c)) for c in conflicts] == [other for other in rejected if other != ids]
+        assert [set(vertices(c)) for c in conflicts] == [
+            other for other in rejected if other != ids
+        ]
 
 
 def test_proposal_contradicting_an_override_does_not_replace_the_override(pipeline):
     resolver = pipeline["resolver"]
     person = PEOPLE["bong_soo_kim"]
-    override = {("provider_a_player_id", fixture_id(person, "provider_a")), ("provider_b_player_id", OVERRIDE_ID)}
+    override = {
+        ("provider_a_player_id", fixture_id(person, "provider_a")),
+        ("provider_b_player_id", OVERRIDE_ID),
+    }
     assert_one_player(pipeline, override)
 
     proposed = expected_ids(person)
@@ -399,11 +644,17 @@ def test_every_fixture_id_is_resolved_or_rejected(pipeline):
 
 
 def test_name_only_profile_with_accents_links_to_existing_player(pipeline):
-    assert_one_player(pipeline, expected_ids(PEOPLE["sergino_dest"]) | {("provider_d_player_id", "401")})
+    assert_one_player(
+        pipeline,
+        expected_ids(PEOPLE["sergino_dest"]) | {("provider_d_player_id", "401")},
+    )
 
 
 def test_name_only_profile_links_to_existing_player(pipeline):
-    assert_one_player(pipeline, expected_ids(PEOPLE["naomi_girma"]) | {("provider_d_player_id", "403")})
+    assert_one_player(
+        pipeline,
+        expected_ids(PEOPLE["naomi_girma"]) | {("provider_d_player_id", "403")},
+    )
 
 
 @pytest.mark.xfail(
@@ -413,7 +664,10 @@ def test_name_only_profile_links_to_existing_player(pipeline):
 )
 def test_name_only_profile_under_maiden_name_links_to_existing_player(pipeline):
     # "Makenzy Doniak" vs "Makenzy Robbe", the name the resolved player carries
-    assert_one_player(pipeline, expected_ids(PEOPLE["makenzy_robbe"]) | {("provider_d_player_id", "402")})
+    assert_one_player(
+        pipeline,
+        expected_ids(PEOPLE["makenzy_robbe"]) | {("provider_d_player_id", "402")},
+    )
 
 
 @pytest.mark.parametrize("profile", ["411", "412", "413"])
@@ -432,10 +686,28 @@ def test_unmatched_name_only_profile_is_added_alone(pipeline, profile):
 # is a former US player's who isn't in any fixture, and the match ID isn't a fixture's, so the rows can't be mistaken
 # for fixture data.
 SAME_NAME_ROWS = [
-    {"match_id": "2026-01-01-test-case", "provider_player_id": 9900801, "jersey_number": "10", "player_name": "Carli Lloyd",
-     "player_nickname": "Carli Lloyd", "birth_date": None, "team_id": "HOU", "player_gender": "female", "data_provider": "provider_b"},
-    {"match_id": "2026-01-01-test-case", "provider_player_id": 9900802, "jersey_number": "11", "player_name": "Carli Lloyd",
-     "player_nickname": "Carli Lloyd", "birth_date": None, "team_id": "HOU", "player_gender": "female", "data_provider": "provider_b"},
+    {
+        "match_id": "2026-01-01-test-case",
+        "provider_player_id": 9900801,
+        "jersey_number": "10",
+        "player_name": "Carli Lloyd",
+        "player_nickname": "Carli Lloyd",
+        "birth_date": None,
+        "team_id": "HOU",
+        "player_gender": "female",
+        "data_provider": "provider_b",
+    },
+    {
+        "match_id": "2026-01-01-test-case",
+        "provider_player_id": 9900802,
+        "jersey_number": "11",
+        "player_name": "Carli Lloyd",
+        "player_nickname": "Carli Lloyd",
+        "birth_date": None,
+        "team_id": "HOU",
+        "player_gender": "female",
+        "data_provider": "provider_b",
+    },
 ]
 
 
@@ -462,6 +734,7 @@ def test_same_name_new_players_are_resolved_or_rejected(gap_pipeline):
     lost = [
         r["provider_player_id"]
         for r in SAME_NAME_ROWS
-        if (v := ("provider_b_player_id", str(r["provider_player_id"]))) not in resolver and v not in rejected
+        if (v := ("provider_b_player_id", str(r["provider_player_id"]))) not in resolver
+        and v not in rejected
     ]
     assert not lost, f"neither resolved nor rejected: {lost}"

@@ -44,7 +44,6 @@ class PlayerDataSchema(pa.DataFrameModel):
         dt_series = pd.to_datetime(series, format="ISO8601", errors="coerce")
         # make sure the number of NAs before conversion == the number of NAs after
         return len(dt_series[dt_series.isna()]) == len(series[series.isna()])
-        
 
 
 class PlayerSyncableContent(SyncableContent):
@@ -231,9 +230,9 @@ class PlayerSyncEngine(SyncEngine):
 
         # determine which fields are available for equality checks based on both inputs
         actual_available_fields = sorted(
-            set(input1.data.columns.intersection(layer.other_equal_fields)).intersection(
-                input2.data.columns.intersection(layer.other_equal_fields)
-            )
+            set(
+                input1.data.columns.intersection(layer.other_equal_fields)
+            ).intersection(input2.data.columns.intersection(layer.other_equal_fields))
         )
 
         # perform field equality checks before processing string similarity: only rows with the same values for every

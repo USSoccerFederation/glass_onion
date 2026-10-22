@@ -385,12 +385,8 @@ class SyncEngine:
         # with both fields
         if not (len(input1_fields) > 0 and len(input2_fields) > 0):
             return pd.DataFrame(
-                {
-                    i: pd.Series(dtype=str)
-                    for i in [input1.id_field, input2.id_field]
-                }
+                {i: pd.Series(dtype=str) for i in [input1.id_field, input2.id_field]}
             )
-
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0)
 
@@ -504,11 +500,8 @@ class SyncEngine:
         # with both fields
         if not (len(name_population) > 0 and len(name_sample) > 0):
             return pd.DataFrame(
-                {
-                    i: pd.Series(dtype=str)
-                    for i in [input1.id_field, input2.id_field]
-                }
-            ) 
+                {i: pd.Series(dtype=str) for i in [input1.id_field, input2.id_field]}
+            )
 
         normalized_name_population = self.normalize(name_population[fields[0]])
         normalized_name_sample = self.normalize(name_sample[fields[1]])

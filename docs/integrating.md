@@ -172,12 +172,8 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 With these prerequisites in place, we can actually run `GroupedData.applyInPandas(func, schema)`:
 
 ```python linenums="1"
-all_synced_records = (
-    all_remaining_records
-        .groupBy("grouping_key")
-        .applyInPandas(
-            synchronize, target_schema
-        )
+all_synced_records = all_remaining_records.groupBy("grouping_key").applyInPandas(
+    synchronize, target_schema
 )
 
 (
@@ -203,7 +199,11 @@ We start with our existing set of synced object records from `ussf.object`.
 ```python linenums="1"
 from glass_onion.resolver import ObjectResolver
 
-id_mask = ["provider_a_object_id", "provider_b_object_id", "provider_c_object_id"] # and so on and so forth...
+id_mask = [
+    "provider_a_object_id",
+    "provider_b_object_id",
+    "provider_c_object_id",
+]  # and so on and so forth...
 meta_columns = [
     # ... any additional columns ...
 ]
@@ -211,7 +211,10 @@ flag_columns = meta_columns + id_mask + ["flag_reason"]
 
 # object_flagged.conflicts: the records each flagged record conflicted with, in the column order of its struct
 conflict_columns = ["source"] + id_mask + meta_columns
-conflicts_type = T.ArrayType(T.StructType([T.StructField(c, T.StringType()) for c in conflict_columns]))
+conflicts_type = T.ArrayType(
+    T.StructType([T.StructField(c, T.StringType()) for c in conflict_columns])
+)
+
 
 def spark_to_records(rows, source):
     # a record is one source row: the IDs it syncs together plus the fields needed to flag it or describe the player
@@ -220,8 +223,15 @@ def spark_to_records(rows, source):
         row = row.asDict()
         ids = {k: row[k] for k in id_mask if row.get(k) is not None}
         if len(ids) > 0:
-            records.append({"source": source, "ids": ids, "meta": {k: row.get(k) for k in meta_columns}})
+            records.append(
+                {
+                    "source": source,
+                    "ids": ids,
+                    "meta": {k: row.get(k) for k in meta_columns},
+                }
+            )
     return records
+
 
 # 0. Grab datasets and format into dataframes
 
@@ -233,7 +243,9 @@ object_records = spark_to_records(
 )
 
 # one record per distinct ID combination, described by the first grouping key it was synced in
-first_seen = Window.partitionBy(*id_mask).orderBy(F.col("grouping_key").asc_nulls_last(), "data_provider")
+first_seen = Window.partitionBy(*id_mask).orderBy(
+    F.col("grouping_key").asc_nulls_last(), "data_provider"
+)
 raw_records = spark_to_records(
     normalize_ids(spark.read.table("preliminary_set"))
         .filter(" OR ".join([f"{k} IS NOT NULL" for k in id_mask]))
@@ -248,7 +260,6 @@ raw_records = spark_to_records(
 We can then generate the graph of identifiers via [ObjectResolver][glass_onion.resolver.ObjectResolver]:
 
 ```python linenums="1"
-
 # 1. build the graph from the sources of truth (ussf.object)
 graph = ObjectResolver()
 graph.resolve([r for r in object_records if len(r["ids"]) > 1])
@@ -260,13 +271,16 @@ for r in object_records:
     if len(r["ids"]) == 1 and graph.add_record(r):
         added_singles.append(r)
 
-all_added = pd.concat([added_overrides, all_added, to_frame(added_singles)], ignore_index=True)
+all_added = pd.concat(
+    [added_overrides, all_added, to_frame(added_singles)], ignore_index=True
+)
 ```
 
 Then, we can layer on our proposals and add any single-identifier proposals to the graph. We hold out any proposals that have previously appeared in our `ussf.object_flagged` table to avoid adding them to a valid object component in the graph.
 
 ```python 
 partial_hold_reasons = ["duplicate"]
+
 
 def held_ids(vouched):
     held = set()
@@ -278,6 +292,7 @@ def held_ids(vouched):
         held.update(vs)
     return held
 
+
 # `vouched` IDs come from the ussf.object table. We implicitly trust that these are correct.
 vouched = {v for vs in frame_vertices(all_added) for v in vs}
 # We grab the previously held-out/flagged IDs, ignoring the IDs we can vouch for (via helper method `held_ids`)
@@ -285,14 +300,23 @@ previously_held = held_ids(vouched)
 
 # 2. merge in proposals. A proposal with a held-out ID is, well, held out to avoid that ID being pulled into a valid object's component
 proposals = [r for r in raw_records if len(r["ids"]) > 1]
-held_proposals = [r for r in proposals if any(v in previously_held for v in vertices(r))]
-graph.resolve([r for r in proposals if not any(v in previously_held for v in vertices(r))])
+held_proposals = [
+    r for r in proposals if any(v in previously_held for v in vertices(r))
+]
+graph.resolve(
+    [r for r in proposals if not any(v in previously_held for v in vertices(r))]
+)
 
 # 3. a vertex in the graph with no edges (IE: a single-ID proposal) becomes its own record, unless it's already in the graph, held out, or in a record left out above
 excluded = (
     previously_held
     | {v for r in held_proposals for v in vertices(r)}
-    | {v for frame in (all_rejected, rejected_proposals) for vs in frame_vertices(frame) for v in vs}
+    | {
+        v
+        for frame in (all_rejected, rejected_proposals)
+        for vs in frame_vertices(frame)
+        for v in vs
+    }
 )
 
 for r in raw_records:
@@ -309,21 +333,32 @@ But what happens to rejected proposals? We add these (and the other records they
 ```python linenums="1"
 flag_rows = {}
 
+
 def flatten(records):
     # Records, flattened as in ObjectResolver.rejected
     return to_frame(records).to_dict("records")
+
 
 def add_flag(row, reason, conflicts):
     # row: one record, flattened as in ObjectResolver.rejected; conflicts: the flattened records it conflicted with
     ids = {k: value(row, k) for k in id_mask if value(row, k) is not None}
     key = (row["source"], tuple(sorted(ids.items())))
-    flag = flag_rows.setdefault(key, {**{k: value(row, k) for k in meta_columns}, **{k: ids.get(k) for k in id_mask}, "flag_reason": reason, "conflicts": []})
+    flag = flag_rows.setdefault(
+        key,
+        {
+            **{k: value(row, k) for k in meta_columns},
+            **{k: ids.get(k) for k in id_mask},
+            "flag_reason": reason,
+            "conflicts": [],
+        },
+    )
 
     # keeping the conflicts in the record allows us to resolve them more easily in the future
     for x in conflicts:
         c = (x["source"],) + tuple(value(x, k) for k in conflict_columns[1:])
         if c not in flag["conflicts"]:
             flag["conflicts"].append(c)
+
 
 for row in truth_rejected.to_dict("records"):
     add_flag(row, "conflicting source of truth", flatten(row["conflicts"]))
@@ -336,8 +371,14 @@ for row in rejected_proposals.to_dict("records"):
 print(f"{datetime.now()}: records to flag: {len(flag_rows)}")
 if len(flag_rows) > 0:
     flags = spark.createDataFrame(
-        [tuple(row[c] for c in flag_columns) + (row["conflicts"],) for row in flag_rows.values()],
-        T.StructType([T.StructField(c, T.StringType()) for c in flag_columns] + [T.StructField("conflicts", conflicts_type)])
+        [
+            tuple(row[c] for c in flag_columns) + (row["conflicts"],)
+            for row in flag_rows.values()
+        ],
+        T.StructType(
+            [T.StructField(c, T.StringType()) for c in flag_columns]
+            + [T.StructField("conflicts", conflicts_type)]
+        ),
     )
     append_new_flagged_ids(flags.dropDuplicates(id_mask), flag_columns + ["conflicts"])
 ```
@@ -348,13 +389,18 @@ We can then convert our graph components into rows, accounting for duplicates...
 
 ```python linenums="1"
 # 4. write one row per component to the network table
-network_columns = id_mask + [
-    # ... any metadata columns ...
-]
+network_columns = (
+    id_mask
+    + [
+        # ... any metadata columns ...
+    ]
+)
+
 
 def first_seen_key(record):
     m = record["meta"]["grouping_key"]
     return (m is None, m or "")
+
 
 network_rows = []
 # for each identified component
@@ -368,14 +414,16 @@ for ids, records in graph.components():
     # two steps:
     # 1. if this row came from the raw data (is net new), then we get the first grouping key it appeared in from the dataset
     #   - if the row came from the object records (or for some reason neither source), then set to None
-    # 2. IF step 1 produced None, return 'a' as a placeholder to sort above all raw data. 
-    ussf_match_id = (raw[0]["meta"]["ussf_match_id"] if len(raw) > 0 and len(objects) == 0 else None) or "a"
+    # 2. IF step 1 produced None, return 'a' as a placeholder to sort above all raw data.
+    ussf_match_id = (
+        raw[0]["meta"]["ussf_match_id"] if len(raw) > 0 and len(objects) == 0 else None
+    ) or "a"
     # create a tuple of the ID values + the appropriate metadata values from `meta`
     network_rows.append(
         tuple([ids.get(k) for k in network_id_columns])
         + (
-            ussf_match_id, 
-            get_right_provider(meta["data_provider"], ids), 
+            ussf_match_id,
+            get_right_provider(meta["data_provider"], ids),
             # ... any metadata values ...
         )
     )
@@ -385,12 +433,14 @@ for ids, records in graph.components():
 
 ```python linenums="1"
 (
-    spark.createDataFrame(network_rows, T.StructType([T.StructField(c, T.StringType()) for c in network_columns]))
-        .write
-        .mode("overwrite")
-        .option("overwriteSchema", "true")
-        .format("delta")
-        .saveAsTable("ussf.tmp_object_network")
+    spark.createDataFrame(
+        network_rows,
+        T.StructType([T.StructField(c, T.StringType()) for c in network_columns]),
+    )
+    .write.mode("overwrite")
+    .option("overwriteSchema", "true")
+    .format("delta")
+    .saveAsTable("ussf.tmp_object_network")
 )
 ```
 
@@ -559,12 +609,10 @@ clean_list = (
 )
 
 (
-    clean_list
-        .write
-        .mode("overwrite")
-        .option("overwriteSchema", "true")
-        .format("delta")
-        .saveAsTable("ussf.tmp_object_clean")
+    clean_list.write.mode("overwrite")
+    .option("overwriteSchema", "true")
+    .format("delta")
+    .saveAsTable("ussf.tmp_object_clean")
 )
 ```
 
