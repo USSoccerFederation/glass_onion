@@ -353,15 +353,15 @@ def test_synchronize_population_mixed_nulls(method: str):
     assert len(actual) > 0
     assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
-    target = actual.loc[actual["provider_a_object_id"] == 1, :]
+    target = actual.loc[actual["provider_a_object_id"] == "1", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == "1"
 
-    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    target = actual.loc[actual["provider_a_object_id"] == "3", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 3
+    assert target.loc[target.index[0], "provider_b_object_id"] == "3"
 
-    assert len(actual[actual["provider_a_object_id"] == 2]) == 0
+    assert len(actual[actual["provider_a_object_id"] == "2"]) == 0
 
 
 @pytest.mark.parametrize(
@@ -403,9 +403,9 @@ def test_synchronize_should_match_same_name(method: str):
     assert len(actual) > 0
     assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
-    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    target = actual.loc[actual["provider_a_object_id"] == "3", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == "1"
 
 
 def test_synchronize_with_cosine_similarity_caches_results(mocker):
