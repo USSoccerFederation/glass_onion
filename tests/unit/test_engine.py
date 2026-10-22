@@ -295,21 +295,21 @@ def test_synchronize_sample_mixed_nulls(method: str):
 
     engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
 
-    actual = getattr(engine, method)(left, right, ("object_name", "object_name"))
+    actual = getattr(engine, method)(engine.content[0], engine.content[1], ("object_name", "object_name"))
 
     assert isinstance(actual, pd.DataFrame)
     assert len(actual) > 0
     assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
-    target = actual.loc[actual["provider_a_object_id"] == 1, :]
+    target = actual.loc[actual["provider_a_object_id"] == "1", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == "1"
 
-    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    target = actual.loc[actual["provider_a_object_id"] == "3", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 3
+    assert target.loc[target.index[0], "provider_b_object_id"] == "3"
 
-    assert len(actual[actual["provider_a_object_id"] == 2]) == 0
+    assert len(actual[actual["provider_a_object_id"] == "2"]) == 0
 
 
 @pytest.mark.parametrize(
