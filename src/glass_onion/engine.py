@@ -7,6 +7,7 @@ from glass_onion.utils import (
     apply_cosine_similarity,
     dataframe_coalesce,
     series_normalize,
+    series_stringify_object_id,
     string_pair_cosine_similarity,
 )
 from itertools import combinations
@@ -132,6 +133,14 @@ class SyncableContent:
 
         return self
 
+    def normalize_ids(self):
+        """
+        Converts all object identifiers in this instance into strings, accounting for NaN/None, float/int differences, etc.
+
+        NOTE: This operation is in-place and directly modifies the underlying `data` pandas.DataFrame.
+        """
+        self.data[self.id_field] = series_stringify_object_id(self.data[self.id_field])
+
 
 class SyncEngine:
     """
@@ -185,6 +194,9 @@ class SyncEngine:
         )
 
         for c in content:
+            # normalize all values
+            c.normalize_ids()
+            # check validity
             assert c.validate_data_schema(), (
                 f"`data` for provider {c.provider} does not meet the schema requirements for its SyncableContent class."
             )
@@ -284,11 +296,8 @@ class SyncEngine:
         # with both fields
         if not (len(name_population) > 0 and len(name_sample) > 0):
             return pd.DataFrame(
-                {
-                    i: pd.Series(dtype=str)
-                    for i in [input1.id_field, input2.id_field]
-                }
-            ) 
+                {i: pd.Series(dtype=str) for i in [input1.id_field, input2.id_field]}
+            )
 
         normalized_name_population = self.normalize(name_population[fields[0]])
         normalized_name_sample = self.normalize(name_sample[fields[1]])

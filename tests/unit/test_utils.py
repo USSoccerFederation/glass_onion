@@ -1,4 +1,6 @@
 from pathlib import Path
+
+import numpy as np
 import glass_onion
 from glass_onion import string_ngrams
 import pytest
@@ -9,6 +11,7 @@ from pandas.core.dtypes.common import is_string_dtype, is_float_dtype
 from glass_onion.utils import (
     apply_cosine_similarity,
     dataframe_clean_merged_fields,
+    series_stringify_object_id,
     string_clean_spaces,
     string_remove_accents,
     string_remove_youth_suffixes,
@@ -16,6 +19,7 @@ from glass_onion.utils import (
     string_pair_cosine_similarity,
     dataframe_coalesce,
     series_normalize,
+    string_stringify_object_id,
 )
 
 FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
@@ -402,9 +406,9 @@ def test_string_pair_cosine_similarity_matches_apply_cosine_similarity():
                 continue
 
             expected = apply_cosine_similarity(pd.Series([name1]), pd.Series([name2]))
-            assert actual == pytest.approx(
-                expected.loc[0, "similarity"], abs=1e-12
-            ), f"{name1} vs {name2}"
+            assert actual == pytest.approx(expected.loc[0, "similarity"], abs=1e-12), (
+                f"{name1} vs {name2}"
+            )
 
 
 @pytest.mark.parametrize(
@@ -415,7 +419,29 @@ def test_string_pair_cosine_similarity_matches_apply_cosine_similarity():
         ("ab", "cd"),
     ],
 )
-def test_string_pair_cosine_similarity_no_ngrams_returns_none(
-    input1: str, input2: str
-):
+def test_string_pair_cosine_similarity_no_ngrams_returns_none(input1: str, input2: str):
     assert string_pair_cosine_similarity(input1, input2) is None
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (123, "123"),
+        ("123", "123"),
+        (123.0, "123"),
+        ("123.0", "123"),
+        (123.123, "123.123"),
+        ("123.123", "123.123"),
+        ("NULL", None),
+        ("nan", None),
+    ],
+)
+def test_string_stringify_object_id(input: str, expected: str):
+    assert string_stringify_object_id(input) == expected
+
+
+def test_series_stringify_object_id():
+    test = pd.Series([123, "123", 123.0, "123.0", "123.123", 123.123, "NULL", "nan"])
+    normalized = series_stringify_object_id(test)
+
+    assert set(["123", "123.123", np.nan]) == set(normalized)

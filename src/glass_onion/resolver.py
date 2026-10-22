@@ -1,8 +1,8 @@
 from collections.abc import Hashable, Iterator
-from numbers import Real
-from typing import Any, Literal, cast
-
+from typing import Any, Literal
 import pandas as pd
+
+from glass_onion.utils import string_stringify_object_id
 
 Vertex = tuple[str, Hashable]
 """
@@ -13,7 +13,7 @@ Record = dict[str, Any]
 """
 One source row: `{"source": str, "ids": {provider ID field: ID}, "meta": {...}}`.
 
-`ids` holds the IDs this row syncs together; `source` and `meta` are carried along untouched. IDs are normalized when read (see [normalize_id()][glass_onion.resolver.normalize_id]), so numeric IDs end up as strings and missing or blank IDs are ignored.
+`ids` holds the IDs this row syncs together; `source` and `meta` are carried along untouched. IDs are normalized when read (see [string_stringify_object_id()][glass_onion.resolver.string_stringify_object_id]), so numeric IDs end up as strings and missing or blank IDs are ignored.
 """
 
 PathVertex = tuple[Literal["n"], Vertex] | tuple[Literal["r"], int]
@@ -27,30 +27,9 @@ A vertex in [conflict_paths()][glass_onion.resolver.ObjectResolver.conflict_path
 """
 
 
-def normalize_id(i: Hashable) -> Hashable | None:
-    """
-    Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects.
-
-    Missing values (`None`, NaN, `pd.NA`), blank strings, and the strings "<na>", "nan", "none" and "null" (in any casing, as left by casting missing values to strings) are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
-
-    Args:
-        i (collections.abc.Hashable): a provider ID, as found in a [Record][glass_onion.resolver.Record]'s `ids`.
-
-    Returns:
-        The normalized ID, or `None` if `i` isn't a valid ID.
-    """
-    if pd.api.types.is_scalar(i) and pd.isna(cast(Any, i)):
-        return None
-    if isinstance(i, str):
-        return None if i.strip() == "" or i.strip().lower() in ["<na>", "nan", "none", "null"] else i
-    if isinstance(i, Real):
-        return str(int(i)) if float(i).is_integer() else str(i)
-    return i
-
-
 def vertices(record: Record) -> list[Vertex]:
     """
-    Builds the `(provider ID field, ID)` vertices for a record. IDs are normalized and invalid IDs dropped (see [normalize_id()][glass_onion.resolver.normalize_id]).
+    Builds the `(provider ID field, ID)` vertices for a record. IDs are normalized and invalid IDs dropped (see [string_stringify_object_id()][glass_onion.resolver.string_stringify_object_id]).
 
     Args:
         record (glass_onion.resolver.Record): the record to build vertices for.
@@ -58,7 +37,7 @@ def vertices(record: Record) -> list[Vertex]:
     Returns:
         A list of [Vertex][glass_onion.resolver.Vertex] objects, one per valid ID in `record["ids"]`.
     """
-    vs = [(p, normalize_id(i)) for p, i in record["ids"].items()]
+    vs = [(p, string_stringify_object_id(i)) for p, i in record["ids"].items()]
     return [(p, i) for p, i in vs if i is not None]
 
 
@@ -73,14 +52,14 @@ def to_frame(
         conflicts (list[list[glass_onion.resolver.Record]] | None): if given, the records each of `records` conflicted with, added as a `conflicts` column.
 
     Returns:
-        A DataFrame with one row per record: a `source` column, one column per provider ID field in any record (IDs normalized, invalid or missing IDs `None`; see [normalize_id()][glass_onion.resolver.normalize_id]), then the record's `meta` keys, then `conflicts` if given.
+        A DataFrame with one row per record: a `source` column, one column per provider ID field in any record (IDs normalized, invalid or missing IDs `None`; see [string_stringify_object_id()][glass_onion.resolver.string_stringify_object_id]), then the record's `meta` keys, then `conflicts` if given.
     """
     fields = list(dict.fromkeys(p for r in records for p in r["ids"]))
     frame = pd.DataFrame(
         [
             {
                 "source": r["source"],
-                **{p: normalize_id(r["ids"].get(p)) for p in fields},
+                **{p: string_stringify_object_id(r["ids"].get(p)) for p in fields},
                 **r["meta"],
             }
             for r in records
@@ -310,7 +289,7 @@ class ObjectResolver:
         A record is rejected if merging it would put two IDs from one provider into the same component. The result doesn't depend on the order of `records`.
 
         Methodology:
-            1. Drop records with no valid IDs (see [normalize_id()][glass_onion.resolver.normalize_id]). These appear in neither `added` nor `rejected`.
+            1. Drop records with no valid IDs (see [string_stringify_object_id()][glass_onion.resolver.string_stringify_object_id]). These appear in neither `added` nor `rejected`.
             2. Reject each record that conflicts with the resolver as it stands.
             3. Of the remaining records, reject those on a path linking two IDs from one provider (see [conflict_paths()][glass_onion.resolver.ObjectResolver.conflict_paths]). Records that merely touch the same object are kept, and records that only conflict with each other are all rejected.
             4. Add the remaining records to the resolver, largest first. Records whose IDs are all in one record from the resolver or this batch are skipped and appear in neither `added` nor `rejected`; resolver records whose IDs are all in an added record are removed from the resolver (see [add_record()][glass_onion.resolver.ObjectResolver.add_record]).

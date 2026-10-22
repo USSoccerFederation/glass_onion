@@ -232,3 +232,51 @@ def test_append_happy_path():
     # confirm data appended
     target = appended.data.loc[appended.data["provider_b_object_id"] == 2, :]
     assert len(target) == 2
+
+
+def test_syncablecontent_normalize_ids_mixed_same_values():
+    test = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_b_object_id": i,
+                    "object_name": "A",
+                }
+                for i in [123, "123", 123.0, "123.0", "nan"]
+            ]
+        ),
+    )
+
+    test.normalize_ids()
+    assert len(test.data) == 5
+    assert test.data[test.id_field].nunique(dropna=False) == 2
+    assert "nan" not in test.data[test.id_field].unique()
+    assert "123.0" not in test.data[test.id_field].unique()
+
+
+def test_syncablecontent_validate_normalized_ids():
+    # nan is not normalized, so this should not throw an error
+    test = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            [
+                {
+                    "provider_b_object_id": i,
+                    "object_name": "A",
+                }
+                for i in [123, "123", 123.0, "123.0", "nan"]
+            ]
+        ),
+    )
+    assert test.validate_data_schema()
+
+    test.normalize_ids()
+
+    # but now that it IS normalized, we have a NULL/NaN/NA in a non-nullable field,
+    # which should throw.
+    with pytest.raises(AssertionError):
+        assert test.validate_data_schema() == False
+

@@ -1,6 +1,7 @@
 """Utilities for performing object synchronization."""
 
 from collections import Counter
+from collections.abc import Hashable
 import math
 from typing import Optional, Union
 import pandas as pd
@@ -9,6 +10,8 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
+from numbers import Real
+from typing import Any, cast
 
 
 def dataframe_coalesce(
@@ -469,3 +472,63 @@ def apply_cosine_similarity(
         )
 
     return pd.DataFrame(match_results)
+
+
+def is_integer(i: str) -> bool:
+    """
+    Check if a given string can be coerced into an integer.
+
+    Args:
+        i (str): some string
+
+    Returns:
+        bool: if this string is a valid integer or not.
+    """
+    try:
+        return float(i).is_integer()
+    except:
+        return False
+
+
+def string_stringify_object_id(i: Hashable) -> Hashable | None:
+    """
+    Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects and identifier deduplication.
+
+    Missing values (`None`, NaN, `pd.NA`), blank strings, and the strings "<na>", "nan", "none" and "null" (in any casing, as left by casting missing values to strings) are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
+
+    Args:
+        i (collections.abc.Hashable): a provider ID, as found in a [Record][glass_onion.resolver.Record]'s `ids`.
+
+    Returns:
+        The normalized ID, or `None` if `i` isn't a valid ID.
+    """
+    if pd.api.types.is_scalar(i) and pd.isna(cast(Any, i)):
+        return None
+
+    if isinstance(i, str):
+        stripped = i.strip()
+        if stripped == "" or stripped.lower() in ["<na>", "nan", "none", "null"]:
+            return None
+        if is_integer(stripped):
+            return str(int(float(stripped)))
+        else:
+            return stripped
+
+    if isinstance(i, Real):
+        return str(int(i)) if is_integer(i) else str(i)
+    return i
+
+
+def series_stringify_object_id(series: "pd.Series") -> "pd.Series[str]":
+    """
+    Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects and identifier deduplication.
+
+    Please see [`string_stringify_object_id`][glass_onion.utils.string_stringify_object_id] for more details.
+
+    Args:
+        input (pd.Series): a pandas.Series with (ostensibly) identifier strings.
+
+    Returns:
+        A pandas.Series with normalized idenfifier strings, or np.nan where applicable.
+    """
+    return series.apply(string_stringify_object_id)
