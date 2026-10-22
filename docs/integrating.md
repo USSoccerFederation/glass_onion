@@ -6,7 +6,7 @@ In general, our process looks something like this for every object type:
 
 <img src="site:assets/img/integration/Slide1.png" style="margin: auto !important; display: block;" />
 
-In our pipeline, each object type depends on a "higher-order" object type to have unified identifiers in order to reduce the search space of potential matches (more details in [Step 2](#step-2-glass-onion-synchronization)). Data providers modify competitions and seasons least often, so we synchronize those by hand. That manual work allows us to automate the synchronization process for teams, which unlocks that process for matches, which then unlocks that process for players.
+In our pipeline, each object type depends on a "higher-order" object type to have unified identifiers in order to reduce the search space of potential matches (more details in [Step 2](#step-2-synchronization)). Data providers modify competitions and seasons least often, so we synchronize those by hand. That manual work allows us to automate the synchronization process for teams, which unlocks that process for matches, which then unlocks that process for players.
 
 ## Start: Provider-specific object tables
 
@@ -23,7 +23,7 @@ We collect data from the provider-specific tables into a single Spark DataFrame 
 - data_provider: the data provider's name
 - provider_object_id: the ID of the object in the data provider's system
 - Any object-specific columns to use for synchronization
-- A grouping key (More on this in [Step 2](#step-2-glass-onion-synchronization))
+- A grouping key (More on this in [Step 2](#step-2-synchronization))
 
 Here's what this might look like in code for player synchronization:
 

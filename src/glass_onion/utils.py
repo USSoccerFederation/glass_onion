@@ -526,7 +526,7 @@ def series_stringify_object_id(series: "pd.Series") -> "pd.Series[str]":
     Please see [`string_stringify_object_id`][glass_onion.utils.string_stringify_object_id] for more details.
 
     Args:
-        input (pd.Series): a pandas.Series with (ostensibly) identifier strings.
+        series (pd.Series): a pandas.Series with (ostensibly) identifier strings.
 
     Returns:
         A pandas.Series with normalized idenfifier strings, or np.nan where applicable.

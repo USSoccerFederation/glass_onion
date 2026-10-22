@@ -279,4 +279,3 @@ def test_syncablecontent_validate_normalized_ids():
     # which should throw.
     with pytest.raises(AssertionError):
         assert test.validate_data_schema() == False
-

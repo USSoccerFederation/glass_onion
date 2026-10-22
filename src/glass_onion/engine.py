@@ -158,6 +158,8 @@ class SyncEngine:
     This result dataframe is then deduplicated: by default, the result dataframe is grouped by the specific columns defined in SyncEngine and the first non-null result is selected for each data provider's identifier field.
 
     This class should be subclassed for each new object type: see [PlayerSyncEngine][glass_onion.player.PlayerSyncEngine] for an example.
+
+    NOTE: any `SyncableContent` objects provided to a `SyncEngine` will have their identifiers converted to strings for easier deduplication. Please see [SyncableContent.normalize_ids][glass_onion.engine.SyncableContent.normalize_ids] and [utils.string_stringify_object_id][glass_onion.utils.string_stringify_object_id] for more details.
     """
 
     def __init__(
