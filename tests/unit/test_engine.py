@@ -1,8 +1,11 @@
+from random import Random
 from typing import Tuple
 from glass_onion import SyncableContent, SyncEngine
+import glass_onion.engine
 import pytest
 import re
 import pandas as pd
+from glass_onion.utils import series_normalize
 
 
 def test_init_disjoint_object_types():
@@ -124,6 +127,39 @@ def test_init_object_type_empty_whitespace():
         assert False
 
 
+def test_init_content_fails_schema_validation():
+    class NamedSyncableContent(SyncableContent):
+        def validate_data_schema(self) -> bool:
+            return "object_name" in self.data.columns and super().validate_data_schema()
+
+    # creating content only runs the base structural checks, so the invalid object can be created
+    valid = NamedSyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame([{"provider_a_object_id": 1, "object_name": "A"}]),
+    )
+    invalid = NamedSyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame([{"provider_b_object_id": 1}]),
+    )
+
+    with pytest.raises(
+        AssertionError,
+        match=re.escape(
+            "`data` for provider provider_b does not meet the schema requirements for its SyncableContent class."
+        ),
+    ):
+        SyncEngine(
+            object_type="object",
+            content=[valid, invalid],
+            join_columns=["object_name"],
+        )
+
+        # should never get here
+        assert False
+
+
 @pytest.mark.parametrize(
     "fields, data, expected_error",
     [
@@ -154,17 +190,6 @@ def test_init_object_type_empty_whitespace():
                 ]
             ).head(0),
             "Both SyncableContent objects must be non-empty.",
-        ),
-        (
-            ("object_name", "object_name"),
-            pd.DataFrame(
-                {
-                    "provider_a_object_id": range(1, 3),
-                    "provider_b_object_id": range(1, 3),
-                    "object_name": [pd.NA] * 2,
-                }
-            ),
-            "Both SyncableContent objects must have > 0 non-null elements in `data`.",
         ),
     ],
 )
@@ -208,6 +233,43 @@ def test_synchronize_with_error_cases(
         "synchronize_with_cosine_similarity",
     ],
 )
+def test_synchronize_with_invalid_data_frames_forcing_zero_results(method: str):
+    data = pd.DataFrame(
+        {
+            "provider_a_object_id": range(1, 3),
+            "provider_b_object_id": range(1, 3),
+            "object_name": [pd.NA] * 2,
+        }
+    )
+
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=data,
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=data,
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+
+    result = getattr(engine, method)(
+        input1=left, input2=right, fields=["object_name", "object_name"]
+    )
+    assert len(result) == 0
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "synchronize_with_naive_match",
+        "synchronize_with_fuzzy_match",
+        "synchronize_with_cosine_similarity",
+    ],
+)
 def test_synchronize_sample_mixed_nulls(method: str):
     left = SyncableContent(
         "object",
@@ -233,21 +295,23 @@ def test_synchronize_sample_mixed_nulls(method: str):
 
     engine = SyncEngine("object", [left, right], ["object_name"], verbose=True)
 
-    actual = getattr(engine, method)(left, right, ("object_name", "object_name"))
+    actual = getattr(engine, method)(
+        engine.content[0], engine.content[1], ("object_name", "object_name")
+    )
 
     assert isinstance(actual, pd.DataFrame)
     assert len(actual) > 0
     assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
-    target = actual.loc[actual["provider_a_object_id"] == 1, :]
+    target = actual.loc[actual["provider_a_object_id"] == "1", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == "1"
 
-    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    target = actual.loc[actual["provider_a_object_id"] == "3", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 3
+    assert target.loc[target.index[0], "provider_b_object_id"] == "3"
 
-    assert len(actual[actual["provider_a_object_id"] == 2]) == 0
+    assert len(actual[actual["provider_a_object_id"] == "2"]) == 0
 
 
 @pytest.mark.parametrize(
@@ -289,15 +353,15 @@ def test_synchronize_population_mixed_nulls(method: str):
     assert len(actual) > 0
     assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
-    target = actual.loc[actual["provider_a_object_id"] == 1, :]
+    target = actual.loc[actual["provider_a_object_id"] == "1", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == "1"
 
-    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    target = actual.loc[actual["provider_a_object_id"] == "3", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 3
+    assert target.loc[target.index[0], "provider_b_object_id"] == "3"
 
-    assert len(actual[actual["provider_a_object_id"] == 2]) == 0
+    assert len(actual[actual["provider_a_object_id"] == "2"]) == 0
 
 
 @pytest.mark.parametrize(
@@ -339,6 +403,253 @@ def test_synchronize_should_match_same_name(method: str):
     assert len(actual) > 0
     assert set(["provider_a_object_id", "provider_b_object_id"]) == set(actual.columns)
 
-    target = actual.loc[actual["provider_a_object_id"] == 3, :]
+    target = actual.loc[actual["provider_a_object_id"] == "3", :]
     assert len(target) == 1
-    assert target.loc[target.index[0], "provider_b_object_id"] == 1
+    assert target.loc[target.index[0], "provider_b_object_id"] == "1"
+
+
+def test_synchronize_with_cosine_similarity_caches_results(mocker):
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame(
+            {
+                "provider_a_object_id": [1, 2],
+                "object_name": ["Test Team", "Other Club"],
+            }
+        ),
+    )
+
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            {
+                "provider_b_object_id": [1, 2],
+                "object_name": ["Other Club", "Test Team FC"],
+            }
+        ),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "apply_cosine_similarity")
+    fields = ("object_name", "object_name")
+
+    first = engine.synchronize_with_cosine_similarity(left, right, fields)
+    second = engine.synchronize_with_cosine_similarity(left, right, fields)
+
+    # the same inputs are only scored once, and the cached result isn't modified by the first call
+    assert spy.call_count == 1
+    pd.testing.assert_frame_equal(first, second)
+
+    # the threshold is applied after the cache, so a different threshold still uses the cached result
+    strict = engine.synchronize_with_cosine_similarity(
+        left, right, fields, threshold=1.0
+    )
+    assert spy.call_count == 1
+    assert len(strict) < len(first)
+
+    # different inputs are scored separately
+    engine.synchronize_with_cosine_similarity(right, left, fields)
+    assert spy.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "right_name, threshold, expected_match",
+    [
+        ("Test Team", 0.75, True),
+        ("Test Team FC", 0.75, True),
+        ("Test Team FC", 1.0, False),
+        ("Other Club", 0.75, False),
+        ("Other Club", 0.0, True),
+    ],
+)
+def test_synchronize_with_cosine_similarity_single_pair_fast_path(
+    right_name: str, threshold: float, expected_match: bool, mocker
+):
+    # a null name on each side is ignored, so each side only has one name to compare
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame(
+            {"provider_a_object_id": ["1", "2"], "object_name": [pd.NA, "Test Team"]}
+        ),
+    )
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            {"provider_b_object_id": ["3", "4"], "object_name": [right_name, pd.NA]}
+        ),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "apply_cosine_similarity")
+    actual = engine.synchronize_with_cosine_similarity(
+        left, right, ("object_name", "object_name"), threshold=threshold
+    )
+
+    # the pair is scored without fitting a vectorizer
+    assert spy.call_count == 0
+    assert set(actual.columns) == {"provider_a_object_id", "provider_b_object_id"}
+    if expected_match:
+        assert actual.to_dict("records") == [
+            {"provider_a_object_id": "2", "provider_b_object_id": "3"}
+        ]
+    else:
+        assert len(actual) == 0
+
+
+def test_synchronize_with_cosine_similarity_single_pair_without_ngrams_falls_back(
+    mocker,
+):
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": ["1"], "object_name": ["AB"]}),
+    )
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame({"provider_b_object_id": ["2"], "object_name": ["ABC"]}),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "apply_cosine_similarity")
+    engine.synchronize_with_cosine_similarity(
+        left, right, ("object_name", "object_name")
+    )
+
+    # "ab" has no 3-character n-grams, so the vectorizer handles it
+    assert spy.call_count == 1
+
+
+def test_normalize_matches_series_normalize_and_caches(mocker):
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame({"provider_a_object_id": [1], "object_name": ["A"]}),
+    )
+    engine = SyncEngine("object", [left], ["object_name"])
+    spy = mocker.spy(glass_onion.engine, "series_normalize")
+
+    values = pd.Series(
+        ["José  Pérez", "J. Doe", "José  Pérez", "Test-Team FC"], index=[5, 7, 9, 11]
+    )
+    actual = engine.normalize(values)
+
+    assert actual.tolist() == series_normalize(values).tolist()
+    assert actual.index.tolist() == [5, 7, 9, 11]
+    # duplicate values are only normalized once
+    assert spy.call_count == 1
+    assert len(spy.call_args.args[0]) == 3
+
+    # already-normalized values aren't normalized again
+    engine.normalize(values.iloc[[1, 0]])
+    assert spy.call_count == 1
+
+    # only unseen values are normalized
+    engine.normalize(pd.Series(["J. Doe", "New Name"]))
+    assert spy.call_count == 2
+    assert spy.call_args.args[0].tolist() == ["New Name"]
+
+
+def _naive_match_reference(
+    left: SyncableContent, right: SyncableContent, fields: Tuple[str, str]
+) -> pd.DataFrame:
+    # brute-force pairwise implementation of the naive match, used as an oracle
+    population = left.data.loc[left.data[fields[0]].notna(), :]
+    sample = right.data.loc[right.data[fields[1]].notna(), :]
+    population_names = series_normalize(population[fields[0]]).tolist()
+    sample_names = series_normalize(sample[fields[1]]).tolist()
+    population_ids = population[left.id_field].tolist()
+    sample_ids = sample[right.id_field].tolist()
+
+    results = []
+    name_map: dict[str, str] = {}
+    for i, i1_raw in enumerate(population_names):
+        for j, i2_raw in enumerate(sample_names):
+            if i1_raw not in name_map and i2_raw not in name_map.values():
+                if i1_raw == i2_raw:
+                    name_map[i1_raw] = i2_raw
+                    results.append((population_ids[i], sample_ids[j]))
+
+    for i, i1_raw in enumerate(population_names):
+        if i1_raw in name_map:
+            continue
+        i1_set = set(re.split(r"\s+", i1_raw))
+        for j, i2_raw in enumerate(sample_names):
+            if i2_raw in name_map.values():
+                continue
+            i2_set = set(re.split(r"\s+", i2_raw))
+            if i2_set <= i1_set or i1_set <= i2_set:
+                name_map[i1_raw] = i2_raw
+                results.append((population_ids[i], sample_ids[j]))
+                break
+
+    return pd.DataFrame(results, columns=[left.id_field, right.id_field])
+
+
+@pytest.mark.parametrize("seed", range(500))
+def test_synchronize_with_naive_match_matches_reference(seed: int):
+    rng = Random(seed)
+    # small vocabulary so names overlap often; includes accents, casing, and punctuation
+    tokens = [
+        "ana",
+        "bo",
+        "cruz",
+        "de",
+        "silva",
+        "li",
+        "jo",
+        "van",
+        "dijk",
+        "ñu",
+        "Mo-Sa",
+    ]
+
+    def random_names() -> list:
+        names = [
+            None
+            if rng.random() < 0.05
+            else " ".join(rng.choice(tokens) for _ in range(rng.randint(1, 3)))
+            for _ in range(rng.randint(1, 40))
+        ]
+        # guarantee at least one non-null name so the method's input assertions pass
+        if all(n is None for n in names):
+            names[0] = rng.choice(tokens)
+        return names
+
+    left_names = random_names()
+    right_names = random_names()
+    left = SyncableContent(
+        "object",
+        "provider_a",
+        data=pd.DataFrame(
+            {
+                "provider_a_object_id": list(range(len(left_names))),
+                "object_name": left_names,
+            }
+        ),
+    )
+    right = SyncableContent(
+        "object",
+        "provider_b",
+        data=pd.DataFrame(
+            {
+                "provider_b_object_id": list(range(len(right_names))),
+                "object_name": right_names,
+            }
+        ),
+    )
+
+    engine = SyncEngine("object", [left, right], ["object_name"])
+    fields = ("object_name", "object_name")
+    actual = engine.synchronize_with_naive_match(left, right, fields)
+    expected = _naive_match_reference(left, right, fields)
+
+    pd.testing.assert_frame_equal(
+        actual.reset_index(drop=True),
+        expected.reset_index(drop=True),
+        check_dtype=False,
+    )

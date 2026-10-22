@@ -1,4 +1,6 @@
 from pathlib import Path
+
+import numpy as np
 import glass_onion
 from glass_onion import string_ngrams
 import pytest
@@ -9,12 +11,18 @@ from pandas.core.dtypes.common import is_string_dtype, is_float_dtype
 from glass_onion.utils import (
     apply_cosine_similarity,
     dataframe_clean_merged_fields,
+    series_stringify_object_id,
     string_clean_spaces,
     string_remove_accents,
     string_remove_youth_suffixes,
     string_replace_common_womens_suffixes,
+    string_pair_cosine_similarity,
     dataframe_coalesce,
+    series_normalize,
+    string_stringify_object_id,
 )
+
+FIXTURE_DATA_PATH = Path(__file__).resolve().parent.parent / "fixtures"
 
 
 @pytest.mark.parametrize(
@@ -369,3 +377,77 @@ def test_apply_cosine_similarity_error_series_all_nulls():
         ),
     ):
         apply_cosine_similarity(input1, input2)
+
+
+def test_string_pair_cosine_similarity_matches_apply_cosine_similarity():
+    # every name/nickname pair from a real match, plus short and accented edge cases
+    dataset = pd.read_csv(
+        FIXTURE_DATA_PATH / "player" / "2025-07-05-usa-mex.csv", dtype=str
+    )
+    names = (
+        pd.concat([dataset["player_name"], dataset["player_nickname"]])
+        .dropna()
+        .drop_duplicates()
+        .tolist()
+    )[:40] + ["Ab", "Abc", "J. Doe", "José", "Jose"]
+
+    for name1 in names:
+        for name2 in names:
+            normalized = series_normalize(pd.Series([name1, name2]))
+            actual = string_pair_cosine_similarity(
+                normalized.iloc[0], normalized.iloc[1]
+            )
+            if actual is None:
+                # callers fall back to apply_cosine_similarity when a string has no n-grams
+                assert (
+                    len(string_ngrams(normalized.iloc[0])) == 0
+                    or len(string_ngrams(normalized.iloc[1])) == 0
+                )
+                continue
+
+            expected = apply_cosine_similarity(pd.Series([name1]), pd.Series([name2]))
+            assert actual == pytest.approx(expected.loc[0, "similarity"], abs=1e-12), (
+                f"{name1} vs {name2}"
+            )
+
+
+@pytest.mark.parametrize(
+    "input1, input2",
+    [
+        ("ab", "test team"),
+        ("test team", "ab"),
+        ("ab", "cd"),
+    ],
+)
+def test_string_pair_cosine_similarity_no_ngrams_returns_none(input1: str, input2: str):
+    assert string_pair_cosine_similarity(input1, input2) is None
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        (123, "123"),
+        ("123", "123"),
+        (123.0, "123"),
+        ("123.0", "123"),
+        (123.123, "123.123"),
+        ("123.123", "123.123"),
+        ("0007", "0007"),
+        ("12345678901234567890", "12345678901234567890"),
+        ("NULL", None),
+        ("nan", None),
+        (None, None),
+        (-123.0, "-123"),
+        ("-123.0", "-123"),
+        (-123, "-123"),
+    ],
+)
+def test_string_stringify_object_id(input: str, expected: str):
+    assert string_stringify_object_id(input) == expected
+
+
+def test_series_stringify_object_id():
+    test = pd.Series([123, "123", 123.0, "123.0", "123.123", 123.123, "NULL", "nan", "-123.0", "-123", -123.0])
+    normalized = series_stringify_object_id(test)
+
+    assert set(["123", "123.123", "-123", np.nan]) == set(normalized)

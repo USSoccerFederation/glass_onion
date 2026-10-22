@@ -1,12 +1,17 @@
 """Utilities for performing object synchronization."""
 
-from typing import Union
+from collections import Counter
+from collections.abc import Hashable
+import math
+from typing import Optional, Union
 import pandas as pd
 from unidecode import unidecode
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
+from numbers import Real
+from typing import Any, cast
 
 
 def dataframe_coalesce(
@@ -364,6 +369,33 @@ def series_normalize_team_names(input: "pd.Series[str]") -> "pd.Series[str]":
     return result
 
 
+def string_pair_cosine_similarity(input1: str, input2: str) -> Optional[float]:
+    """
+    Computes the cosine similarity [apply_cosine_similarity][glass_onion.utils.apply_cosine_similarity] would produce for exactly one string on each side, without fitting a vectorizer.
+
+    Args:
+        input1 (str): a normalized string (see [series_normalize][glass_onion.utils.series_normalize]).
+        input2 (str): a normalized string (see [series_normalize][glass_onion.utils.series_normalize]).
+
+    Returns:
+        The cosine similarity of the two strings, or `None` if either string has no n-grams (callers should fall back to `apply_cosine_similarity` for that case).
+    """
+    counts = [Counter(string_ngrams(input1)), Counter(string_ngrams(input2))]
+    if any(len(c) == 0 for c in counts):
+        return None
+
+    vectors = []
+    for c in counts:
+        weights = {
+            ngram: n * (math.log(3 / (1 + sum(ngram in d for d in counts))) + 1)
+            for ngram, n in c.items()
+        }
+        norm = math.sqrt(sum(w * w for w in weights.values()))
+        vectors.append({ngram: w / norm for ngram, w in weights.items()})
+
+    return sum(w * vectors[1].get(ngram, 0.0) for ngram, w in vectors[0].items())
+
+
 def apply_cosine_similarity(
     input1: "pd.Series[str]", input2: "pd.Series[str]"
 ) -> pd.DataFrame:
@@ -440,3 +472,48 @@ def apply_cosine_similarity(
         )
 
     return pd.DataFrame(match_results)
+
+
+def string_stringify_object_id(i: Hashable) -> Hashable | None:
+    """
+    Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects and identifier deduplication.
+
+    Missing values (`None`, NaN, `pd.NA`), blank strings, and the strings "<na>", "nan", "none" and "null" (in any casing, as left by casting missing values to strings) are invalid. Other strings are valid, including `"0"`. Numeric IDs are converted to integers and then to strings, so `123`, `123.0` and `"123"` are the same ID. Numbers with a fractional part are converted to strings as is.
+
+    Args:
+        i (collections.abc.Hashable): a provider ID, as found in a [Record][glass_onion.resolver.Record]'s `ids`.
+
+    Returns:
+        The normalized ID, or `None` if `i` isn't a valid ID.
+    """
+    if pd.api.types.is_scalar(i) and pd.isna(cast(Any, i)):
+        return None
+
+    if isinstance(i, str):
+        stripped = i.strip()
+        if stripped == "" or stripped.lower() in ["<na>", "nan", "none", "null"]:
+            return None
+        # remove trailing zeros from decimal string identifiers
+        if k := re.fullmatch(r"(-?\d+)\.0+", stripped):
+            return k.group(1)
+
+        return stripped
+
+    if isinstance(i, Real):
+        return str(int(i)) if float(i).is_integer() else str(i)
+    return i
+
+
+def series_stringify_object_id(series: "pd.Series") -> "pd.Series[str]":
+    """
+    Normalizes a provider ID into the form used for [Vertex][glass_onion.resolver.Vertex] objects and identifier deduplication.
+
+    Please see [`string_stringify_object_id`][glass_onion.utils.string_stringify_object_id] for more details.
+
+    Args:
+        series (pd.Series): a pandas.Series with (ostensibly) identifier strings.
+
+    Returns:
+        A pandas.Series with normalized idenfifier strings, or np.nan where applicable.
+    """
+    return series.apply(string_stringify_object_id)

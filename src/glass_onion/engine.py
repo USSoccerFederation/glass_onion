@@ -1,4 +1,3 @@
-from functools import reduce
 from datetime import datetime
 import re
 from typing import Any, Optional, Tuple, Union
@@ -8,6 +7,8 @@ from glass_onion.utils import (
     apply_cosine_similarity,
     dataframe_coalesce,
     series_normalize,
+    series_stringify_object_id,
+    string_pair_cosine_similarity,
 )
 from itertools import combinations
 
@@ -22,6 +23,8 @@ class SyncableContent:
     def validate_data_schema(self) -> bool:
         """
         Checks if this object's `data` meets the schema requirements for this object type.
+
+        This is not run when the object is created: [SyncEngine][glass_onion.engine.SyncEngine] runs it on each object in `content` when the engine is created, so objects built internally during synchronization aren't re-validated.
 
         This class should be subclassed for each new object type: see [PlayerDataSchema][glass_onion.player.PlayerDataSchema] for an example.
         """
@@ -41,7 +44,8 @@ class SyncableContent:
         self.id_field = f"{provider}_{object_type}_id"
         self.data = data
 
-        assert self.validate_data_schema(), (
+        # only run the base structural checks here: subclass schema validation is expensive, so SyncEngine runs it once per input
+        assert SyncableContent.validate_data_schema(self), (
             "`data` does not meet the schema requirements for this SyncableContent class."
         )
 
@@ -129,6 +133,14 @@ class SyncableContent:
 
         return self
 
+    def normalize_ids(self):
+        """
+        Converts all object identifiers in this instance into strings, accounting for NaN/None, float/int differences, etc.
+
+        NOTE: This operation is in-place and directly modifies the underlying `data` pandas.DataFrame.
+        """
+        self.data[self.id_field] = series_stringify_object_id(self.data[self.id_field])
+
 
 class SyncEngine:
     """
@@ -146,6 +158,8 @@ class SyncEngine:
     This result dataframe is then deduplicated: by default, the result dataframe is grouped by the specific columns defined in SyncEngine and the first non-null result is selected for each data provider's identifier field.
 
     This class should be subclassed for each new object type: see [PlayerSyncEngine][glass_onion.player.PlayerSyncEngine] for an example.
+
+    NOTE: any `SyncableContent` objects provided to a `SyncEngine` will have their identifiers converted to strings for easier deduplication. Please see [SyncableContent.normalize_ids][glass_onion.engine.SyncableContent.normalize_ids] and [utils.string_stringify_object_id][glass_onion.utils.string_stringify_object_id] for more details.
     """
 
     def __init__(
@@ -181,10 +195,44 @@ class SyncEngine:
             "One or more `SyncableContent` objects in `content` do not match `SyncEngine.object_type`."
         )
 
+        for c in content:
+            # normalize all values
+            c.normalize_ids()
+            # check validity
+            assert c.validate_data_schema(), (
+                f"`data` for provider {c.provider} does not meet the schema requirements for its SyncableContent class."
+            )
+
         self.content = content
+        self.conflicts: list[Tuple[Tuple[str, Any], Tuple[str, Any]]] = []
+        # apply_cosine_similarity() results keyed by its two inputs' values: its vectorizer is only fit on those values,
+        # so the same inputs always produce the same result. Layers often re-run it on the same names.
+        self.cosine_similarity_cache: dict[
+            Tuple[Tuple[str, ...], Tuple[str, ...]], pd.DataFrame
+        ] = {}
+        # series_normalize() results keyed by raw string: normalization is per-string, so each string only needs it once
+        self.normalized_strings: dict[str, str] = {}
         self.object_type = object_type
         self.verbose = verbose
         self.join_columns = join_columns
+
+    def normalize(self, values: "pd.Series[str]") -> "pd.Series[str]":
+        """
+        Cached wrapper around [series_normalize][glass_onion.utils.series_normalize]: only strings this engine hasn't normalized yet are normalized (in one batch).
+
+        Args:
+            values (pd.Series[str]): a pandas.Series of non-null strings.
+
+        Returns:
+            A pandas.Series with normalized strings and the same index as `values`.
+        """
+        missing = pd.Series(
+            list(dict.fromkeys(v for v in values if v not in self.normalized_strings)),
+            dtype=object,
+        )
+        if len(missing) > 0:
+            self.normalized_strings.update(zip(missing, series_normalize(missing)))
+        return values.map(self.normalized_strings)
 
     def verbose_log(self, msg: Any):
         """
@@ -246,12 +294,15 @@ class SyncEngine:
             input2.data[fields[1]].notna(), [fields[1], input2.id_field]
         ]
 
-        assert len(name_population) > 0 and len(name_sample) > 0, (
-            "Both SyncableContent objects must have > 0 non-null elements in `data`."
-        )
+        # if one or both of the dataframes are now empty, just return an empty result
+        # with both fields
+        if not (len(name_population) > 0 and len(name_sample) > 0):
+            return pd.DataFrame(
+                {i: pd.Series(dtype=str) for i in [input1.id_field, input2.id_field]}
+            )
 
-        normalized_name_population = series_normalize(name_population[fields[0]])
-        normalized_name_sample = series_normalize(name_sample[fields[1]])
+        normalized_name_population = self.normalize(name_population[fields[0]])
+        normalized_name_sample = self.normalize(name_sample[fields[1]])
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0) * 100
 
@@ -332,14 +383,48 @@ class SyncEngine:
             input2.data[fields[1]].notna(), fields[1]
         ].reset_index(drop=True)
 
-        assert len(input1_fields) > 0 and len(input2_fields) > 0, (
-            "Both SyncableContent objects must have > 0 non-null elements in `data`."
-        )
+        # if one or both of the dataframes are now empty, just return an empty result
+        # with both fields
+        if not (len(input1_fields) > 0 and len(input2_fields) > 0):
+            return pd.DataFrame(
+                {i: pd.Series(dtype=str) for i in [input1.id_field, input2.id_field]}
+            )
 
         adjusted_threshold = max(min(threshold, 1.0), 0.0)
 
-        match_results = apply_cosine_similarity(input1_fields, input2_fields)
+        # fast path: with one name on each side, the only possible pair can be scored without fitting a vectorizer
+        if len(input1_fields) == 1 and len(input2_fields) == 1:
+            normalized = self.normalize(pd.concat([input1_fields, input2_fields]))
+            similarity = string_pair_cosine_similarity(
+                normalized.iloc[0], normalized.iloc[1]
+            )
+            if similarity is not None:
+                if similarity < adjusted_threshold:
+                    return pd.DataFrame(
+                        {
+                            i: pd.Series(dtype=str)
+                            for i in [input1.id_field, input2.id_field]
+                        }
+                    )
+                return pd.DataFrame(
+                    {
+                        input1.id_field: input1.data.loc[
+                            input1.data[fields[0]].notna(), input1.id_field
+                        ].reset_index(drop=True),
+                        input2.id_field: input2.data.loc[
+                            input2.data[fields[1]].notna(), input2.id_field
+                        ].reset_index(drop=True),
+                    }
+                )
 
+        cache_key = (tuple(input1_fields), tuple(input2_fields))
+        if cache_key not in self.cosine_similarity_cache:
+            self.cosine_similarity_cache[cache_key] = apply_cosine_similarity(
+                input1_fields, input2_fields
+            )
+        match_results = self.cosine_similarity_cache[cache_key]
+
+        # sort_values() returns a copy, so the cached result isn't modified below
         result = match_results.sort_values(by="similarity", ascending=False)
         result = result[result.similarity >= adjusted_threshold]
         result["similarity_rank"] = result.groupby(["input1", "input2"])[
@@ -413,71 +498,81 @@ class SyncEngine:
             input2.data[fields[1]].notna(), [fields[1], input2.id_field]
         ]
 
-        assert len(name_population) > 0 and len(name_sample) > 0, (
-            "Both SyncableContent objects must have > 0 non-null elements in `data`."
-        )
+        # if one or both of the dataframes are now empty, just return an empty result
+        # with both fields
+        if not (len(name_population) > 0 and len(name_sample) > 0):
+            return pd.DataFrame(
+                {i: pd.Series(dtype=str) for i in [input1.id_field, input2.id_field]}
+            )
 
-        normalized_name_population = series_normalize(name_population[fields[0]])
-        normalized_name_sample = series_normalize(name_sample[fields[1]])
+        normalized_name_population = self.normalize(name_population[fields[0]])
+        normalized_name_sample = self.normalize(name_sample[fields[1]])
+
+        # only the first occurrence of each normalized string can ever be matched,
+        # so collapse both sides to {string: id of first occurrence} (dicts keep insertion order).
+        population_ids: dict[str, Any] = {}
+        for name, id in zip(
+            normalized_name_population.tolist(),
+            name_population[input1.id_field].tolist(),
+        ):
+            population_ids.setdefault(name, id)
+
+        sample_ids: dict[str, Any] = {}
+        for name, id in zip(
+            normalized_name_sample.tolist(), name_sample[input2.id_field].tolist()
+        ):
+            sample_ids.setdefault(name, id)
 
         results = []
         name_map: dict[str, str] = {}
+        matched_sample: set[str] = set()
 
         # first pass to encapsulate exact matches
-        for i in range(0, len(normalized_name_population)):
-            i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
-            if i1_raw in name_map.keys():
+        for i1_raw, i1_id in population_ids.items():
+            if i1_raw in sample_ids:
+                self.verbose_log(f"Logging match: {i1_raw} -> {i1_raw}")
+                name_map[i1_raw] = i1_raw
+                matched_sample.add(i1_raw)
+                results.append(
+                    {
+                        f"{input1.id_field}": i1_id,
+                        f"{input2.id_field}": sample_ids[i1_raw],
+                    }
+                )
+
+        # second pass: match if either name's token set is a subset of the other's.
+        # Any such pair shares at least one token, so an inverted index of
+        # token -> sample positions limits the comparisons to plausible candidates.
+        sample_names = [n for n in sample_ids.keys() if n not in matched_sample]
+        sample_sets = [frozenset(re.split(r"\s+", n.strip())) for n in sample_names]
+        token_index: dict[str, list[int]] = {}
+        for j, i2_set in enumerate(sample_sets):
+            for token in i2_set:
+                token_index.setdefault(token, []).append(j)
+
+        for i1_raw, i1_id in population_ids.items():
+            if i1_raw in name_map:
                 continue
 
-            for j in range(0, len(normalized_name_sample)):
-                i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
-                if i2_raw in name_map.values():
+            i1_set = frozenset(re.split(r"\s+", i1_raw))
+            candidates = sorted(
+                {j for token in i1_set for j in token_index.get(token, ())}
+            )
+            for j in candidates:
+                i2_raw = sample_names[j]
+                if i2_raw in matched_sample:
                     continue
 
-                if i1_raw == i2_raw:
+                i2_set = sample_sets[j]
+                if i2_set <= i1_set or i1_set <= i2_set:
                     # this is a match
                     self.verbose_log(f"Logging match: {i1_raw} -> {i2_raw}")
                     name_map[i1_raw] = i2_raw
+                    matched_sample.add(i2_raw)
                     results.append(
                         {
-                            f"{input1.id_field}": name_population.loc[
-                                name_population.index[i], input1.id_field
-                            ],
-                            f"{input2.id_field}": name_sample.loc[
-                                name_sample.index[j], input2.id_field
-                            ],
-                        }
-                    )
-
-        for i in range(0, len(normalized_name_population)):
-            i1_raw = normalized_name_population.loc[normalized_name_population.index[i]]
-            if i1_raw in name_map.keys():
-                continue
-
-            for j in range(0, len(normalized_name_sample)):
-                i2_raw = normalized_name_sample.loc[normalized_name_sample.index[j]]
-                if i2_raw in name_map.values():
-                    continue
-
-                i1_set = set(re.split(r"\s+", i1_raw))
-                self.verbose_log(f"Input1 {i}: {i1_raw} -> {i1_set}")
-                i2_set = set(re.split(r"\s+", i2_raw))
-                self.verbose_log(f"Input2 {j}: {i2_raw} -> {i2_set}")
-
-                if len(i1_set.intersection(i2_set)) == len(i2_set) or len(
-                    i2_set.intersection(i1_set)
-                ) == len(i1_set):
-                    # this is a match
-                    self.verbose_log(f"Logging match: {i1_raw} -> {i2_raw}")
-                    name_map[i1_raw] = i2_raw
-                    results.append(
-                        {
-                            f"{input1.id_field}": name_population.loc[
-                                name_population.index[i], input1.id_field
-                            ],
-                            f"{input2.id_field}": name_sample.loc[
-                                name_sample.index[j], input2.id_field
-                            ],
+                            f"{input1.id_field}": i1_id,
+                            f"{input2.id_field}": sample_ids[i2_raw],
                         }
                     )
                     break
@@ -493,11 +588,17 @@ class SyncEngine:
         """
         Internal wrapper around `synchronize_pair()` that generates all possible combinations of the elements in `content` to run `synchronize_pair` on.
 
+        Pair results are combined by treating every synced identifier pair as a link and grouping linked identifiers into one row, so an object can be
+        synced through a third provider even if two providers never matched it directly (IE: A <-> C and B <-> C yields A <-> B <-> C).
+        Links are applied strongest first: by the `sync_rank` column of each pair result if present (lower is stronger), then by identifier, so the
+        result doesn't depend on the order of `content`. A link is skipped if it would put two identifiers from the same provider in one row; skipped
+        links are recorded in `SyncEngine.conflicts`.
+
         Args:
             content (list[SyncableContent]): a list of SyncableContent objects that correspond to `object_type`. If `None`, defaults to `self.content`.
 
         Returns:
-            A SyncableContent object with the combined results of all executions of `synchronize_pair`.
+            A SyncableContent object with one row per group of linked identifiers. Non-identifier columns are taken from the first object in `content` that has an identifier in the row.
         """
         if content is None:
             content = self.content
@@ -508,7 +609,88 @@ class SyncEngine:
             z = self.synchronize_pair(x, y)
             results.append(z)
 
-        return reduce(lambda x, y: x.merge(y), results[1:], results[0])
+        id_fields = [c.id_field for c in content]
+
+        # union-find over (id_field, id) nodes. Each root tracks the id_fields in its group
+        # so that a link can't merge two identifiers from the same provider.
+        parent: dict[Tuple[str, Any], Tuple[str, Any]] = {}
+        group_fields: dict[Tuple[str, Any], set[str]] = {}
+
+        def find(node: Tuple[str, Any]) -> Tuple[str, Any]:
+            parent.setdefault(node, node)
+            group_fields.setdefault(node, {node[0]})
+            while parent[node] != node:
+                parent[node] = parent[parent[node]]
+                node = parent[node]
+            return node
+
+        def node_key(node: Tuple[str, Any]) -> Tuple[str, str]:
+            # identifiers can be of mixed types, so compare them as strings
+            return (node[0], str(node[1]))
+
+        # collect every link as (rank, left node, right node) so they can be applied strongest first, independent of
+        # the order of `content`. Pair results without a `sync_rank` column treat every link as equally strong.
+        links: list[Tuple[float, Tuple[str, Any], Tuple[str, Any]]] = []
+        for r in results:
+            pair_fields = [f for f in id_fields if f in r.data.columns]
+            ranks = (
+                r.data["sync_rank"].fillna(0)
+                if "sync_rank" in r.data.columns
+                else pd.Series(0, index=r.data.index)
+            )
+            for rank, row in zip(ranks, r.data[pair_fields].itertuples(index=False)):
+                nodes = sorted(
+                    [(f, v) for f, v in zip(pair_fields, row) if pd.notna(v)],
+                    key=node_key,
+                )
+                links += [(rank, nodes[0], node) for node in nodes[1:]]
+
+        for rank, left, right in sorted(
+            links, key=lambda l: (l[0], node_key(l[1]), node_key(l[2]))
+        ):
+            root_x, root_y = find(left), find(right)
+            if root_x == root_y:
+                continue
+            if group_fields[root_x] & group_fields[root_y]:
+                self.verbose_log(
+                    f"Skipping link {left} <-> {right}: would put two identifiers from the same provider in one row"
+                )
+                self.conflicts.append((left, right))
+                continue
+            parent[root_y] = root_x
+            group_fields[root_x] |= group_fields.pop(root_y)
+
+        groups: dict[Tuple[str, Any], dict[str, Any]] = {}
+        for node in parent:
+            groups.setdefault(find(node), {})[node[0]] = node[1]
+
+        unified = pd.DataFrame(list(groups.values()), columns=id_fields)
+
+        # re-attach non-identifier columns, preferring earlier objects in `content`
+        metadata_columns = []
+        for r in results:
+            for col in r.data.columns:
+                if (
+                    col not in id_fields
+                    and col not in metadata_columns
+                    and not col.endswith(f"_{self.object_type}_id")
+                    and any(col in c.data.columns for c in content)
+                ):
+                    metadata_columns.append(col)
+
+        for c in content:
+            lookup = c.data.drop_duplicates(subset=c.id_field).set_index(c.id_field)
+            for col in metadata_columns:
+                if col not in lookup.columns:
+                    continue
+                values = unified[c.id_field].map(lookup[col])
+                unified[col] = (
+                    unified[col].fillna(values) if col in unified.columns else values
+                )
+
+        return SyncableContent(
+            object_type=self.object_type, provider=content[0].provider, data=unified
+        )
 
     def synchronize_pair(
         self, input1: SyncableContent, input2: SyncableContent
@@ -564,6 +746,9 @@ class SyncEngine:
 
         if len(self.content) == 1:
             return self.content[0]
+
+        # conflicts accumulate across every synchronize_all_combinations() pass below
+        self.conflicts = []
 
         # first pass: straight matching - approach: agglomerative
         self.verbose_log(

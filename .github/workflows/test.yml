@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Install Python ${{ matrix.python-version }}
@@ -51,7 +51,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Install Python 3.11
@@ -79,3 +79,57 @@ jobs:
           hide_and_recreate: true
           hide_classify: "OUTDATED"
           path: code-coverage-results.md
+
+  performance:
+    runs-on: ubuntu-latest
+    needs: tests
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Install Python 3.11
+        run: uv python install 3.11
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+      - name: Checkout Baseline
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: baseline
+      # the base branch gets its own environment (baseline/.venv) from its own uv.lock
+      - name: Install Baseline
+        if: github.event_name == 'pull_request'
+        run: uv sync --locked --all-extras --dev --project baseline
+      # run this branch's performance tests in the base branch's environment, so both runs time the same tests. addopts
+      # is replaced because this branch's pytest options can need plugins the base branch doesn't install (IE:
+      # pytest-xdist). Tests for code the base branch doesn't have yet can't be collected, so they're skipped and show
+      # no baseline in the report.
+      - name: Run Baseline Performance Tests
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: >-
+          uv run --locked --project baseline pytest tests/performance
+          -o addopts="--import-mode=importlib -q -p no:cacheprovider"
+          --continue-on-collection-errors
+          --performance-json=performance-baseline.json
+      # run serially so tests don't compete with each other for CPU time
+      - name: Run performance tests
+        run: uv run pytest tests/performance -n0 --performance-report=performance-report.md --performance-baseline=performance-baseline.json
+      # the report is written even if a test fails, so post it in that case too
+      - name: Performance Report Summary
+        if: ${{ !cancelled() }}
+        run: cat performance-report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Add Performance PR Comment
+        uses: marocchino/sticky-pull-request-comment@v3
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        with:
+          # a separate header keeps this comment from replacing the coverage comment
+          header: performance
+          hide_and_recreate: true
+          hide_classify: "OUTDATED"
+          path: performance-report.md

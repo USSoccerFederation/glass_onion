@@ -6,7 +6,7 @@ In general, our process looks something like this for every object type:
 
 <img src="site:assets/img/integration/Slide1.png" style="margin: auto !important; display: block;" />
 
-In our pipeline, each object type depends on a "higher-order" object type to have unified identifiers in order to reduce the search space of potential matches (more details in [Step 2](#step-2-glass-onion-synchronization)). Data providers modify competitions and seasons least often, so we synchronize those by hand. That manual work allows us to automate the synchronization process for teams, which unlocks that process for matches, which then unlocks that process for players.
+In our pipeline, each object type depends on a "higher-order" object type to have unified identifiers in order to reduce the search space of potential matches (more details in [Step 2](#step-2-synchronization)). Data providers modify competitions and seasons least often, so we synchronize those by hand. That manual work allows us to automate the synchronization process for teams, which unlocks that process for matches, which then unlocks that process for players.
 
 ## Start: Provider-specific object tables
 
@@ -23,7 +23,7 @@ We collect data from the provider-specific tables into a single Spark DataFrame 
 - data_provider: the data provider's name
 - provider_object_id: the ID of the object in the data provider's system
 - Any object-specific columns to use for synchronization
-- A grouping key (More on this in [Step 2](#step-2-glass-onion-synchronization))
+- A grouping key (More on this in [Step 2](#step-2-synchronization))
 
 Here's what this might look like in code for player synchronization:
 
@@ -39,7 +39,7 @@ Notes:
 """
 
 prov_a = spark.sql(
-"""
+    """
     SELECT 
         um.match_id,
         'provider_a' AS data_provider,
@@ -60,29 +60,26 @@ prov_a = spark.sql(
 
 # ... and so on for other providers ...
 
-all_remaining_records = (
-    reduce(
-        lambda a, b: a.union(b), [
-            prov_a, # ... other providers ...
-        ]
-    )
-    .select(
-        "match_id", 
-        "provider_player_id",
-        "data_provider", 
-        "jersey_number",
-        "player_name",
-        "player_nickname", 
-        "birth_date",
-        "team_id", 
-        "player_gender",
-    )
+all_remaining_records = reduce(
+    lambda a, b: a.union(b),
+    [
+        prov_a,  # ... other providers ...
+    ],
+).select(
+    "match_id",
+    "provider_player_id",
+    "data_provider",
+    "jersey_number",
+    "player_name",
+    "player_nickname",
+    "birth_date",
+    "team_id",
+    "player_gender",
 )
-
 ```
 
 
-## Step 2: Glass Onion synchronization
+## Step 2: Synchronization
 
 Stuffing all of our data into a common schema is a architectural choice forced by PySpark's [`GroupedData.applyInPandas(func, schema)`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.GroupedData.applyInPandas.html) to parallelize the work of identifier synchronization across a Spark cluster's nodes. This choice also has the benefit of naturally reducing the search space for synchronization if we have unified identifiers for higher-order objects. For matches and teams, we group by internal identifiers for competition and season, and for players, we group by an internal match identifier. 
 
@@ -90,15 +87,18 @@ To use `GroupedData.applyInPandas(func, schema)` properly, we predefine a target
 ```python linenums="1"
 from pyspark.sql import types as T
 
-target_schema = T.StructType([
-    T.StructField("grouping_key", T.StringType()), # to track the group this match came from
-    T.StructField("provider_a_object_id", T.StringType()),
-    T.StructField("provider_b_object_id", T.StringType()),
-    T.StructField("provider_c_object_id", T.StringType()),
-    T.StructField("data_provider", T.StringType()),
-
-    # ... more T.StructField() invocations for SyncEngine.join_columns ...
-])
+target_schema = T.StructType(
+    [
+        T.StructField(
+            "grouping_key", T.StringType()
+        ),  # to track the group this match came from
+        T.StructField("provider_a_object_id", T.StringType()),
+        T.StructField("provider_b_object_id", T.StringType()),
+        T.StructField("provider_c_object_id", T.StringType()),
+        T.StructField("data_provider", T.StringType()),
+        # ... more T.StructField() invocations for SyncEngine.join_columns ...
+    ]
+)
 ```
 
 `func` will receive a pandas.DataFrame that contains a subset of our big object table without the grouping key added, so we need to do three things:
@@ -110,24 +110,21 @@ target_schema = T.StructType([
 Thus, `func` ends up looking something like this:
 
 ```python linenums="1"
-
 import pandas as pd
+
 # NOTE: this class doesn't actually exist. We're just using it for our example.
-from glass_onion.object import ObjectSyncableContent, ObjectSyncEngine 
+from glass_onion.object import ObjectSyncableContent, ObjectSyncEngine
 
 
 def transform_provider_data(dataset: pd.DataFrame, provider: str) -> pd.DataFrame:
     dataset.rename(
-        {
-            "provider_object_id": f"{provider}_object_id"
-        },
-        axis=1,
-        inplace=True
+        {"provider_object_id": f"{provider}_object_id"}, axis=1, inplace=True
     )
     dataset.drop(["data_provider"], axis=1, inplace=True)
     return dataset
 
-# NOTE: if you use multiple grouping keys, `GroupedData.applyInPandas(func, schema)` will pass a Tuple 
+
+# NOTE: if you use multiple grouping keys, `GroupedData.applyInPandas(func, schema)` will pass a Tuple
 # containing the keys to the first param of `func` (if you provide multiple).
 def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 
@@ -136,9 +133,9 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 
     syncables = [
         ObjectSyncableContent(
-            provider=p, 
-            data=transform_provider_data(dataset.loc[dataset.index.isin(d), ], p)
-        ) 
+            provider=p,
+            data=transform_provider_data(dataset.loc[dataset.index.isin(d),], p),
+        )
         for p, d in grouped.groups.items()
     ]
     syncables = [k for k in syncables if len(k.data) > 0]
@@ -152,7 +149,7 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
                 "provider_b_object_id": pd.NA,
                 "provider_c_object_id": pd.NA,
                 # ... key/values for ObjectSyncEngine.join_columns ...
-                "data_provider": pd.NA
+                "data_provider": pd.NA,
             }
         ]
     ).head(0)
@@ -175,239 +172,291 @@ def synchronize(grouping_key: str, dataset: pd.DataFrame) -> pd.DataFrame:
 With these prerequisites in place, we can actually run `GroupedData.applyInPandas(func, schema)`:
 
 ```python linenums="1"
-all_synced_records = (
-    all_remaining_records
-        .groupBy("grouping_key")
-        .applyInPandas(synchronize, target_schema)
+all_synced_records = all_remaining_records.groupBy("grouping_key").applyInPandas(
+    synchronize, target_schema
 )
 
 (
-    all_synced_records
-        .write
-        .mode("overwrite")
-        .option("mergeSchema", "true")
-        .format("delta")
-        .saveAsTable("preliminary_set") # more on this below
+    all_synced_records.write.mode("overwrite")
+    .option("mergeSchema", "true")
+    .format("delta")
+    .saveAsTable("preliminary_set")
 )
 
 display(all_synced_records)
 ```
 
-## Step 3: "Knockout" Logic
+## Step 3: Resolution
 
-Once we have a preliminary set of synchronized identifiers (the "preliminary set" below), we can run them through our "knockout logic". First, we retrieve the list of existing synchronized identifiers from `ussf.object` and store it in a temporary dataframe (our "knockout list").
+### Applying `ObjectResolver`
+
+Once we have this preliminary set of synchronized identifiers, we can determine which results are valid. We throw all of these "proposed results" in an instance of [ObjectResolver][glass_onion.resolver.ObjectResolver] (see [Methodology](/methodology#resolution) for more details on how this class works). 
+
+In short, if we can use "proposed results" to form a graph "component" (representing an object) where each provider has only one ID, we accept the "proposals". If for some reason (transitively or explicitly), a "proposal" would result in multiple IDs for the same provider in the same "component", then we reject the "proposal".
+
+We start with our existing set of synced object records from `ussf.object`. 
+
+```python linenums="1"
+from glass_onion.resolver import ObjectResolver
+
+id_mask = [
+    "provider_a_object_id",
+    "provider_b_object_id",
+    "provider_c_object_id",
+]  # and so on and so forth...
+meta_columns = [
+    # ... any additional columns ...
+]
+flag_columns = meta_columns + id_mask + ["flag_reason"]
+
+# object_flagged.conflicts: the records each flagged record conflicted with, in the column order of its struct
+conflict_columns = ["source"] + id_mask + meta_columns
+conflicts_type = T.ArrayType(
+    T.StructType([T.StructField(c, T.StringType()) for c in conflict_columns])
+)
+
+
+def spark_to_records(rows, source):
+    # a record is one source row: the IDs it syncs together plus the fields needed to flag it or describe the player
+    records = []
+    for row in rows:
+        row = row.asDict()
+        ids = {k: row[k] for k in id_mask if row.get(k) is not None}
+        if len(ids) > 0:
+            records.append(
+                {
+                    "source": source,
+                    "ids": ids,
+                    "meta": {k: row.get(k) for k in meta_columns},
+                }
+            )
+    return records
+
+
+# 0. Grab datasets and format into dataframes
+
+object_records = spark_to_records(
+    normalize_ids(
+        spark.read.table("ussf.object")
+    )  # `normalize_ids` omitted; it just turns every id column into a StringType for easier comparison
+    .select(id_mask + meta_columns)
+    .collect(),
+    "player",
+)
+
+# one record per distinct ID combination, described by the first grouping key it was synced in
+first_seen = Window.partitionBy(*id_mask).orderBy(
+    F.col("grouping_key").asc_nulls_last(), "data_provider"
+)
+raw_records = spark_to_records(
+    normalize_ids(spark.read.table("preliminary_set"))
+    .filter(" OR ".join([f"{k} IS NOT NULL" for k in id_mask]))
+    .withColumn("first_seen", F.row_number().over(first_seen))
+    .filter("first_seen = 1")
+    .select(id_mask + [F.col(c).cast(T.StringType()).alias(c) for c in meta_columns])
+    .collect(),
+    "raw",
+)
+```
+
+We can then generate the graph of identifiers via [ObjectResolver][glass_onion.resolver.ObjectResolver]:
+
+```python linenums="1"
+# 1. build the graph from the sources of truth (ussf.object)
+graph = ObjectResolver()
+graph.resolve([r for r in object_records if len(r["ids"]) > 1])
+
+all_added, all_rejected = graph.added, graph.rejected
+# a single ID can't conflict; add_record skips it if a larger record already holds it
+added_singles = []
+for r in object_records:
+    if len(r["ids"]) == 1 and graph.add_record(r):
+        added_singles.append(r)
+
+all_added = pd.concat(
+    [added_overrides, all_added, to_frame(added_singles)], ignore_index=True
+)
+```
+
+Then, we can layer on our proposals and add any single-identifier proposals to the graph. We hold out any proposals that have previously appeared in our `ussf.object_flagged` table to avoid adding them to a valid object component in the graph.
+
+```python 
+partial_hold_reasons = ["duplicate"]
+
+
+def held_ids(vouched):
+    held = set()
+    flagged = normalize_ids(spark.read.table("ussf.object_flagged"))
+    for row in flagged.select(id_mask + ["flag_reason"]).collect():
+        vs = [(k, row[k]) for k in id_mask if row[k] is not None]
+        if row["flag_reason"] in partial_hold_reasons:
+            vs = [v for v in vs if v not in vouched]
+        held.update(vs)
+    return held
+
+
+# `vouched` IDs come from the ussf.object table. We implicitly trust that these are correct.
+vouched = {v for vs in frame_vertices(all_added) for v in vs}
+# We grab the previously held-out/flagged IDs, ignoring the IDs we can vouch for (via helper method `held_ids`)
+previously_held = held_ids(vouched)
+
+# 2. merge in proposals. A proposal with a held-out ID is, well, held out to avoid that ID being pulled into a valid object's component
+proposals = [r for r in raw_records if len(r["ids"]) > 1]
+held_proposals = [
+    r for r in proposals if any(v in previously_held for v in vertices(r))
+]
+graph.resolve(
+    [r for r in proposals if not any(v in previously_held for v in vertices(r))]
+)
+
+# 3. a vertex in the graph with no edges (IE: a single-ID proposal) becomes its own record, unless it's already in the graph, held out, or in a record left out above
+excluded = (
+    previously_held
+    | {v for r in held_proposals for v in vertices(r)}
+    | {
+        v
+        for frame in (all_rejected, rejected_proposals)
+        for vs in frame_vertices(frame)
+        for v in vs
+    }
+)
+
+for r in raw_records:
+    if len(r["ids"]) == 1:
+        v = vertices(r)[0]
+        if v not in graph and v not in excluded:
+            graph.add_record(r)
+```
+
+### Handling Rejected Proposals
+
+But what happens to rejected proposals? We add these (and the other records they conflict with) to the `ussf.object_flagged` table for manual review:
+
+```python linenums="1"
+flag_rows = {}
+
+
+def flatten(records):
+    # Records, flattened as in ObjectResolver.rejected
+    return to_frame(records).to_dict("records")
+
+
+def add_flag(row, reason, conflicts):
+    # row: one record, flattened as in ObjectResolver.rejected; conflicts: the flattened records it conflicted with
+    ids = {k: value(row, k) for k in id_mask if value(row, k) is not None}
+    key = (row["source"], tuple(sorted(ids.items())))
+    flag = flag_rows.setdefault(
+        key,
+        {
+            **{k: value(row, k) for k in meta_columns},
+            **{k: ids.get(k) for k in id_mask},
+            "flag_reason": reason,
+            "conflicts": [],
+        },
+    )
+
+    # keeping the conflicts in the record allows us to resolve them more easily in the future
+    for x in conflicts:
+        c = (x["source"],) + tuple(value(x, k) for k in conflict_columns[1:])
+        if c not in flag["conflicts"]:
+            flag["conflicts"].append(c)
+
+
+for row in truth_rejected.to_dict("records"):
+    add_flag(row, "conflicting source of truth", flatten(row["conflicts"]))
+
+for row in rejected_proposals.to_dict("records"):
+    add_flag(row, "duplicate", flatten(row["conflicts"]))
+
+# ... some cleaning code removed ...
+
+print(f"{datetime.now()}: records to flag: {len(flag_rows)}")
+if len(flag_rows) > 0:
+    flags = spark.createDataFrame(
+        [
+            tuple(row[c] for c in flag_columns) + (row["conflicts"],)
+            for row in flag_rows.values()
+        ],
+        T.StructType(
+            [T.StructField(c, T.StringType()) for c in flag_columns]
+            + [T.StructField("conflicts", conflicts_type)]
+        ),
+    )
+    append_new_flagged_ids(flags.dropDuplicates(id_mask), flag_columns + ["conflicts"])
+```
+
+### Assembling Results Table
+
+We can then convert our graph components into rows, accounting for duplicates...
+
+```python linenums="1"
+# 4. write one row per component to the network table
+network_columns = (
+    id_mask
+    + [
+        # ... any metadata columns ...
+    ]
+)
+
+
+def first_seen_key(record):
+    m = record["meta"]["grouping_key"]
+    return (m is None, m or "")
+
+
+network_rows = []
+# for each identified component
+for ids, records in graph.components():
+    # get the records that were sourced from the ussf.object table
+    objects = [r for r in records if r["source"] == "object"]
+    # get the records that were sourced from the raw data, sorted by the first grouping key they were seen in
+    raw = sorted([r for r in records if r["source"] == "raw"], key=first_seen_key)
+    # prioritize the object record as a source of truth. If not available, use raw data. Pull metadata values from this place
+    meta = (objects or raw or records)[0]["meta"]
+    # two steps:
+    # 1. if this row came from the raw data (is net new), then we get the first grouping key it appeared in from the dataset
+    #   - if the row came from the object records (or for some reason neither source), then set to None
+    # 2. IF step 1 produced None, return 'a' as a placeholder to sort above all raw data.
+    ussf_match_id = (
+        raw[0]["meta"]["ussf_match_id"] if len(raw) > 0 and len(objects) == 0 else None
+    ) or "a"
+    # create a tuple of the ID values + the appropriate metadata values from `meta`
+    network_rows.append(
+        tuple([ids.get(k) for k in network_id_columns])
+        + (
+            ussf_match_id,
+            get_right_provider(meta["data_provider"], ids),
+            # ... any metadata values ...
+        )
+    )
+```
+
+...and then we can save these into a table:
+
 ```python linenums="1"
 (
-    spark.read.table("ussf.object")
-        .write
-        .mode("overwrite")
-        .option("mergeSchema", "true")
-        .format("delta")
-        .saveAsTable("knockout_list")
+    spark.createDataFrame(
+        network_rows,
+        T.StructType([T.StructField(c, T.StringType()) for c in network_columns]),
+    )
+    .write.mode("overwrite")
+    .option("overwriteSchema", "true")
+    .format("delta")
+    .saveAsTable("ussf.tmp_object_network")
 )
 ```
 
-Then, for each data provider (say, Provider A) in the list:
-
-1. Rows with instances of existing non-null identifiers for Provider A from the "knockout list" are removed from the "preliminary set" (IE: they are "knocked out").
-2. We group the set of remaining synchronized identifiers by Provider A's identifiers.
-3. In each group, we find the first non-null identifier for every other data provider (say, B through Z). _However_, if we find multiple identifiers in a group for, say, Provider B, we set provider B's identifier to NULL instead.
-4. The rows aggregated for Provider A from this grouping process are added to the "knockout list".
-5. This process repeats until we exhaust the list of data providers or there are no more rows in the "preliminary set".
-
-Here's what this looks like in code:
+...and then remove any previously flagged identifiers from the list:
 
 ```python linenums="1"
-data_providers = ["provider_a", "provider_b", "provider_c"]
-
-for k in data_providers:
-    ## 1: remove any records that mention any of the IDs in the knockout list from preliminary set
-    remaining_records = get_remaining_records()
-    rem_records_count = get_remaining_records_count()
-    if rem_records_count == 0:
-      break
-
-    base_records = (
-        remaining_records
-            .filter(f"{k} IS NOT NULL") # hide rows from remaining list with NULL
-    )
-    if base_records.count() == 0:
-        continue
-    
-    ## 2+3: make sure that there's only one unique ID from each that `k` can be associated with. See utility functions below for more details.
-    provider_rows = squish_provider_records(base_records, k)
-    provider_rows_count = provider_rows.count()
-
-    ## 4: add the complete records to the knockout list
-    if provider_rows_count > 0:
-        update_knockout_list(provider_rows, k)
-        knock_out_records()
-```
-
-
-??? "Utility functions used above"
-
-    ```python linenums="1"
-
-    import pyspark.sql.functions as F
-    from delta import DeltaTable
-
-    def knock_out_records():
-        return (
-            DeltaTable.forName(spark, "preliminary_set")
-                .alias("source")
-                .merge(
-                    spark.read.table("knockout_list").alias("target"),
-                    " OR ".join([f"(source.{k} = target.{k} AND source.{k} IS NOT NULL AND target.{k} IS NOT NULL)" for k in data_providers])
-                )
-                .whenMatchedDelete()
-                .execute()
-        )
-
-    def update_knockout_list(provider_rows, key: str):
-        # merge on selected key
-        midmerge = (
-            DeltaTable.forName(spark, "knockout_list")
-                .alias("source")
-                .merge(
-                    provider_rows.alias("target"), 
-                    f"(source.{key} = target.{key} AND source.{key} IS NOT NULL AND target.{key} IS NOT NULL)"
-                )
-        )
-
-        # update values ONLY if they're missing in the source. If they exist already, DO NOT.
-        # ignore the key column obviously.
-        for k in data_providers:
-            if k == key:
-                continue
-
-            midmerge = (
-                midmerge
-                    .whenMatchedUpdate(
-                        condition=f"source.{k} IS NULL",
-                        set={
-                            k: f"target.{k}"
-                        }
-                    )
-            )
-
-        # if no match, insert all. then execute the merge
-        (
-            midmerge
-                .whenNotMatchedInsertAll()
-                .execute()
-        )
-
-    def get_remaining_records():
-        return spark.sql("SELECT * FROM preliminary_set")
-
-    def get_remaining_records_count():
-        tmp = spark.sql("SELECT COUNT(*) AS rem_records_count FROM preliminary_set").collect()
-        rem_records_count = tmp[0]["rem_records_count"]
-        return rem_records_count
-
-    def squish_provider_records(base_records, key):
-        ## 3a. In each group, we find the first non-null identifier for every other data provider (say, B through Z). 
-        parent_id_agg = [
-            F.first(F.col(p), ignorenulls=True).alias(p) 
-            for p in data_providers # + [ ... any columns from SyncEngine.join_columns ...]
-            if p != key
-        ]
-
-        ## 3b. _However_, if we find multiple identifiers in a group for, say, Provider B, we set provider B's identifier to NULL instead.
-        count_agg = [
-            # NOTE: by design, `count_distinct` only counts non null values
-            F.count_distinct(F.col(p)).alias(f"{p}_count")
-            for p in data_providers
-            if p != key
-        ]
-
-        count_adj = {
-            p: F.when(F.col(f"{p}_count") <= F.lit(1), F.col(p)).otherwise(F.lit(None))
-            for p in data_providers if p != key
-        }
-
-        provider_counts = (
-            base_records
-                .groupBy(k)
-                .agg(*count_agg)
-                .select(
-                    [k] + [f"{p}_count" for p in data_providers if p != key]
-                )
-        )
-        
-        ## 2. We group the set of remaining synchronized identifiers by Provider A's identifiers.
-        return (
-            base_records
-                .groupBy(k)
-                .agg(*parent_id_agg)
-                .join(provider_counts, key)
-                .withColumns(count_adj)
-                .select(
-                    data_providers
-                    # + [ ... any columns from SyncEngine.join_columns ...]
-                )
-        )
-
-    ```
-
-    One quirk of our implementation: we store the "preliminary set" and "knockout list" in Delta tables. Why? While developing our data pipeline, we saw that using `MERGE INTO` was orders of magnitude faster than pulling a list of identifiers into a Spark `filter()` statement when the tables are massive (100k+ rows).
-
-## Step 4: Flagging Duplicates
-
-Our "knockout logic" effectively ignores the existence of duplicates in the "knockout list". We identify these by counting the number of times a given provider's identifier appears in the "knockout list". If an identifier appears more than once, we flag those rows and then set them aside in a `object_flagged` table for manual review.
-
-In code:
-
-```python linenums="1"
-
-id_counts = {
-    f"{k}_num": F.row_number().over(
-        Window.partitionBy(k)
-            .orderBy("ordering_column")
-    ) 
-    for k in id_mask
-}
-
-knockout_list = spark.read.table("knockout_list").withColumns(id_counts)
-
-id_count_filters = " OR ".join([f"({k}_num > 1 AND {k} IS NOT NULL)" for k in id_mask])
-
-all_duplicates = (
-    knockout_list
-        .filter(id_count_filters)
-        .collect()
+clean_list = anti_join_on_held(
+    spark.read.table("ussf.tmp_object_network"), held_ids(vouched)
 )
-
-dupe_insertables = {
-    k.name: f"target.{k.name}" for k in all_duplicates.schema.fields
-}
-
-if all_duplicates.count() > 0:
-    (
-        DeltaTable.forName(spark, "ussf.object.flagged")
-            .alias("source")
-            .merge(
-                all_duplicates.alias("target"),
-                " OR ".join(
-                    [
-                        f"(source.{k} = target.{k} AND source.{k} IS NOT NULL AND target.{k} IS NOT NULL)" 
-                        for k in override_mask
-                    ]
-                )
-            )
-            .whenNotMatchedInsert(
-                values=dupe_insertables
-            )
-            .execute()
-    )
-    display(all_duplicates)
-
 ```
 
-## Step 5: Data Formatting
+## Step 4: Data Formatting
 
-Now that we have flagged duplicate rows, we can prepare the "knockout list" to be written to the table in our unified schema for this object. This has three stages:
+Now that we have flagged and removed duplicate rows, we can prepare the cleaned sync results to be written to the table in our unified schema for this object. This has three stages:
 
 - Removing any duplicate rows (including those we have flagged before this pipeline run)
 - Joining our list back to provide-specific tables for object metadata
@@ -431,8 +480,8 @@ We might structure our data formatting like so:
 ```python linenums="1"
 # assuming you have joined provider-specific tables with aliases `prov_a`, `prov_b`, `prov_c`:
 
-knockout_list = (
-    knockout_list
+clean_list = (
+    clean_list
         .select(
             # ... other fields ...
 
@@ -512,54 +561,66 @@ Here's what our example table would look like if we apply this strategy:
 Here's what this looks like in code:
 
 ```python linenums="1"
-
-knockout_list = (
-    knockout_list
-        # assuming we've already created our player prefix column as `player_prefix` and we have a `player_id` column for existing identifiers
-        .withColumn(
-            "player_id_extract_num",
-            F.regexp_extract(F.col("player_id"), r"\d+$", idx=0).cast(T.IntegerType())
-        )
-        .withColumn(
-            "player_id_max",
-            F.max(F.col("player_id_extract_num")).over(
-                Window.partitionBy(["player_gender", "player_prefix"])
-            )
-        )
-        .withColumn(
-            "player_id_max",
-            F.when(F.col("player_id_max").isNull(), F.lit(0)).otherwise(F.col("player_id_max"))
-        )
-        .withColumn(
-            "player_index",
-            F.when(
-                F.col("player_id").isNull(),
-                F.col("player_id_max") + F.row_number().over(
-                    Window.partitionBy(["player_gender", "player_prefix"])
-                        .orderBy(
-                            [
-                                # put the NULLs first so that they get indexes 1, 2, 3, etc.
-                                F.col("player_id").asc_nulls_first(),
-                                F.col("player_name")
-                            ]
-                        )
+clean_list = (
+    clean_list
+    # assuming we've already created our player prefix column as `player_prefix` and we have a `player_id` column for existing identifiers
+    .withColumn(
+        "player_id_extract_num",
+        F.regexp_extract(F.col("player_id"), r"\d+$", idx=0).cast(T.IntegerType()),
+    )
+    .withColumn(
+        "player_id_max",
+        F.max(F.col("player_id_extract_num")).over(
+            Window.partitionBy(["player_gender", "player_prefix"])
+        ),
+    )
+    .withColumn(
+        "player_id_max",
+        F.when(F.col("player_id_max").isNull(), F.lit(0)).otherwise(
+            F.col("player_id_max")
+        ),
+    )
+    .withColumn(
+        "player_index",
+        F.when(
+            F.col("player_id").isNull(),
+            F.col("player_id_max")
+            + F.row_number().over(
+                Window.partitionBy(["player_gender", "player_prefix"]).orderBy(
+                    [
+                        # put the NULLs first so that they get indexes 1, 2, 3, etc.
+                        F.col("player_id").asc_nulls_first(),
+                        F.col("player_name"),
+                    ]
                 )
-            )
-        )
-        .withColumn(
-            "player_id",
-            F.when(
-                F.col("player_id").isNull(), 
-                F.concat_ws("-", F.col("player_gender"), F.col("player_prefix"), F.col("player_index"))
-            ).otherwise(F.col("player_id"))
-        )
+            ),
+        ),
+    )
+    .withColumn(
+        "player_id",
+        F.when(
+            F.col("player_id").isNull(),
+            F.concat_ws(
+                "-",
+                F.col("player_gender"),
+                F.col("player_prefix"),
+                F.col("player_index"),
+            ),
+        ).otherwise(F.col("player_id")),
+    )
 )
 
+(
+    clean_list.write.mode("overwrite")
+    .option("overwriteSchema", "true")
+    .format("delta")
+    .saveAsTable("ussf.tmp_object_clean")
+)
 ```
 
 ## Final: unified object table
 
-With our pipeline generating a "knockout list" that meets our target criteria:
+With our pipeline generating a "clean list" that meets our target criteria:
 
 - [X] Does not include duplicate rows or identifiers
 - [X] Includes most accurate metadata for the object from the data provider that tends to be the most accurate for each metadata field
@@ -568,37 +629,38 @@ With our pipeline generating a "knockout list" that meets our target criteria:
 We can simply execute a `MERGE INTO` statement into the table for this object in our unified schema:
 
 ```python linenums="1"
-
 data_providers = ["provider_a", "provider_b", "provider_c"]
-table_fields = data_providers + [
-    # ... other object metadata fields ...
-]
+table_fields = (
+    data_providers
+    + [
+        # ... other object metadata fields ...
+    ]
+)
 insertables = {k: f"target.{k}_object_id" for k in table_fields}
 updatables = {k: v for k, v in insertables.items() if k != "object_id"}
 
 (
     DeltaTable.forName(spark, "ussf.object")
-        .alias("source")
-        .merge(
-            spark.read.table("knockout_list").alias("target"), 
-            "source.object_id = target.object_id"
-        )
-        .whenMatchedUpdate(
-            set={
-                **updatables,
-                "updated_at": "CURRENT_TIMESTAMP()" # useful for tracking changes
-            }
-        )
-        .whenNotMatchedInsert(
-            values={
-                **insertables,
-                "created_at": "CURRENT_TIMESTAMP()",
-                "updated_at": "CURRENT_TIMESTAMP()"
-            }
-        )
-        .execute()
+    .alias("source")
+    .merge(
+        spark.read.table("ussf.tmp_object_clean").alias("target"),
+        "source.object_id = target.object_id",
+    )
+    .whenMatchedUpdate(
+        set={
+            **updatables,
+            "updated_at": "CURRENT_TIMESTAMP()",  # useful for tracking changes
+        }
+    )
+    .whenNotMatchedInsert(
+        values={
+            **insertables,
+            "created_at": "CURRENT_TIMESTAMP()",
+            "updated_at": "CURRENT_TIMESTAMP()",
+        }
+    )
+    .execute()
 )
-
 ```
 
 And just like that: we're done with our pipeline! 
