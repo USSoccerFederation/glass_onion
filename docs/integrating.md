@@ -203,6 +203,16 @@ We start with our existing set of synced object records from `ussf.object`.
 ```python linenums="1"
 from glass_onion.resolver import ObjectResolver
 
+id_mask = ["provider_a_object_id", "provider_b_object_id", "provider_c_object_id"] # and so on and so forth...
+meta_columns = [
+    # ... any additional columns ...
+]
+flag_columns = meta_columns + id_mask + ["flag_reason"]
+
+# object_flagged.conflicts: the records each flagged record conflicted with, in the column order of its struct
+conflict_columns = ["source"] + id_mask + meta_columns
+conflicts_type = T.ArrayType(T.StructType([T.StructField(c, T.StringType()) for c in conflict_columns]))
+
 def spark_to_records(rows, source):
     # a record is one source row: the IDs it syncs together plus the fields needed to flag it or describe the player
     records = []
@@ -215,13 +225,9 @@ def spark_to_records(rows, source):
 
 # 0. Grab datasets and format into dataframes
 
-id_mask = ["provider_a_object_id", "provider_b_object_id", "provider_c_object_id"] # and so on and so forth...
-
 object_records = spark_to_records(
     normalize_ids(spark.read.table("ussf.object"))   # `normalize_ids` omitted; it just turns every id column into a StringType for easier comparison
-        .select(id_mask + [
-            # ... any additional fields to add ...
-        ])
+        .select(id_mask + meta_columns)
         .collect(),
     "player"
 )
@@ -312,6 +318,8 @@ def add_flag(row, reason, conflicts):
     ids = {k: value(row, k) for k in id_mask if value(row, k) is not None}
     key = (row["source"], tuple(sorted(ids.items())))
     flag = flag_rows.setdefault(key, {**{k: value(row, k) for k in meta_columns}, **{k: ids.get(k) for k in id_mask}, "flag_reason": reason, "conflicts": []})
+
+    # keeping the conflicts in the record allows us to resolve them more easily in the future
     for x in conflicts:
         c = (x["source"],) + tuple(value(x, k) for k in conflict_columns[1:])
         if c not in flag["conflicts"]:
