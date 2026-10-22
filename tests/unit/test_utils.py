@@ -436,7 +436,7 @@ def test_string_pair_cosine_similarity_no_ngrams_returns_none(input1: str, input
         ("12345678901234567890", "12345678901234567890"),
         ("NULL", None),
         ("nan", None),
-        (None, None)
+        (None, None),
     ],
 )
 def test_string_stringify_object_id(input: str, expected: str):
