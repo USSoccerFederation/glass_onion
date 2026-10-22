@@ -236,10 +236,12 @@ def spark_to_records(rows, source):
 # 0. Grab datasets and format into dataframes
 
 object_records = spark_to_records(
-    normalize_ids(spark.read.table("ussf.object"))   # `normalize_ids` omitted; it just turns every id column into a StringType for easier comparison
-        .select(id_mask + meta_columns)
-        .collect(),
-    "player"
+    normalize_ids(
+        spark.read.table("ussf.object")
+    )  # `normalize_ids` omitted; it just turns every id column into a StringType for easier comparison
+    .select(id_mask + meta_columns)
+    .collect(),
+    "player",
 )
 
 # one record per distinct ID combination, described by the first grouping key it was synced in
@@ -248,12 +250,12 @@ first_seen = Window.partitionBy(*id_mask).orderBy(
 )
 raw_records = spark_to_records(
     normalize_ids(spark.read.table("preliminary_set"))
-        .filter(" OR ".join([f"{k} IS NOT NULL" for k in id_mask]))
-        .withColumn("first_seen", F.row_number().over(first_seen))
-        .filter("first_seen = 1")
-        .select(id_mask + [F.col(c).cast(T.StringType()).alias(c) for c in meta_columns])
-        .collect(),
-    "raw"
+    .filter(" OR ".join([f"{k} IS NOT NULL" for k in id_mask]))
+    .withColumn("first_seen", F.row_number().over(first_seen))
+    .filter("first_seen = 1")
+    .select(id_mask + [F.col(c).cast(T.StringType()).alias(c) for c in meta_columns])
+    .collect(),
+    "raw",
 )
 ```
 
