@@ -437,6 +437,9 @@ def test_string_pair_cosine_similarity_no_ngrams_returns_none(input1: str, input
         ("NULL", None),
         ("nan", None),
         (None, None),
+        (-123.0, "-123"),
+        ("-123.0", "-123"),
+        (-123, "-123"),
     ],
 )
 def test_string_stringify_object_id(input: str, expected: str):
@@ -444,7 +447,7 @@ def test_string_stringify_object_id(input: str, expected: str):
 
 
 def test_series_stringify_object_id():
-    test = pd.Series([123, "123", 123.0, "123.0", "123.123", 123.123, "NULL", "nan"])
+    test = pd.Series([123, "123", 123.0, "123.0", "123.123", 123.123, "NULL", "nan", "-123.0", "-123", -123.0])
     normalized = series_stringify_object_id(test)
 
-    assert set(["123", "123.123", np.nan]) == set(normalized)
+    assert set(["123", "123.123", "-123", np.nan]) == set(normalized)

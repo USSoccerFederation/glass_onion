@@ -494,7 +494,7 @@ def string_stringify_object_id(i: Hashable) -> Hashable | None:
         if stripped == "" or stripped.lower() in ["<na>", "nan", "none", "null"]:
             return None
         # remove trailing zeros from decimal string identifiers
-        if k := re.fullmatch(r"(\d+)\.0+", stripped):
+        if k := re.fullmatch(r"(-?\d+)\.0+", stripped):
             return k.group(1)
 
         return stripped
